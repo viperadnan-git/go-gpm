@@ -2,7 +2,7 @@ package src
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/url"
 	"os"
 
@@ -217,19 +217,19 @@ func saveAppConfig() error {
 
 	err := k.Load(structs.Provider(AppConfig, "koanf"), nil)
 	if err != nil {
-		fmt.Println(err)
+		slog.Error("failed to load config struct", "error", err)
 		return err
 	}
 	b, err := k.Marshal(yaml.Parser())
 	if err != nil {
-		fmt.Println(err)
+		slog.Error("failed to marshal config", "error", err)
 		return err
 	}
 
 	err = os.WriteFile(ConfigPath, b, 0644)
 
 	if err != nil {
-		fmt.Println(err)
+		slog.Error("failed to write config file", "error", err)
 		return err
 	}
 
@@ -240,12 +240,12 @@ func loadAppConfig() Config {
 	var c Config
 	var k = koanf.New(".")
 	if err := k.Load(file.Provider(ConfigPath), yaml.Parser()); err != nil {
-		log.Printf("error parsing app config: %v", err)
+		slog.Error("error parsing app config", "error", err)
 		return DefaultConfig
 	}
 	err := k.Unmarshal("", &c)
 	if err != nil {
-		log.Printf("error unmarshaling app config: %v", err)
+		slog.Error("error unmarshaling app config", "error", err)
 		return DefaultConfig
 	}
 

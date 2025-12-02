@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -275,7 +276,7 @@ func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, work
 
 		mediakey, err = api.FindRemoteMediaByHash(sha1_hash_bytes)
 		if err != nil {
-			fmt.Println("Error checking for remote matches:", err)
+			slog.Error("error checking for remote matches", "error", err)
 		}
 		if len(mediakey) > 0 {
 			callback("ThreadStatus", ThreadStatus{
@@ -287,9 +288,9 @@ func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, work
 			})
 			if AppConfig.DeleteFromHost {
 				if err := os.Remove(filePath); err != nil {
-					fmt.Printf("Warning: failed to delete file %s: %v\n", filePath, err)
+					slog.Warn("failed to delete file", "path", filePath, "error", err)
 				} else {
-					fmt.Printf("Deleted: %s\n", filePath)
+					slog.Info("deleted file", "path", filePath)
 				}
 			}
 			return mediakey, nil
@@ -347,9 +348,9 @@ func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, work
 
 	if AppConfig.DeleteFromHost {
 		if err := os.Remove(filePath); err != nil {
-			fmt.Printf("Warning: failed to delete file %s: %v\n", filePath, err)
+			slog.Warn("failed to delete file", "path", filePath, "error", err)
 		} else {
-			fmt.Printf("Deleted: %s\n", filePath)
+			slog.Info("deleted file", "path", filePath)
 		}
 	}
 

@@ -11,6 +11,9 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var logger *slog.Logger
+var currentLogLevel slog.Level
+
 // parseLogLevel converts a string log level to slog.Level
 func parseLogLevel(level string) slog.Level {
 	switch strings.ToLower(level) {
@@ -27,6 +30,27 @@ func parseLogLevel(level string) slog.Level {
 	}
 }
 
+// initLogger initializes the global logger with the specified level
+func initLogger(level slog.Level) {
+	opts := &slog.HandlerOptions{
+		Level: level,
+	}
+	handler := slog.NewTextHandler(os.Stdout, opts)
+	logger = slog.New(handler)
+	slog.SetDefault(logger)
+}
+
+// initQuietLogger initializes a logger that only shows errors
+func initQuietLogger() {
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelError,
+	}
+	handler := slog.NewTextHandler(os.Stdout, opts)
+	logger = slog.New(handler)
+	slog.SetDefault(logger)
+	currentLogLevel = slog.LevelError
+}
+
 func runCLI() {
 	app := &cli.App{
 		Name:                   "gpcli",
@@ -39,8 +63,27 @@ func runCLI() {
 				Aliases: []string{"c"},
 				Usage:   "Path to config file (default: ./gpcli.config)",
 			},
+			&cli.StringFlag{
+				Name:    "log-level",
+				Aliases: []string{"l"},
+				Value:   "info",
+				Usage:   "Set log level: debug, info, warn, error",
+			},
+			&cli.BoolFlag{
+				Name:    "quiet",
+				Aliases: []string{"q"},
+				Usage:   "Suppress all log output (overrides --log-level)",
+			},
 		},
 		Before: func(c *cli.Context) error {
+			// Initialize logger - quiet mode overrides log level
+			if c.Bool("quiet") {
+				initQuietLogger()
+			} else {
+				currentLogLevel = parseLogLevel(c.String("log-level"))
+				initLogger(currentLogLevel)
+			}
+
 			// Set config path from global flag before any command runs
 			if configPath := c.String("config"); configPath != "" {
 				src.ConfigPath = configPath
@@ -78,12 +121,6 @@ func runCLI() {
 						Name:    "disable-filter",
 						Aliases: []string{"df"},
 						Usage:   "Disable file type filtering",
-					},
-					&cli.StringFlag{
-						Name:    "log-level",
-						Aliases: []string{"l"},
-						Value:   "info",
-						Usage:   "Set log level: debug, info, warn, error",
 					},
 				},
 				Action: uploadAction,
@@ -125,7 +162,7 @@ func runCLI() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		slog.Error("command failed", "error", err)
 		os.Exit(1)
 	}
 }
@@ -156,8 +193,15 @@ func uploadAction(c *cli.Context) error {
 	src.AppConfig.DeleteFromHost = c.Bool("delete")
 	src.AppConfig.DisableUnsupportedFilesFilter = c.Bool("disable-filter")
 
-	// Parse log level
-	logLevel := parseLogLevel(c.String("log-level"))
+	// Log configuration at start
+	logger.Info("starting upload",
+		"path", filePath,
+		"threads", threads,
+		"recursive", src.AppConfig.Recursive,
+		"force", src.AppConfig.ForceUpload,
+		"delete", src.AppConfig.DeleteFromHost,
+		"disable-filter", src.AppConfig.DisableUnsupportedFilesFilter,
+	)
 
 	// Track results
 	var mu sync.Mutex
@@ -175,25 +219,30 @@ func uploadAction(c *cli.Context) error {
 		case "uploadStart":
 			if start, ok := data.(src.UploadBatchStart); ok {
 				totalFiles = start.Total
-				fmt.Printf("Uploading to Google Photos (%d threads)\n", threads)
-				fmt.Printf("Found %d files to upload\n\n", totalFiles)
+				logger.Info("upload batch started", "total_files", totalFiles)
 			}
 		case "ThreadStatus":
 			if status, ok := data.(src.ThreadStatus); ok {
-				fmt.Printf("[%d] %s: %s\n", status.WorkerID, status.Status, status.FileName)
+				logger.Debug("worker status",
+					"worker_id", status.WorkerID,
+					"status", status.Status,
+					"file", status.FileName,
+				)
 			}
 		case "FileStatus":
 			if result, ok := data.(src.FileUploadResult); ok {
 				if result.IsError {
 					failed++
-					fmt.Printf("  FAILED: %s", result.Path)
-					if result.Error != nil {
-						fmt.Printf(" (%s)", result.Error.Error())
-					}
-					fmt.Println()
+					logger.Error("upload failed",
+						"path", result.Path,
+						"error", result.Error,
+					)
 				} else {
 					completed++
-					fmt.Printf("  SUCCESS: %s\n", result.Path)
+					logger.Info("upload success",
+						"path", result.Path,
+						"media_key", result.MediaKey,
+					)
 				}
 			}
 		case "uploadStop":
@@ -201,7 +250,7 @@ func uploadAction(c *cli.Context) error {
 		}
 	}
 
-	cliApp := src.NewCLIApp(eventCallback, logLevel)
+	cliApp := src.NewCLIApp(eventCallback, currentLogLevel)
 	uploadManager := src.NewUploadManager(cliApp)
 
 	// Run upload in background
@@ -213,10 +262,11 @@ func uploadAction(c *cli.Context) error {
 	<-done
 
 	// Print summary
-	fmt.Printf("\nUpload complete!\n")
-	fmt.Printf("  Total: %d\n", totalFiles)
-	fmt.Printf("  Succeeded: %d\n", completed)
-	fmt.Printf("  Failed: %d\n", failed)
+	logger.Info("upload complete",
+		"total", totalFiles,
+		"succeeded", completed,
+		"failed", failed,
+	)
 
 	return nil
 }
@@ -241,7 +291,7 @@ func credentialsAddAction(c *cli.Context) error {
 		return fmt.Errorf("error adding credentials: %w", err)
 	}
 
-	fmt.Println("Credentials added successfully")
+	slog.Info("credentials added successfully")
 	return nil
 }
 
@@ -261,7 +311,7 @@ func credentialsRemoveAction(c *cli.Context) error {
 		return fmt.Errorf("error removing credentials: %w", err)
 	}
 
-	fmt.Printf("Credentials for %s removed successfully\n", email)
+	slog.Info("credentials removed", "email", email)
 	return nil
 }
 
@@ -274,7 +324,7 @@ func credentialsListAction(c *cli.Context) error {
 	config := configManager.GetConfig()
 
 	if len(config.Credentials) == 0 {
-		fmt.Println("No credentials found")
+		slog.Info("no credentials found")
 		return nil
 	}
 
@@ -296,7 +346,7 @@ func credentialsListAction(c *cli.Context) error {
 	if config.Selected != "" {
 		fmt.Printf("\n* = active\n")
 	}
-	fmt.Printf("\nUse 'gpcli creds set <email>' to change active account (supports partial matching)\n")
+	fmt.Printf("\nUse 'gpcli creds set <email>' to change active account\n")
 
 	return nil
 }
@@ -347,16 +397,13 @@ func credentialsSetAction(c *cli.Context) error {
 		} else if len(candidates) == 1 {
 			matchedEmail = candidates[0]
 		} else {
-			fmt.Fprintf(os.Stderr, "Error: multiple credentials match '%s':\n", query)
-			for _, email := range candidates {
-				fmt.Fprintf(os.Stderr, "  - %s\n", email)
-			}
+			slog.Error("multiple credentials match query", "query", query, "candidates", candidates)
 			return fmt.Errorf("please be more specific")
 		}
 	}
 
 	configManager.SetSelected(matchedEmail)
-	fmt.Printf("Active credential set to %s\n", matchedEmail)
+	slog.Info("active credential set", "email", matchedEmail)
 
 	return nil
 }

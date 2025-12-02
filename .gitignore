@@ -15,3 +15,6 @@ gpcli.config
 # OS files
 .DS_Store
 Thumbs.db
+
+# Test files
+tmp/
