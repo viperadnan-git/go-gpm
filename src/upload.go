@@ -72,10 +72,14 @@ func (m *UploadManager) Upload(app AppInterface, paths []string) {
 			IsError: true,
 			Error:   err,
 		})
+		app.EmitEvent("uploadStop", nil)
+		m.running = false
 		return
 	}
 
 	if len(targetPaths) == 0 {
+		app.EmitEvent("uploadStop", nil)
+		m.running = false
 		return
 	}
 
