@@ -215,7 +215,8 @@ func uploadAction(c *cli.Context) error {
 	// Track results
 	var mu sync.Mutex
 	var totalFiles int
-	var completed int
+	var uploaded int
+	var existing int
 	var failed int
 	done := make(chan struct{})
 
@@ -246,8 +247,14 @@ func uploadAction(c *cli.Context) error {
 						"path", result.Path,
 						"error", result.Error,
 					)
+				} else if result.IsExisting {
+					existing++
+					logger.Info("already exists",
+						"path", result.Path,
+						"media_key", result.MediaKey,
+					)
 				} else {
-					completed++
+					uploaded++
 					logger.Info("upload success",
 						"path", result.Path,
 						"media_key", result.MediaKey,
@@ -273,8 +280,10 @@ func uploadAction(c *cli.Context) error {
 	// Print summary
 	logger.Info("upload complete",
 		"total", totalFiles,
-		"succeeded", completed,
+		"succeeded", uploaded+existing,
 		"failed", failed,
+		"uploaded", uploaded,
+		"existing", existing,
 	)
 
 	return nil

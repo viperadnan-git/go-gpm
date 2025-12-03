@@ -44,10 +44,18 @@ type UploadBatchStart struct {
 }
 
 type FileUploadResult struct {
-	MediaKey string
-	IsError  bool
-	Error    error
-	Path     string
+	MediaKey   string
+	IsError    bool
+	IsExisting bool
+	Error      error
+	Path       string
+}
+
+// UploadResult is the return type for uploadFileWithCallback
+type UploadResult struct {
+	MediaKey   string
+	IsExisting bool
+	Error      error
 }
 
 type ThreadStatus struct {
@@ -117,15 +125,13 @@ func (m *UploadManager) Upload(app AppInterface, paths []string) {
 		close(workChan)
 	}()
 
-	// Handle results and wait for completion
+	// Wait for workers to finish and close results channel
 	go func() {
 		m.wg.Wait()
 		close(results)
-		app.EmitEvent("uploadStop", nil)
-		m.running = false
 	}()
 
-	// Process results
+	// Process results, then emit uploadStop when done
 	go func() {
 		for result := range results {
 			app.EmitEvent("FileStatus", result)
@@ -137,6 +143,9 @@ func (m *UploadManager) Upload(app AppInterface, paths []string) {
 				app.GetLogger().Info(s)
 			}
 		}
+		// Only emit uploadStop after all results have been processed
+		app.EmitEvent("uploadStop", nil)
+		m.running = false
 	}()
 }
 
@@ -244,11 +253,11 @@ func filterGooglePhotosFiles(paths []string) ([]string, error) {
 }
 
 // UploadFile is an exported version for CLI use with callback
-func UploadFile(ctx context.Context, api *Api, filePath string, workerID int, callback ProgressCallback) (string, error) {
+func UploadFile(ctx context.Context, api *Api, filePath string, workerID int, callback ProgressCallback) UploadResult {
 	return uploadFileWithCallback(ctx, api, filePath, workerID, callback)
 }
 
-func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, workerID int, callback ProgressCallback) (string, error) {
+func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, workerID int, callback ProgressCallback) UploadResult {
 	fileName := filepath.Base(filePath)
 	mediakey := ""
 
@@ -263,7 +272,7 @@ func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, work
 
 	sha1_hash_bytes, err := CalculateSHA1(ctx, filePath)
 	if err != nil {
-		return "", fmt.Errorf("error calculating hash file: %w", err)
+		return UploadResult{Error: fmt.Errorf("error calculating hash file: %w", err)}
 	}
 
 	sha1_hash_b64 := base64.StdEncoding.EncodeToString([]byte(sha1_hash_bytes))
@@ -294,22 +303,22 @@ func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, work
 				if err := os.Remove(filePath); err != nil {
 					slog.Warn("failed to delete file", "path", filePath, "error", err)
 				} else {
-					slog.Info("deleted file", "path", filePath)
+					slog.Debug("deleted file", "path", filePath)
 				}
 			}
-			return mediakey, nil
+			return UploadResult{MediaKey: mediakey, IsExisting: true}
 		}
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return "", fmt.Errorf("error opening file: %w", err)
+		return UploadResult{Error: fmt.Errorf("error opening file: %w", err)}
 	}
 	fileInfo, err := file.Stat()
 	file.Close()
 
 	if err != nil {
-		return "", fmt.Errorf("error getting file info: %w", err)
+		return UploadResult{Error: fmt.Errorf("error getting file info: %w", err)}
 	}
 
 	// Stage 3: Uploading
@@ -323,13 +332,12 @@ func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, work
 
 	token, err := api.GetUploadToken(sha1_hash_b64, fileInfo.Size())
 	if err != nil {
-		return "", fmt.Errorf("error uploading file: %w", err)
+		return UploadResult{Error: fmt.Errorf("error uploading file: %w", err)}
 	}
 
 	CommitToken, err := api.UploadFile(ctx, filePath, token)
 	if err != nil {
-		return "", fmt.Errorf("error uploading file: %w", err)
-
+		return UploadResult{Error: fmt.Errorf("error uploading file: %w", err)}
 	}
 
 	// Stage 4: Finalizing
@@ -343,23 +351,22 @@ func uploadFileWithCallback(ctx context.Context, api *Api, filePath string, work
 
 	mediaKey, err := api.CommitUpload(CommitToken, fileInfo.Name(), sha1_hash_bytes, fileInfo.ModTime().Unix())
 	if err != nil {
-		return "", fmt.Errorf("error commiting file: %w", err)
+		return UploadResult{Error: fmt.Errorf("error commiting file: %w", err)}
 	}
 
 	if len(mediaKey) == 0 {
-		return "", fmt.Errorf("media key not received")
+		return UploadResult{Error: fmt.Errorf("media key not received")}
 	}
 
 	if AppConfig.DeleteFromHost {
 		if err := os.Remove(filePath); err != nil {
 			slog.Warn("failed to delete file", "path", filePath, "error", err)
 		} else {
-			slog.Info("deleted file", "path", filePath)
+			slog.Debug("deleted file", "path", filePath)
 		}
 	}
 
-	return mediaKey, nil
-
+	return UploadResult{MediaKey: mediaKey}
 }
 
 func startUploadWorker(workerID int, workChan <-chan string, results chan<- FileUploadResult, cancel <-chan struct{}, wg *sync.WaitGroup, app AppInterface) {
@@ -405,18 +412,18 @@ func startUploadWorker(workerID int, workChan <-chan string, results chan<- File
 			callback := func(event string, data any) {
 				app.EmitEvent(event, data)
 			}
-			mediaKey, err := uploadFileWithCallback(ctx, api, path, workerID, callback)
-			if err != nil {
-				results <- FileUploadResult{IsError: true, Error: err, Path: path}
+			result := uploadFileWithCallback(ctx, api, path, workerID, callback)
+			if result.Error != nil {
+				results <- FileUploadResult{IsError: true, Error: result.Error, Path: path}
 				app.EmitEvent("ThreadStatus", ThreadStatus{
 					WorkerID: workerID,
 					Status:   "error",
 					FilePath: path,
 					FileName: filepath.Base(path),
-					Message:  fmt.Sprintf("Error: %v", err),
+					Message:  fmt.Sprintf("Error: %v", result.Error),
 				})
 			} else {
-				results <- FileUploadResult{IsError: false, Path: path, MediaKey: mediaKey}
+				results <- FileUploadResult{IsError: false, IsExisting: result.IsExisting, Path: path, MediaKey: result.MediaKey}
 				app.EmitEvent("ThreadStatus", ThreadStatus{
 					WorkerID: workerID,
 					Status:   "completed",
