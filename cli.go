@@ -74,6 +74,10 @@ func runCLI() {
 				Aliases: []string{"q"},
 				Usage:   "Suppress all log output (overrides --log-level)",
 			},
+			&cli.StringFlag{
+				Name:  "auth",
+				Usage: "Authentication string (overrides config file)",
+			},
 		},
 		Before: func(c *cli.Context) error {
 			// Initialize logger - quiet mode overrides log level
@@ -87,6 +91,11 @@ func runCLI() {
 			// Set config path from global flag before any command runs
 			if configPath := c.String("config"); configPath != "" {
 				src.ConfigPath = configPath
+			}
+
+			// Set auth override from flag
+			if auth := c.String("auth"); auth != "" {
+				src.AuthOverride = auth
 			}
 			return nil
 		},
@@ -126,8 +135,9 @@ func runCLI() {
 				Action: uploadAction,
 			},
 			{
-				Name:    "auth",
-				Usage:   "Manage Google Photos authentication",
+				Name:   "auth",
+				Usage:  "Manage Google Photos authentication",
+				Action: authInfoAction,
 				Subcommands: []*cli.Command{
 					{
 						Name:      "add",
@@ -272,6 +282,35 @@ func uploadAction(c *cli.Context) error {
 
 func loadConfig() error {
 	return src.LoadConfig()
+}
+
+func authInfoAction(c *cli.Context) error {
+	// Check if --auth flag is set
+	if src.AuthOverride != "" {
+		params, err := src.ParseAuthString(src.AuthOverride)
+		if err != nil {
+			return fmt.Errorf("invalid auth string: %w", err)
+		}
+		fmt.Println("Current authentication (from --auth flag):")
+		fmt.Printf("  Email: %s\n", params.Get("Email"))
+		return nil
+	}
+
+	// Load from config
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+
+	configManager := &src.ConfigManager{}
+	config := configManager.GetConfig()
+
+	if config.Selected == "" {
+		return fmt.Errorf("no active authentication. Use 'gpcli auth set <email>' or --auth flag")
+	}
+
+	fmt.Println("Current authentication:")
+	fmt.Printf("  Email: %s\n", config.Selected)
+	return nil
 }
 
 func credentialsAddAction(c *cli.Context) error {

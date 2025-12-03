@@ -37,25 +37,35 @@ type AuthResponse struct {
 }
 
 func NewApi() (*Api, error) {
-	selectedEmail := AppConfig.Selected
-	if len(selectedEmail) == 0 {
-		return nil, fmt.Errorf("no account is selected")
-	}
-	credentials := ""
-	language := ""
-	for _, c := range AppConfig.Credentials {
-		params, err := url.ParseQuery(c)
-		if err != nil {
-			continue
-		}
-		if params.Get("Email") == selectedEmail {
-			credentials = c
+	var credentials string
+	var language string
+
+	// Check for auth override from --auth flag
+	if AuthOverride != "" {
+		credentials = AuthOverride
+		params, err := url.ParseQuery(AuthOverride)
+		if err == nil {
 			language = params.Get("lang")
 		}
-	}
-
-	if len(credentials) == 0 {
-		return nil, fmt.Errorf("no credentials with matching selcted email found")
+	} else {
+		// Use credentials from config file
+		selectedEmail := AppConfig.Selected
+		if len(selectedEmail) == 0 {
+			return nil, fmt.Errorf("no account is selected")
+		}
+		for _, c := range AppConfig.Credentials {
+			params, err := url.ParseQuery(c)
+			if err != nil {
+				continue
+			}
+			if params.Get("Email") == selectedEmail {
+				credentials = c
+				language = params.Get("lang")
+			}
+		}
+		if len(credentials) == 0 {
+			return nil, fmt.Errorf("no credentials with matching selected email found")
+		}
 	}
 
 	client, err := NewHTTPClientWithProxy(AppConfig.Proxy)

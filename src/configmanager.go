@@ -30,6 +30,7 @@ type ConfigManager struct{}
 var AppConfig Config
 var UploadRunning bool = false
 var ConfigPath string
+var AuthOverride string // Auth string from --auth flag, overrides config
 var DefaultConfig = Config{
 	UploadThreads: 3,
 }
