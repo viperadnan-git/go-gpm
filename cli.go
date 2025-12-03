@@ -126,33 +126,32 @@ func runCLI() {
 				Action: uploadAction,
 			},
 			{
-				Name:    "credentials",
-				Aliases: []string{"creds"},
-				Usage:   "Manage Google Photos credentials",
+				Name:    "auth",
+				Usage:   "Manage Google Photos authentication",
 				Subcommands: []*cli.Command{
 					{
 						Name:      "add",
-						Usage:     "Add a new credential",
+						Usage:     "Add a new authentication",
 						ArgsUsage: "<auth-string>",
 						Action:    credentialsAddAction,
 					},
 					{
 						Name:      "remove",
 						Aliases:   []string{"rm"},
-						Usage:     "Remove a credential by email",
+						Usage:     "Remove an authentication by email",
 						ArgsUsage: "<email>",
 						Action:    credentialsRemoveAction,
 					},
 					{
 						Name:    "list",
 						Aliases: []string{"ls"},
-						Usage:   "List all credentials",
+						Usage:   "List all authentications",
 						Action:  credentialsListAction,
 					},
 					{
 						Name:      "set",
 						Aliases:   []string{"select"},
-						Usage:     "Set active credential (supports partial matching)",
+						Usage:     "Set active authentication (supports partial matching)",
 						ArgsUsage: "<email>",
 						Action:    credentialsSetAction,
 					},
@@ -288,10 +287,10 @@ func credentialsAddAction(c *cli.Context) error {
 	configManager := &src.ConfigManager{}
 
 	if err := configManager.AddCredentials(authString); err != nil {
-		return fmt.Errorf("error adding credentials: %w", err)
+		return fmt.Errorf("error adding authentication: %w", err)
 	}
 
-	slog.Info("credentials added successfully")
+	slog.Info("authentication added successfully")
 	return nil
 }
 
@@ -308,10 +307,10 @@ func credentialsRemoveAction(c *cli.Context) error {
 	configManager := &src.ConfigManager{}
 
 	if err := configManager.RemoveCredentials(email); err != nil {
-		return fmt.Errorf("error removing credentials: %w", err)
+		return fmt.Errorf("error removing authentication: %w", err)
 	}
 
-	slog.Info("credentials removed", "email", email)
+	slog.Info("authentication removed", "email", email)
 	return nil
 }
 
@@ -324,15 +323,15 @@ func credentialsListAction(c *cli.Context) error {
 	config := configManager.GetConfig()
 
 	if len(config.Credentials) == 0 {
-		slog.Info("no credentials found")
+		slog.Info("no authentication found")
 		return nil
 	}
 
-	fmt.Println("Credentials:")
+	fmt.Println("Accounts:")
 	for i, cred := range config.Credentials {
 		params, err := src.ParseAuthString(cred)
 		if err != nil {
-			fmt.Printf("  %d. [Invalid credential]\n", i+1)
+			fmt.Printf("  %d. [Invalid]\n", i+1)
 			continue
 		}
 		email := params.Get("Email")
@@ -346,7 +345,7 @@ func credentialsListAction(c *cli.Context) error {
 	if config.Selected != "" {
 		fmt.Printf("\n* = active\n")
 	}
-	fmt.Printf("\nUse 'gpcli creds set <email>' to change active account\n")
+	fmt.Printf("\nUse 'gpcli auth set <email>' to change active authentication\n")
 
 	return nil
 }
@@ -393,17 +392,17 @@ func credentialsSetAction(c *cli.Context) error {
 		}
 
 		if len(candidates) == 0 {
-			return fmt.Errorf("no credentials found matching '%s'", query)
+			return fmt.Errorf("no authentication found matching '%s'", query)
 		} else if len(candidates) == 1 {
 			matchedEmail = candidates[0]
 		} else {
-			slog.Error("multiple credentials match query", "query", query, "candidates", candidates)
+			slog.Error("multiple accounts match query", "query", query, "candidates", candidates)
 			return fmt.Errorf("please be more specific")
 		}
 	}
 
 	configManager.SetSelected(matchedEmail)
-	slog.Info("active credential set", "email", matchedEmail)
+	slog.Info("active account set", "email", matchedEmail)
 
 	return nil
 }
