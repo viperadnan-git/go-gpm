@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"gpcli/src"
+	"io"
 	"log/slog"
 	"os"
 	"strings"
@@ -13,6 +16,35 @@ import (
 
 var logger *slog.Logger
 var currentLogLevel slog.Level
+var logFormat string
+
+// humanHandler is a slog.Handler that outputs human-readable logs without timestamps
+type humanHandler struct {
+	out   io.Writer
+	level slog.Level
+}
+
+func (h *humanHandler) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= h.level
+}
+
+func (h *humanHandler) Handle(_ context.Context, r slog.Record) error {
+	var buf bytes.Buffer
+	buf.WriteString(r.Message)
+	r.Attrs(func(a slog.Attr) bool {
+		buf.WriteString(" ")
+		buf.WriteString(a.Key)
+		buf.WriteString("=")
+		buf.WriteString(fmt.Sprintf("%v", a.Value.Any()))
+		return true
+	})
+	buf.WriteString("\n")
+	_, err := h.out.Write(buf.Bytes())
+	return err
+}
+
+func (h *humanHandler) WithAttrs(attrs []slog.Attr) slog.Handler { return h }
+func (h *humanHandler) WithGroup(name string) slog.Handler      { return h }
 
 // parseLogLevel converts a string log level to slog.Level
 func parseLogLevel(level string) slog.Level {
@@ -30,25 +62,26 @@ func parseLogLevel(level string) slog.Level {
 	}
 }
 
-// initLogger initializes the global logger with the specified level
+// initLogger initializes the global logger with the specified level and format
 func initLogger(level slog.Level) {
-	opts := &slog.HandlerOptions{
-		Level: level,
+	opts := &slog.HandlerOptions{Level: level}
+	var handler slog.Handler
+	switch logFormat {
+	case "slog":
+		handler = slog.NewTextHandler(os.Stdout, opts)
+	case "json":
+		handler = slog.NewJSONHandler(os.Stdout, opts)
+	default: // "human"
+		handler = &humanHandler{out: os.Stdout, level: level}
 	}
-	handler := slog.NewTextHandler(os.Stdout, opts)
 	logger = slog.New(handler)
 	slog.SetDefault(logger)
 }
 
 // initQuietLogger initializes a logger that only shows errors
 func initQuietLogger() {
-	opts := &slog.HandlerOptions{
-		Level: slog.LevelError,
-	}
-	handler := slog.NewTextHandler(os.Stdout, opts)
-	logger = slog.New(handler)
-	slog.SetDefault(logger)
 	currentLogLevel = slog.LevelError
+	initLogger(slog.LevelError)
 }
 
 func runCLI() {
@@ -78,8 +111,16 @@ func runCLI() {
 				Name:  "auth",
 				Usage: "Authentication string (overrides config file)",
 			},
+			&cli.StringFlag{
+				Name:  "log-format",
+				Value: "human",
+				Usage: "Log format: human (default), slog (machine-readable text), or json",
+			},
 		},
 		Before: func(c *cli.Context) error {
+			// Set log format before initializing logger
+			logFormat = c.String("log-format")
+
 			// Initialize logger - quiet mode overrides log level
 			if c.Bool("quiet") {
 				initQuietLogger()
@@ -358,7 +399,7 @@ func credentialsAddAction(c *cli.Context) error {
 	configManager := &src.ConfigManager{}
 
 	if err := configManager.AddCredentials(authString); err != nil {
-		return fmt.Errorf("error adding authentication: %w", err)
+		return fmt.Errorf("invalid credentials: %w", err)
 	}
 
 	slog.Info("authentication added successfully")
