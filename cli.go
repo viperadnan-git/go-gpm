@@ -172,6 +172,21 @@ func runCLI() {
 						Aliases: []string{"df"},
 						Usage:   "Disable file type filtering",
 					},
+					&cli.StringFlag{
+						Name:    "album",
+						Aliases: []string{"a"},
+						Usage:   "Add uploaded files to album with this name (creates if not exists)",
+					},
+					&cli.StringFlag{
+						Name:    "quality",
+						Aliases: []string{"Q"},
+						Value:   "original",
+						Usage:   "Upload quality: 'original' or 'storage-saver'",
+					},
+					&cli.BoolFlag{
+						Name:  "use-quota",
+						Usage: "Uploaded files will count against your Google Photos storage quota",
+					},
 				},
 				Action: uploadAction,
 			},
@@ -241,6 +256,20 @@ func uploadAction(c *cli.Context) error {
 	src.AppConfig.ForceUpload = c.Bool("force")
 	src.AppConfig.DeleteFromHost = c.Bool("delete")
 	src.AppConfig.DisableUnsupportedFilesFilter = c.Bool("disable-filter")
+	src.AppConfig.UseQuota = c.Bool("use-quota")
+
+	// Handle quality flag
+	quality := c.String("quality")
+	if quality == "storage-saver" {
+		src.AppConfig.Saver = true
+	} else if quality != "original" {
+		return fmt.Errorf("invalid quality: %s (use 'original' or 'storage-saver')", quality)
+	} else {
+		src.AppConfig.Saver = false
+	}
+
+	// Get album name
+	albumName := c.String("album")
 
 	// Log configuration at start
 	logger.Info("starting upload",
@@ -250,6 +279,9 @@ func uploadAction(c *cli.Context) error {
 		"force", src.AppConfig.ForceUpload,
 		"delete", src.AppConfig.DeleteFromHost,
 		"disable-filter", src.AppConfig.DisableUnsupportedFilesFilter,
+		"quality", quality,
+		"use-quota", src.AppConfig.UseQuota,
+		"album", albumName,
 	)
 
 	// Track results
@@ -258,6 +290,7 @@ func uploadAction(c *cli.Context) error {
 	var uploaded int
 	var existing int
 	var failed int
+	var successfulMediaKeys []string
 	done := make(chan struct{})
 
 	// Create CLI app with event callback
@@ -293,12 +326,20 @@ func uploadAction(c *cli.Context) error {
 						"path", result.Path,
 						"media_key", result.MediaKey,
 					)
+					// Collect media key for album (existing files can be added too)
+					if result.MediaKey != "" {
+						successfulMediaKeys = append(successfulMediaKeys, result.MediaKey)
+					}
 				} else {
 					uploaded++
 					logger.Info("upload success",
 						"path", result.Path,
 						"media_key", result.MediaKey,
 					)
+					// Collect media key for album
+					if result.MediaKey != "" {
+						successfulMediaKeys = append(successfulMediaKeys, result.MediaKey)
+					}
 				}
 			}
 		case "uploadStop":
@@ -325,6 +366,51 @@ func uploadAction(c *cli.Context) error {
 		"uploaded", uploaded,
 		"existing", existing,
 	)
+
+	// Handle album creation if album name was specified
+	if albumName != "" && len(successfulMediaKeys) > 0 {
+		logger.Info("creating album", "name", albumName, "items", len(successfulMediaKeys))
+
+		api, err := src.NewApi()
+		if err != nil {
+			logger.Error("failed to create API client for album creation", "error", err)
+			return fmt.Errorf("failed to create API client: %w", err)
+		}
+
+		// Create album with media keys (API may have batch limits, handle large sets)
+		const batchSize = 500
+		var albumMediaKey string
+
+		if len(successfulMediaKeys) <= batchSize {
+			// Create album with all media keys
+			albumMediaKey, err = api.CreateAlbum(albumName, successfulMediaKeys)
+			if err != nil {
+				logger.Error("failed to create album", "error", err)
+				return fmt.Errorf("failed to create album: %w", err)
+			}
+		} else {
+			// Create album with first batch
+			albumMediaKey, err = api.CreateAlbum(albumName, successfulMediaKeys[:batchSize])
+			if err != nil {
+				logger.Error("failed to create album", "error", err)
+				return fmt.Errorf("failed to create album: %w", err)
+			}
+
+			// Add remaining items in batches
+			for i := batchSize; i < len(successfulMediaKeys); i += batchSize {
+				end := i + batchSize
+				if end > len(successfulMediaKeys) {
+					end = len(successfulMediaKeys)
+				}
+				err = api.AddMediaToAlbum(albumMediaKey, successfulMediaKeys[i:end])
+				if err != nil {
+					logger.Error("failed to add items to album", "batch_start", i, "error", err)
+				}
+			}
+		}
+
+		logger.Info("album created", "name", albumName, "album_key", albumMediaKey, "items", len(successfulMediaKeys))
+	}
 
 	return nil
 }
