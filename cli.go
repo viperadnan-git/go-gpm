@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 var logger *slog.Logger
@@ -86,7 +86,7 @@ func initQuietLogger() {
 }
 
 func runCLI() {
-	app := &cli.App{
+	cmd := &cli.Command{
 		Name:                   "gpcli",
 		Usage:                  "Google Photos unofficial CLI client",
 		Version:                src.Version,
@@ -118,28 +118,28 @@ func runCLI() {
 				Usage: "Log format: human (default), slog (machine-readable text), or json",
 			},
 		},
-		Before: func(c *cli.Context) error {
+		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 			// Set log format before initializing logger
-			logFormat = c.String("log-format")
+			logFormat = cmd.String("log-format")
 
 			// Initialize logger - quiet mode overrides log level
-			if c.Bool("quiet") {
+			if cmd.Bool("quiet") {
 				initQuietLogger()
 			} else {
-				currentLogLevel = parseLogLevel(c.String("log-level"))
+				currentLogLevel = parseLogLevel(cmd.String("log-level"))
 				initLogger(currentLogLevel)
 			}
 
 			// Set config path from global flag before any command runs
-			if configPath := c.String("config"); configPath != "" {
+			if configPath := cmd.String("config"); configPath != "" {
 				src.ConfigPath = configPath
 			}
 
 			// Set auth override from flag (strip whitespace)
-			if auth := c.String("auth"); auth != "" {
+			if auth := cmd.String("auth"); auth != "" {
 				src.AuthOverride = strings.TrimSpace(auth)
 			}
-			return nil
+			return ctx, nil
 		},
 		Commands: []*cli.Command{
 			{
@@ -228,7 +228,7 @@ func runCLI() {
 				Name:   "auth",
 				Usage:  "Manage Google Photos authentication",
 				Action: authInfoAction,
-				Subcommands: []*cli.Command{
+				Commands: []*cli.Command{
 					{
 						Name:      "add",
 						Usage:     "Add a new authentication",
@@ -259,18 +259,18 @@ func runCLI() {
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		slog.Error("command failed", "error", err)
 		os.Exit(1)
 	}
 }
 
-func uploadAction(c *cli.Context) error {
-	if c.NArg() < 1 {
+func uploadAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 1 {
 		return fmt.Errorf("filepath required")
 	}
 
-	filePath := c.Args().First()
+	filePath := cmd.Args().First()
 
 	// Validate that filepath exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -284,26 +284,26 @@ func uploadAction(c *cli.Context) error {
 	}
 
 	// Override config with CLI flags
-	threads := c.Int("threads")
-	src.AppConfig.Recursive = c.Bool("recursive")
+	threads := int(cmd.Int("threads"))
+	src.AppConfig.Recursive = cmd.Bool("recursive")
 	src.AppConfig.UploadThreads = threads
-	src.AppConfig.ForceUpload = c.Bool("force")
-	src.AppConfig.DeleteFromHost = c.Bool("delete")
-	src.AppConfig.DisableUnsupportedFilesFilter = c.Bool("disable-filter")
-	src.AppConfig.UseQuota = c.Bool("use-quota")
+	src.AppConfig.ForceUpload = cmd.Bool("force")
+	src.AppConfig.DeleteFromHost = cmd.Bool("delete")
+	src.AppConfig.DisableUnsupportedFilesFilter = cmd.Bool("disable-filter")
+	src.AppConfig.UseQuota = cmd.Bool("use-quota")
 
 	// Handle quality flag
-	quality := c.String("quality")
+	quality := cmd.String("quality")
 	if quality != "original" && quality != "storage-saver" {
 		return fmt.Errorf("invalid quality: %s (use 'original' or 'storage-saver')", quality)
 	}
 	src.AppConfig.Quality = quality
 
 	// Get album name and set runtime config for post-upload operations
-	albumName := c.String("album")
-	src.AppConfig.ShouldArchive = c.Bool("archive")
-	src.AppConfig.Caption = c.String("caption")
-	src.AppConfig.ShouldFavourite = c.Bool("favourite")
+	albumName := cmd.String("album")
+	src.AppConfig.ShouldArchive = cmd.Bool("archive")
+	src.AppConfig.Caption = cmd.String("caption")
+	src.AppConfig.ShouldFavourite = cmd.Bool("favourite")
 
 	// Log configuration at start
 	logger.Info("starting upload",
@@ -466,19 +466,19 @@ func loadConfig() error {
 	return src.LoadConfig()
 }
 
-func downloadAction(c *cli.Context) error {
+func downloadAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	mediaKey := c.Args().First()
+	mediaKey := cmd.Args().First()
 	if mediaKey == "" {
 		return fmt.Errorf("media_key is required")
 	}
 
-	getOriginal := c.Bool("original")
-	urlOnly := c.Bool("url")
-	outputPath := c.String("output")
+	getOriginal := cmd.Bool("original")
+	urlOnly := cmd.Bool("url")
+	outputPath := cmd.String("output")
 
 	apiClient, err := api.NewApi(api.ApiConfig{
 		AuthOverride: src.AuthOverride,
@@ -526,7 +526,7 @@ func downloadAction(c *cli.Context) error {
 	return downloadFile(apiClient, downloadURL, outputPath)
 }
 
-func authInfoAction(c *cli.Context) error {
+func authInfoAction(ctx context.Context, cmd *cli.Command) error {
 	// Check if --auth flag is set
 	if src.AuthOverride != "" {
 		params, err := src.ParseAuthString(src.AuthOverride)
@@ -579,8 +579,8 @@ func authInfoAction(c *cli.Context) error {
 	return nil
 }
 
-func credentialsAddAction(c *cli.Context) error {
-	if c.NArg() < 1 {
+func credentialsAddAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 1 {
 		return fmt.Errorf("auth-string required")
 	}
 
@@ -588,7 +588,7 @@ func credentialsAddAction(c *cli.Context) error {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	authString := strings.TrimSpace(c.Args().First())
+	authString := strings.TrimSpace(cmd.Args().First())
 	configManager := &src.ConfigManager{}
 
 	if err := configManager.AddCredentials(authString); err != nil {
@@ -599,8 +599,8 @@ func credentialsAddAction(c *cli.Context) error {
 	return nil
 }
 
-func credentialsRemoveAction(c *cli.Context) error {
-	if c.NArg() < 1 {
+func credentialsRemoveAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 1 {
 		return fmt.Errorf("number or email required")
 	}
 
@@ -608,7 +608,7 @@ func credentialsRemoveAction(c *cli.Context) error {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	arg := c.Args().First()
+	arg := cmd.Args().First()
 	configManager := &src.ConfigManager{}
 	config := configManager.GetConfig()
 
@@ -625,8 +625,8 @@ func credentialsRemoveAction(c *cli.Context) error {
 	return nil
 }
 
-func credentialsSetAction(c *cli.Context) error {
-	if c.NArg() < 1 {
+func credentialsSetAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 1 {
 		return fmt.Errorf("number or email required")
 	}
 
@@ -634,7 +634,7 @@ func credentialsSetAction(c *cli.Context) error {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	arg := c.Args().First()
+	arg := cmd.Args().First()
 	configManager := &src.ConfigManager{}
 	config := configManager.GetConfig()
 
