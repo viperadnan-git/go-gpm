@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v3.12.4
-// source: SetArchived.proto
+// source: .proto/SetArchived.proto
 
 package pb
 
@@ -32,7 +32,7 @@ type SetArchived struct {
 
 func (x *SetArchived) Reset() {
 	*x = SetArchived{}
-	mi := &file_SetArchived_proto_msgTypes[0]
+	mi := &file___proto_SetArchived_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +44,7 @@ func (x *SetArchived) String() string {
 func (*SetArchived) ProtoMessage() {}
 
 func (x *SetArchived) ProtoReflect() protoreflect.Message {
-	mi := &file_SetArchived_proto_msgTypes[0]
+	mi := &file___proto_SetArchived_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +57,7 @@ func (x *SetArchived) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetArchived.ProtoReflect.Descriptor instead.
 func (*SetArchived) Descriptor() ([]byte, []int) {
-	return file_SetArchived_proto_rawDescGZIP(), []int{0}
+	return file___proto_SetArchived_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *SetArchived) GetItems() []*SetArchived_ArchivedItem {
@@ -84,7 +84,7 @@ type SetArchived_ArchivedItem struct {
 
 func (x *SetArchived_ArchivedItem) Reset() {
 	*x = SetArchived_ArchivedItem{}
-	mi := &file_SetArchived_proto_msgTypes[1]
+	mi := &file___proto_SetArchived_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -96,7 +96,7 @@ func (x *SetArchived_ArchivedItem) String() string {
 func (*SetArchived_ArchivedItem) ProtoMessage() {}
 
 func (x *SetArchived_ArchivedItem) ProtoReflect() protoreflect.Message {
-	mi := &file_SetArchived_proto_msgTypes[1]
+	mi := &file___proto_SetArchived_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -109,7 +109,7 @@ func (x *SetArchived_ArchivedItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetArchived_ArchivedItem.ProtoReflect.Descriptor instead.
 func (*SetArchived_ArchivedItem) Descriptor() ([]byte, []int) {
-	return file_SetArchived_proto_rawDescGZIP(), []int{0, 0}
+	return file___proto_SetArchived_proto_rawDescGZIP(), []int{0, 0}
 }
 
 func (x *SetArchived_ArchivedItem) GetItemKey() string {
@@ -135,7 +135,7 @@ type SetArchived_ArchiveAction struct {
 
 func (x *SetArchived_ArchiveAction) Reset() {
 	*x = SetArchived_ArchiveAction{}
-	mi := &file_SetArchived_proto_msgTypes[2]
+	mi := &file___proto_SetArchived_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -147,7 +147,7 @@ func (x *SetArchived_ArchiveAction) String() string {
 func (*SetArchived_ArchiveAction) ProtoMessage() {}
 
 func (x *SetArchived_ArchiveAction) ProtoReflect() protoreflect.Message {
-	mi := &file_SetArchived_proto_msgTypes[2]
+	mi := &file___proto_SetArchived_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -160,7 +160,7 @@ func (x *SetArchived_ArchiveAction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetArchived_ArchiveAction.ProtoReflect.Descriptor instead.
 func (*SetArchived_ArchiveAction) Descriptor() ([]byte, []int) {
-	return file_SetArchived_proto_rawDescGZIP(), []int{0, 1}
+	return file___proto_SetArchived_proto_rawDescGZIP(), []int{0, 1}
 }
 
 func (x *SetArchived_ArchiveAction) GetAction() int64 {
@@ -170,11 +170,11 @@ func (x *SetArchived_ArchiveAction) GetAction() int64 {
 	return 0
 }
 
-var File_SetArchived_proto protoreflect.FileDescriptor
+var File___proto_SetArchived_proto protoreflect.FileDescriptor
 
-const file_SetArchived_proto_rawDesc = "" +
+const file___proto_SetArchived_proto_rawDesc = "" +
 	"\n" +
-	"\x11SetArchived.proto\"\xde\x01\n" +
+	"\x18.proto/SetArchived.proto\"\xde\x01\n" +
 	"\vSetArchived\x12/\n" +
 	"\x05items\x18\x01 \x03(\v2\x19.SetArchived.ArchivedItemR\x05items\x12\x16\n" +
 	"\x06field3\x18\x03 \x01(\x03R\x06field3\x1a]\n" +
@@ -182,27 +182,27 @@ const file_SetArchived_proto_rawDesc = "" +
 	"\bitem_key\x18\x01 \x01(\tR\aitemKey\x122\n" +
 	"\x06action\x18\x02 \x01(\v2\x1a.SetArchived.ArchiveActionR\x06action\x1a'\n" +
 	"\rArchiveAction\x12\x16\n" +
-	"\x06action\x18\x01 \x01(\x03R\x06actionB\x05Z\x03/pbb\x06proto3"
+	"\x06action\x18\x01 \x01(\x03R\x06actionB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
 
 var (
-	file_SetArchived_proto_rawDescOnce sync.Once
-	file_SetArchived_proto_rawDescData []byte
+	file___proto_SetArchived_proto_rawDescOnce sync.Once
+	file___proto_SetArchived_proto_rawDescData []byte
 )
 
-func file_SetArchived_proto_rawDescGZIP() []byte {
-	file_SetArchived_proto_rawDescOnce.Do(func() {
-		file_SetArchived_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_SetArchived_proto_rawDesc), len(file_SetArchived_proto_rawDesc)))
+func file___proto_SetArchived_proto_rawDescGZIP() []byte {
+	file___proto_SetArchived_proto_rawDescOnce.Do(func() {
+		file___proto_SetArchived_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file___proto_SetArchived_proto_rawDesc), len(file___proto_SetArchived_proto_rawDesc)))
 	})
-	return file_SetArchived_proto_rawDescData
+	return file___proto_SetArchived_proto_rawDescData
 }
 
-var file_SetArchived_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_SetArchived_proto_goTypes = []any{
+var file___proto_SetArchived_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file___proto_SetArchived_proto_goTypes = []any{
 	(*SetArchived)(nil),               // 0: SetArchived
 	(*SetArchived_ArchivedItem)(nil),  // 1: SetArchived.ArchivedItem
 	(*SetArchived_ArchiveAction)(nil), // 2: SetArchived.ArchiveAction
 }
-var file_SetArchived_proto_depIdxs = []int32{
+var file___proto_SetArchived_proto_depIdxs = []int32{
 	1, // 0: SetArchived.items:type_name -> SetArchived.ArchivedItem
 	2, // 1: SetArchived.ArchivedItem.action:type_name -> SetArchived.ArchiveAction
 	2, // [2:2] is the sub-list for method output_type
@@ -212,26 +212,26 @@ var file_SetArchived_proto_depIdxs = []int32{
 	0, // [0:2] is the sub-list for field type_name
 }
 
-func init() { file_SetArchived_proto_init() }
-func file_SetArchived_proto_init() {
-	if File_SetArchived_proto != nil {
+func init() { file___proto_SetArchived_proto_init() }
+func file___proto_SetArchived_proto_init() {
+	if File___proto_SetArchived_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_SetArchived_proto_rawDesc), len(file_SetArchived_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file___proto_SetArchived_proto_rawDesc), len(file___proto_SetArchived_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_SetArchived_proto_goTypes,
-		DependencyIndexes: file_SetArchived_proto_depIdxs,
-		MessageInfos:      file_SetArchived_proto_msgTypes,
+		GoTypes:           file___proto_SetArchived_proto_goTypes,
+		DependencyIndexes: file___proto_SetArchived_proto_depIdxs,
+		MessageInfos:      file___proto_SetArchived_proto_msgTypes,
 	}.Build()
-	File_SetArchived_proto = out.File
-	file_SetArchived_proto_goTypes = nil
-	file_SetArchived_proto_depIdxs = nil
+	File___proto_SetArchived_proto = out.File
+	file___proto_SetArchived_proto_goTypes = nil
+	file___proto_SetArchived_proto_depIdxs = nil
 }

@@ -5966,7 +5966,7 @@ const file___proto_CommitUpload_proto_rawDesc = "" +
 	"\vfield2_type\x12\x14\n" +
 	"\x05model\x18\x03 \x01(\tR\x05model\x12\x12\n" +
 	"\x04make\x18\x04 \x01(\tR\x04make\x12.\n" +
-	"\x13android_api_version\x18\x05 \x01(\x03R\x11androidApiVersionB\x05Z\x03/pbb\x06proto3"
+	"\x13android_api_version\x18\x05 \x01(\x03R\x11androidApiVersionB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_CommitUpload_proto_rawDescOnce sync.Once

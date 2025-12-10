@@ -19,12 +19,11 @@ Quick reference from project root:
 export PATH=$PATH:$(go env GOPATH)/bin
 
 # Generate single file
-protoc --proto_path=. --go_out=. --go_opt=M.proto/MessageName.proto=github.com/viperadnan-git/gogpm/internal/pb .proto/MessageName.proto
+protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/gogpm .proto/MessageName.proto
 
 # Generate all files
 for proto in .proto/*.proto; do
-  name=$(basename "$proto" .proto)
-  protoc --proto_path=. --go_out=. --go_opt=M.proto/${name}.proto=github.com/viperadnan-git/gogpm/internal/pb .proto/${name}.proto
+  protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/gogpm "$proto"
 done
 ```
 

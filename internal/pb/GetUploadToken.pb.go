@@ -107,7 +107,7 @@ const file___proto_GetUploadToken_proto_rawDesc = "" +
 	"\x02f2\x18\x02 \x01(\x05R\x02f2\x12\x0e\n" +
 	"\x02f3\x18\x03 \x01(\x05R\x02f3\x12\x0e\n" +
 	"\x02f4\x18\x04 \x01(\x05R\x02f4\x12&\n" +
-	"\x0ffile_size_bytes\x18\a \x01(\x03R\rfileSizeBytesB\x05Z\x03/pbb\x06proto3"
+	"\x0ffile_size_bytes\x18\a \x01(\x03R\rfileSizeBytesB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_GetUploadToken_proto_rawDescOnce sync.Once

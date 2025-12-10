@@ -804,7 +804,7 @@ const file___proto_GetDownloadUrl_proto_rawDesc = "" +
 	"\x06Field3\x12\x16\n" +
 	"\x06field1\x18\x01 \x01(\tR\x06field1\x12\x16\n" +
 	"\x06field3\x18\x03 \x01(\x03R\x06field3\x12!\n" +
-	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrlB\x05Z\x03/pbb\x06proto3"
+	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrlB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_GetDownloadUrl_proto_rawDescOnce sync.Once

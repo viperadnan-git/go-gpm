@@ -209,7 +209,7 @@ const file___proto_HashCheck_proto_rawDesc = "" +
 	"\x06field2\x18\x02 \x01(\v2\".HashCheck.field1_type.field2_typeR\x06field2\x1a)\n" +
 	"\vfield1_type\x12\x1a\n" +
 	"\bsha1Hash\x18\x01 \x01(\fR\bsha1Hash\x1a\r\n" +
-	"\vfield2_typeB\x05Z\x03/pbb\x06proto3"
+	"\vfield2_typeB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_HashCheck_proto_rawDescOnce sync.Once

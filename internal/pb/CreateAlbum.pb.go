@@ -463,7 +463,7 @@ const file___proto_CreateAlbum_proto_rawDesc = "" +
 	"\x06field1\x18\x01 \x01(\v2\x1f.CreateAlbumResponse.Field1TypeR\x06field1\x1a4\n" +
 	"\n" +
 	"Field1Type\x12&\n" +
-	"\x0falbum_media_key\x18\x01 \x01(\tR\ralbumMediaKeyB\x05Z\x03/pbb\x06proto3"
+	"\x0falbum_media_key\x18\x01 \x01(\tR\ralbumMediaKeyB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_CreateAlbum_proto_rawDescOnce sync.Once
