@@ -244,6 +244,14 @@ func Run() {
 						Name:  "height",
 						Usage: "Thumbnail height in pixels",
 					},
+					&cli.BoolFlag{
+						Name:  "jpeg",
+						Usage: "Force JPEG format output",
+					},
+					&cli.BoolFlag{
+						Name:  "overlay",
+						Usage: "Show video overlay icon (hidden by default)",
+					},
 				},
 				Action: thumbnailAction,
 			},
@@ -556,6 +564,8 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 	outputPath := cmd.String("output")
 	width := int(cmd.Int("width"))
 	height := int(cmd.Int("height"))
+	forceJpeg := cmd.Bool("jpeg")
+	noOverlay := !cmd.Bool("overlay")
 
 	authData := getAuthData(cfg)
 	if authData == "" {
@@ -572,11 +582,14 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("downloading thumbnail", "media_key", mediaKey)
 
-	// Build thumbnail URL (force_jpeg=true, no_overlay=true by default)
-	thumbnailURL := apiClient.GetThumbnailURL(mediaKey, width, height, true, true)
+	body, err := apiClient.GetThumbnail(mediaKey, width, height, forceJpeg, noOverlay)
+	if err != nil {
+		return err
+	}
+	defer body.Close()
 
-	// Download the thumbnail
-	savedPath, err := gogpm.DownloadThumbnail(apiClient, thumbnailURL, outputPath, mediaKey)
+	filename := mediaKey + ".jpg"
+	savedPath, err := gogpm.DownloadFromReader(body, outputPath, filename)
 	if err != nil {
 		return err
 	}

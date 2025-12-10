@@ -8,9 +8,17 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"gpcli/gogpm/core"
 )
+
+// DownloadFromReader saves data from an io.Reader to the specified output path
+// Returns the final output path
+func DownloadFromReader(reader io.Reader, outputPath, filename string) (string, error) {
+	filePath := resolveOutputPath(outputPath, filename)
+	if err := writeToFile(filePath, reader); err != nil {
+		return "", err
+	}
+	return filePath, nil
+}
 
 // DownloadFile downloads a file from the given URL to the specified output path
 // Returns the final output path
@@ -33,45 +41,7 @@ func DownloadFile(downloadURL, outputPath string) (string, error) {
 		filename = "download"
 	}
 
-	filePath := resolveOutputPath(outputPath, filename)
-	if err := writeToFile(filePath, resp.Body); err != nil {
-		return "", err
-	}
-	return filePath, nil
-}
-
-// DownloadThumbnail downloads a thumbnail to the specified output path
-// Returns the final output path
-func DownloadThumbnail(api *core.Api, thumbnailURL, outputPath, mediaKey string) (string, error) {
-	req, err := http.NewRequest("GET", thumbnailURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-
-	bearerToken, err := api.BearerToken()
-	if err != nil {
-		return "", fmt.Errorf("failed to get bearer token: %w", err)
-	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", bearerToken))
-	req.Header.Set("User-Agent", api.UserAgent)
-	req.Header.Set("Accept-Encoding", "gzip")
-
-	resp, err := api.Client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("download request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("download failed with status %d", resp.StatusCode)
-	}
-
-	filename := mediaKey + ".jpg"
-	filePath := resolveOutputPath(outputPath, filename)
-	if err := writeToFile(filePath, resp.Body); err != nil {
-		return "", fmt.Errorf("failed to write thumbnail: %w", err)
-	}
-	return filePath, nil
+	return DownloadFromReader(resp.Body, outputPath, filename)
 }
 
 // extractFilenameFromContentDisposition extracts filename from Content-Disposition header
