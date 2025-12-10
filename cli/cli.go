@@ -294,6 +294,50 @@ func Run() {
 					},
 				},
 			},
+			{
+				Name:      "delete",
+				Usage:     "Move item to trash or restore from trash",
+				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "restore",
+						Usage: "Restore from trash instead of delete",
+					},
+				},
+				Action: deleteAction,
+			},
+			{
+				Name:      "archive",
+				Usage:     "Archive or unarchive item",
+				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "unarchive",
+						Aliases: []string{"u"},
+						Usage:   "Unarchive instead of archive",
+					},
+				},
+				Action: archiveAction,
+			},
+			{
+				Name:      "favourite",
+				Usage:     "Add or remove favourite status",
+				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "remove",
+						Aliases: []string{"r"},
+						Usage:   "Remove favourite status",
+					},
+				},
+				Action: favouriteAction,
+			},
+			{
+				Name:      "caption",
+				Usage:     "Set item caption",
+				ArgsUsage: "<media_key|dedup_key|file_path> <caption>",
+				Action:    captionAction,
+			},
 		},
 	}
 
@@ -723,10 +767,219 @@ func credentialsSetAction(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
+func deleteAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 1 {
+		return fmt.Errorf("item key or file path required")
+	}
+
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	cfg := cfgManager.GetConfig()
+
+	input := cmd.Args().First()
+	restore := cmd.Bool("restore")
+
+	itemKey, err := resolveItemKey(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	authData := getAuthData(cfg)
+	if authData == "" {
+		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
+	}
+
+	apiClient, err := core.NewApi(core.ApiConfig{
+		AuthData: authData,
+		Proxy:    cfg.Proxy,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	if restore {
+		logger.Info("restoring from trash", "item_key", itemKey)
+		if err := apiClient.RestoreFromTrash([]string{itemKey}); err != nil {
+			return fmt.Errorf("failed to restore from trash: %w", err)
+		}
+		logger.Info("restored from trash")
+	} else {
+		logger.Info("moving to trash", "item_key", itemKey)
+		if err := apiClient.MoveToTrash([]string{itemKey}); err != nil {
+			return fmt.Errorf("failed to move to trash: %w", err)
+		}
+		logger.Info("moved to trash")
+	}
+
+	return nil
+}
+
+func archiveAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 1 {
+		return fmt.Errorf("item key or file path required")
+	}
+
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	cfg := cfgManager.GetConfig()
+
+	input := cmd.Args().First()
+	unarchive := cmd.Bool("unarchive")
+
+	itemKey, err := resolveItemKey(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	authData := getAuthData(cfg)
+	if authData == "" {
+		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
+	}
+
+	apiClient, err := core.NewApi(core.ApiConfig{
+		AuthData: authData,
+		Proxy:    cfg.Proxy,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	isArchived := !unarchive
+	if isArchived {
+		logger.Info("archiving", "item_key", itemKey)
+	} else {
+		logger.Info("unarchiving", "item_key", itemKey)
+	}
+
+	if err := apiClient.SetArchived([]string{itemKey}, isArchived); err != nil {
+		return fmt.Errorf("failed to set archived status: %w", err)
+	}
+
+	if isArchived {
+		logger.Info("archived")
+	} else {
+		logger.Info("unarchived")
+	}
+
+	return nil
+}
+
+func favouriteAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 1 {
+		return fmt.Errorf("item key or file path required")
+	}
+
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	cfg := cfgManager.GetConfig()
+
+	input := cmd.Args().First()
+	remove := cmd.Bool("remove")
+
+	itemKey, err := resolveItemKey(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	authData := getAuthData(cfg)
+	if authData == "" {
+		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
+	}
+
+	apiClient, err := core.NewApi(core.ApiConfig{
+		AuthData: authData,
+		Proxy:    cfg.Proxy,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	isFavourite := !remove
+	if isFavourite {
+		logger.Info("adding to favourites", "item_key", itemKey)
+	} else {
+		logger.Info("removing from favourites", "item_key", itemKey)
+	}
+
+	if err := apiClient.SetFavourite(itemKey, isFavourite); err != nil {
+		return fmt.Errorf("failed to set favourite status: %w", err)
+	}
+
+	if isFavourite {
+		logger.Info("added to favourites")
+	} else {
+		logger.Info("removed from favourites")
+	}
+
+	return nil
+}
+
+func captionAction(ctx context.Context, cmd *cli.Command) error {
+	if cmd.NArg() < 2 {
+		return fmt.Errorf("item key/file path and caption required")
+	}
+
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	cfg := cfgManager.GetConfig()
+
+	input := cmd.Args().First()
+	caption := cmd.Args().Get(1)
+
+	itemKey, err := resolveItemKey(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	authData := getAuthData(cfg)
+	if authData == "" {
+		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
+	}
+
+	apiClient, err := core.NewApi(core.ApiConfig{
+		AuthData: authData,
+		Proxy:    cfg.Proxy,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	logger.Info("setting caption", "item_key", itemKey, "caption", caption)
+
+	if err := apiClient.SetCaption(itemKey, caption); err != nil {
+		return fmt.Errorf("failed to set caption: %w", err)
+	}
+
+	logger.Info("caption set")
+
+	return nil
+}
+
 func containsSubstring(str, substr string) bool {
 	strLower := strings.ToLower(str)
 	substrLower := strings.ToLower(substr)
 	return strings.Contains(strLower, substrLower)
+}
+
+// resolveItemKey resolves input to an item key
+// If input is a file path (file exists on disk), calculates SHA1 and converts to dedup key
+// Otherwise returns input as-is (assumed to be mediaKey or dedupKey)
+func resolveItemKey(ctx context.Context, input string) (string, error) {
+	// Check if input is a file path by trying to stat it
+	if _, err := os.Stat(input); err == nil {
+		// File exists, calculate SHA1 and convert to dedup key
+		hash, err := gogpm.CalculateSHA1(ctx, input)
+		if err != nil {
+			return "", fmt.Errorf("failed to calculate SHA1: %w", err)
+		}
+		return core.SHA1ToDedupeKey(hash), nil
+	}
+	// Assume it's already a media key or dedup key
+	return input, nil
 }
 
 // resolveEmailFromArg resolves an email from either an index number (1-based) or email string
