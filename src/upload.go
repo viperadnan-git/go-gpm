@@ -395,7 +395,7 @@ func startUploadWorker(workerID int, workChan <-chan string, results chan<- File
 				Selected:     AppConfig.Selected,
 				Credentials:  AppConfig.Credentials,
 				Proxy:        AppConfig.Proxy,
-				Saver:        AppConfig.Saver,
+				Quality:      AppConfig.Quality,
 				UseQuota:     AppConfig.UseQuota,
 			})
 			if err != nil {
@@ -425,6 +425,9 @@ func startUploadWorker(workerID int, workChan <-chan string, results chan<- File
 					Message:  fmt.Sprintf("Error: %v", result.Error),
 				})
 			} else {
+				// Execute post-upload operations immediately after each successful upload
+				postUploadOps(apiClient, result.DedupKey, path, workerID, callback)
+
 				results <- FileUploadResult{IsError: false, IsExisting: result.IsExisting, Path: path, MediaKey: result.MediaKey, DedupKey: result.DedupKey}
 				app.EmitEvent("ThreadStatus", ThreadStatus{
 					WorkerID: workerID,
@@ -451,4 +454,51 @@ func startUploadWorker(workerID int, workChan <-chan string, results chan<- File
 		Status:   "idle",
 		Message:  "Finished",
 	})
+}
+
+// postUploadOps executes caption, favourite, and archive operations immediately after upload
+func postUploadOps(apiClient *api.Api, dedupKey, filePath string, workerID int, callback ProgressCallback) {
+	fileName := filepath.Base(filePath)
+
+	// Set caption if configured
+	if AppConfig.Caption != "" {
+		callback("ThreadStatus", ThreadStatus{
+			WorkerID: workerID,
+			Status:   "finalizing",
+			FilePath: filePath,
+			FileName: fileName,
+			Message:  "Setting caption...",
+		})
+		if err := apiClient.SetCaption(dedupKey, AppConfig.Caption); err != nil {
+			slog.Error("failed to set caption", "path", filePath, "error", err)
+		}
+	}
+
+	// Set favourite if configured
+	if AppConfig.ShouldFavourite {
+		callback("ThreadStatus", ThreadStatus{
+			WorkerID: workerID,
+			Status:   "finalizing",
+			FilePath: filePath,
+			FileName: fileName,
+			Message:  "Setting favourite...",
+		})
+		if err := apiClient.SetFavourite(dedupKey, true); err != nil {
+			slog.Error("failed to set favourite", "path", filePath, "error", err)
+		}
+	}
+
+	// Archive if configured
+	if AppConfig.ShouldArchive {
+		callback("ThreadStatus", ThreadStatus{
+			WorkerID: workerID,
+			Status:   "finalizing",
+			FilePath: filePath,
+			FileName: fileName,
+			Message:  "Archiving...",
+		})
+		if err := apiClient.SetArchived([]string{dedupKey}, true); err != nil {
+			slog.Error("failed to archive", "path", filePath, "error", err)
+		}
+	}
 }

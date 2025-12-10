@@ -223,8 +223,8 @@ func (a *Api) CommitUpload(
 		uploadTimestamp = time.Now().Unix()
 	}
 
-	var quality int64 = 3
-	if a.saver {
+	var quality int64 = 3 // original
+	if a.quality == "storage-saver" {
 		quality = 1
 		a.Model = "Pixel 2"
 	}

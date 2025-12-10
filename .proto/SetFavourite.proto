@@ -1,0 +1,26 @@
+syntax = "proto3";
+option go_package = "/pb";
+
+message SetFavourite {
+  Field1 field1 = 1;
+  Field2 field2 = 2;
+  Field3 field3 = 3;
+
+  message Field1 {
+    string dedup_key = 2;
+  }
+
+  message Field2 {
+    int64 action = 1; // 1 = favourite, 2 = unfavourite
+  }
+
+  message Field3 {
+    Field1Inner field1 = 1;
+
+    message Field1Inner {
+      Field19 field19 = 19;
+
+      message Field19 {}
+    }
+  }
+}

@@ -17,12 +17,16 @@ type Config struct {
 	Selected                      string   `json:"selected" koanf:"selected"`
 	Proxy                         string   `json:"proxy" koanf:"proxy"`
 	UseQuota                      bool     `json:"useQuota" koanf:"use_quota"`
-	Saver                         bool     `json:"saver" koanf:"saver"`
+	Quality                       string   `json:"quality" koanf:"quality"` // "original" or "storage-saver"
 	Recursive                     bool     `json:"recursive" koanf:"recursive"`
 	ForceUpload                   bool     `json:"forceUpload" koanf:"force_upload"`
 	UploadThreads                 int      `json:"uploadThreads" koanf:"upload_threads"`
 	DeleteFromHost                bool     `json:"deleteFromHost" koanf:"delete_from_host"`
 	DisableUnsupportedFilesFilter bool     `json:"disableUnsupportedFilesFilter" koanf:"disable_unsupported_files_filter"`
+	// Runtime-only fields (not persisted to config file)
+	Caption         string `json:"-" koanf:"-"` // Caption to set on uploaded files
+	ShouldFavourite bool   `json:"-" koanf:"-"` // Mark uploaded files as favourites
+	ShouldArchive   bool   `json:"-" koanf:"-"` // Archive uploaded files
 }
 
 type ConfigManager struct{}
@@ -33,6 +37,7 @@ var ConfigPath string
 var AuthOverride string // Auth string from --auth flag, overrides config
 var DefaultConfig = Config{
 	UploadThreads: 3,
+	Quality:       "original",
 }
 
 // ParseAuthString parses an auth string and returns url.Values (exported for CLI use)
@@ -56,9 +61,11 @@ func (g *ConfigManager) SetUseQuota(useQuota bool) {
 	saveAppConfig()
 }
 
-func (g *ConfigManager) SetSaver(saver bool) {
-	AppConfig.Saver = saver
-	saveAppConfig()
+func (g *ConfigManager) SetQuality(quality string) {
+	if quality == "original" || quality == "storage-saver" {
+		AppConfig.Quality = quality
+		saveAppConfig()
+	}
 }
 
 func (g *ConfigManager) SetRecursive(recursive bool) {
@@ -252,6 +259,11 @@ func loadAppConfig() Config {
 
 	if c.UploadThreads < 1 {
 		c.UploadThreads = DefaultConfig.UploadThreads
+	}
+
+	// Set default quality if not set
+	if c.Quality == "" {
+		c.Quality = DefaultConfig.Quality
 	}
 
 	return c

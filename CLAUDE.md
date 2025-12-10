@@ -36,3 +36,7 @@ Event types: `uploadStart`, `ThreadStatus`, `FileStatus`, `uploadStop`
 ### Config File
 
 Config is stored in `./gpcli.config` (YAML) or custom path via `--config` flag. Contains credentials array and upload settings.
+
+## Rules
+
+- always implement root fixes and never add patch fixes

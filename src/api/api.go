@@ -18,7 +18,7 @@ type ApiConfig struct {
 	Selected     string   // Selected email from config
 	Credentials  []string // All stored credentials
 	Proxy        string   // Proxy URL
-	Saver        bool     // Use storage-saver quality
+	Quality      string   // "original" or "storage-saver"
 	UseQuota     bool     // Files count against quota
 }
 
@@ -33,7 +33,7 @@ type Api struct {
 	AuthData          string
 	Client            *http.Client
 	authTokenCache    map[string]string
-	saver             bool
+	quality           string // "original" or "storage-saver"
 	useQuota          bool
 }
 
@@ -87,7 +87,7 @@ func NewApi(cfg ApiConfig) (*Api, error) {
 			"Expiry": "0",
 			"Auth":   "",
 		},
-		saver:    cfg.Saver,
+		quality:  cfg.Quality,
 		useQuota: cfg.UseQuota,
 	}
 

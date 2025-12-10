@@ -45,7 +45,7 @@ func (h *humanHandler) Handle(_ context.Context, r slog.Record) error {
 }
 
 func (h *humanHandler) WithAttrs(attrs []slog.Attr) slog.Handler { return h }
-func (h *humanHandler) WithGroup(name string) slog.Handler      { return h }
+func (h *humanHandler) WithGroup(name string) slog.Handler       { return h }
 
 // parseLogLevel converts a string log level to slog.Level
 func parseLogLevel(level string) slog.Level {
@@ -192,8 +192,28 @@ func runCLI() {
 						Name:  "archive",
 						Usage: "Archive uploaded files after upload",
 					},
+					&cli.StringFlag{
+						Name:  "caption",
+						Usage: "Set caption for uploaded files",
+					},
+					&cli.BoolFlag{
+						Name:  "favourite",
+						Usage: "Mark uploaded files as favourites",
+					},
 				},
 				Action: uploadAction,
+			},
+			{
+				Name:      "download-url",
+				Usage:     "Get download URL for a media item",
+				ArgsUsage: "<media_key>",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "original",
+						Usage: "Get original file URL (default: edited if available)",
+					},
+				},
+				Action: downloadURLAction,
 			},
 			{
 				Name:   "auth",
@@ -265,17 +285,16 @@ func uploadAction(c *cli.Context) error {
 
 	// Handle quality flag
 	quality := c.String("quality")
-	if quality == "storage-saver" {
-		src.AppConfig.Saver = true
-	} else if quality != "original" {
+	if quality != "original" && quality != "storage-saver" {
 		return fmt.Errorf("invalid quality: %s (use 'original' or 'storage-saver')", quality)
-	} else {
-		src.AppConfig.Saver = false
 	}
+	src.AppConfig.Quality = quality
 
-	// Get album name and archive flag
+	// Get album name and set runtime config for post-upload operations
 	albumName := c.String("album")
-	shouldArchive := c.Bool("archive")
+	src.AppConfig.ShouldArchive = c.Bool("archive")
+	src.AppConfig.Caption = c.String("caption")
+	src.AppConfig.ShouldFavourite = c.Bool("favourite")
 
 	// Log configuration at start
 	logger.Info("starting upload",
@@ -288,7 +307,9 @@ func uploadAction(c *cli.Context) error {
 		"quality", quality,
 		"use-quota", src.AppConfig.UseQuota,
 		"album", albumName,
-		"archive", shouldArchive,
+		"archive", src.AppConfig.ShouldArchive,
+		"caption", src.AppConfig.Caption,
+		"favourite", src.AppConfig.ShouldFavourite,
 	)
 
 	// Track results
@@ -298,7 +319,6 @@ func uploadAction(c *cli.Context) error {
 	var existing int
 	var failed int
 	var successfulMediaKeys []string
-	var successfulDedupKeys []string
 	done := make(chan struct{})
 
 	// Create CLI app with event callback
@@ -334,12 +354,9 @@ func uploadAction(c *cli.Context) error {
 						"path", result.Path,
 						"media_key", result.MediaKey,
 					)
-					// Collect media key for album and dedup key for archive
+					// Collect media key for album
 					if result.MediaKey != "" {
 						successfulMediaKeys = append(successfulMediaKeys, result.MediaKey)
-					}
-					if result.DedupKey != "" {
-						successfulDedupKeys = append(successfulDedupKeys, result.DedupKey)
 					}
 				} else {
 					uploaded++
@@ -347,12 +364,9 @@ func uploadAction(c *cli.Context) error {
 						"path", result.Path,
 						"media_key", result.MediaKey,
 					)
-					// Collect media key for album and dedup key for archive
+					// Collect media key for album
 					if result.MediaKey != "" {
 						successfulMediaKeys = append(successfulMediaKeys, result.MediaKey)
-					}
-					if result.DedupKey != "" {
-						successfulDedupKeys = append(successfulDedupKeys, result.DedupKey)
 					}
 				}
 			}
@@ -390,7 +404,7 @@ func uploadAction(c *cli.Context) error {
 			Selected:     src.AppConfig.Selected,
 			Credentials:  src.AppConfig.Credentials,
 			Proxy:        src.AppConfig.Proxy,
-			Saver:        src.AppConfig.Saver,
+			Quality:      src.AppConfig.Quality,
 			UseQuota:     src.AppConfig.UseQuota,
 		})
 		if err != nil {
@@ -433,44 +447,63 @@ func uploadAction(c *cli.Context) error {
 		logger.Info("album created", "name", albumName, "album_key", albumMediaKey, "items", len(successfulMediaKeys))
 	}
 
-	// Handle archiving if archive flag was specified
-	if shouldArchive && len(successfulDedupKeys) > 0 {
-		logger.Info("archiving uploaded files", "items", len(successfulDedupKeys))
-
-		apiClient, err := api.NewApi(api.ApiConfig{
-			AuthOverride: src.AuthOverride,
-			Selected:     src.AppConfig.Selected,
-			Credentials:  src.AppConfig.Credentials,
-			Proxy:        src.AppConfig.Proxy,
-			Saver:        src.AppConfig.Saver,
-			UseQuota:     src.AppConfig.UseQuota,
-		})
-		if err != nil {
-			logger.Error("failed to create API client for archiving", "error", err)
-			return fmt.Errorf("failed to create API client: %w", err)
-		}
-
-		// Archive in batches (use same batch size as album)
-		const batchSize = 500
-		for i := 0; i < len(successfulDedupKeys); i += batchSize {
-			end := i + batchSize
-			if end > len(successfulDedupKeys) {
-				end = len(successfulDedupKeys)
-			}
-			err = apiClient.SetArchived(successfulDedupKeys[i:end], true)
-			if err != nil {
-				logger.Error("failed to archive items", "batch_start", i, "error", err)
-			}
-		}
-
-		logger.Info("files archived", "items", len(successfulDedupKeys))
-	}
+	// Note: Caption, favourite, and archive operations are now executed immediately
+	// after each file upload in the upload worker (src/upload.go postUploadOps)
 
 	return nil
 }
 
 func loadConfig() error {
 	return src.LoadConfig()
+}
+
+func downloadURLAction(c *cli.Context) error {
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	mediaKey := c.Args().First()
+	if mediaKey == "" {
+		return fmt.Errorf("media_key is required")
+	}
+
+	getOriginal := c.Bool("original")
+
+	apiClient, err := api.NewApi(api.ApiConfig{
+		AuthOverride: src.AuthOverride,
+		Selected:     src.AppConfig.Selected,
+		Credentials:  src.AppConfig.Credentials,
+		Proxy:        src.AppConfig.Proxy,
+		Quality:      src.AppConfig.Quality,
+		UseQuota:     src.AppConfig.UseQuota,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	editedURL, originalURL, err := apiClient.GetDownloadUrls(mediaKey)
+	if err != nil {
+		return fmt.Errorf("failed to get download URLs: %w", err)
+	}
+
+	if getOriginal {
+		if originalURL != "" {
+			fmt.Println(originalURL)
+		} else {
+			return fmt.Errorf("original URL not available")
+		}
+	} else {
+		// Prefer edited URL, fallback to original
+		if editedURL != "" {
+			fmt.Println(editedURL)
+		} else if originalURL != "" {
+			fmt.Println(originalURL)
+		} else {
+			return fmt.Errorf("no download URL available")
+		}
+	}
+
+	return nil
 }
 
 func authInfoAction(c *cli.Context) error {

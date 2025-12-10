@@ -1,0 +1,63 @@
+syntax = "proto3";
+option go_package = "/pb";
+
+message GetDownloadUrls {
+  Field1 field1 = 1;
+  Field2 field2 = 2;
+
+  message Field1 {
+    Field1Inner field1 = 1;
+
+    message Field1Inner {
+      string media_key = 1;
+    }
+  }
+
+  message Field2 {
+    Field1Type field1 = 1;
+    Field5Type field5 = 5;
+
+    message Field1Type {
+      Field7Type field7 = 7;
+
+      message Field7Type {
+        Field2Type field2 = 2;
+
+        message Field2Type {}
+      }
+    }
+
+    message Field5Type {
+      Field2Type field2 = 2;
+      Field3Type field3 = 3;
+      Field5Inner field5 = 5;
+
+      message Field2Type {}
+      message Field3Type {}
+
+      message Field5Inner {
+        Field1Type field1 = 1;
+        int64 field3 = 3;
+
+        message Field1Type {}
+      }
+    }
+  }
+}
+
+message GetDownloadUrlsResponse {
+  Field1 field1 = 1;
+
+  message Field1 {
+    Field5 field5 = 5;
+
+    message Field5 {
+      Field2 field2 = 2;
+
+      message Field2 {
+        string edited_url = 5;
+        string original_url = 6;
+      }
+    }
+  }
+}
