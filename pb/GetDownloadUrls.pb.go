@@ -647,7 +647,8 @@ func (x *GetDownloadUrlsResponse_Field1) GetField5() *GetDownloadUrlsResponse_Fi
 
 type GetDownloadUrlsResponse_Field1_Field5 struct {
 	state         protoimpl.MessageState                        `protogen:"open.v1"`
-	Field2        *GetDownloadUrlsResponse_Field1_Field5_Field2 `protobuf:"bytes,2,opt,name=field2,proto3" json:"field2,omitempty"`
+	Field1        int64                                         `protobuf:"varint,1,opt,name=field1,proto3" json:"field1,omitempty"`
+	Field3        *GetDownloadUrlsResponse_Field1_Field5_Field3 `protobuf:"bytes,3,opt,name=field3,proto3" json:"field3,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -682,35 +683,43 @@ func (*GetDownloadUrlsResponse_Field1_Field5) Descriptor() ([]byte, []int) {
 	return file___proto_GetDownloadUrls_proto_rawDescGZIP(), []int{1, 0, 0}
 }
 
-func (x *GetDownloadUrlsResponse_Field1_Field5) GetField2() *GetDownloadUrlsResponse_Field1_Field5_Field2 {
+func (x *GetDownloadUrlsResponse_Field1_Field5) GetField1() int64 {
 	if x != nil {
-		return x.Field2
+		return x.Field1
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlsResponse_Field1_Field5) GetField3() *GetDownloadUrlsResponse_Field1_Field5_Field3 {
+	if x != nil {
+		return x.Field3
 	}
 	return nil
 }
 
-type GetDownloadUrlsResponse_Field1_Field5_Field2 struct {
+type GetDownloadUrlsResponse_Field1_Field5_Field3 struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	EditedUrl     string                 `protobuf:"bytes,5,opt,name=edited_url,json=editedUrl,proto3" json:"edited_url,omitempty"`
-	OriginalUrl   string                 `protobuf:"bytes,6,opt,name=original_url,json=originalUrl,proto3" json:"original_url,omitempty"`
+	Field1        string                 `protobuf:"bytes,1,opt,name=field1,proto3" json:"field1,omitempty"`
+	Field3        int64                  `protobuf:"varint,3,opt,name=field3,proto3" json:"field3,omitempty"`
+	DownloadUrl   string                 `protobuf:"bytes,5,opt,name=download_url,json=downloadUrl,proto3" json:"download_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetDownloadUrlsResponse_Field1_Field5_Field2) Reset() {
-	*x = GetDownloadUrlsResponse_Field1_Field5_Field2{}
+func (x *GetDownloadUrlsResponse_Field1_Field5_Field3) Reset() {
+	*x = GetDownloadUrlsResponse_Field1_Field5_Field3{}
 	mi := &file___proto_GetDownloadUrls_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDownloadUrlsResponse_Field1_Field5_Field2) String() string {
+func (x *GetDownloadUrlsResponse_Field1_Field5_Field3) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDownloadUrlsResponse_Field1_Field5_Field2) ProtoMessage() {}
+func (*GetDownloadUrlsResponse_Field1_Field5_Field3) ProtoMessage() {}
 
-func (x *GetDownloadUrlsResponse_Field1_Field5_Field2) ProtoReflect() protoreflect.Message {
+func (x *GetDownloadUrlsResponse_Field1_Field5_Field3) ProtoReflect() protoreflect.Message {
 	mi := &file___proto_GetDownloadUrls_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -722,21 +731,28 @@ func (x *GetDownloadUrlsResponse_Field1_Field5_Field2) ProtoReflect() protorefle
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDownloadUrlsResponse_Field1_Field5_Field2.ProtoReflect.Descriptor instead.
-func (*GetDownloadUrlsResponse_Field1_Field5_Field2) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetDownloadUrlsResponse_Field1_Field5_Field3.ProtoReflect.Descriptor instead.
+func (*GetDownloadUrlsResponse_Field1_Field5_Field3) Descriptor() ([]byte, []int) {
 	return file___proto_GetDownloadUrls_proto_rawDescGZIP(), []int{1, 0, 0, 0}
 }
 
-func (x *GetDownloadUrlsResponse_Field1_Field5_Field2) GetEditedUrl() string {
+func (x *GetDownloadUrlsResponse_Field1_Field5_Field3) GetField1() string {
 	if x != nil {
-		return x.EditedUrl
+		return x.Field1
 	}
 	return ""
 }
 
-func (x *GetDownloadUrlsResponse_Field1_Field5_Field2) GetOriginalUrl() string {
+func (x *GetDownloadUrlsResponse_Field1_Field5_Field3) GetField3() int64 {
 	if x != nil {
-		return x.OriginalUrl
+		return x.Field3
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlsResponse_Field1_Field5_Field3) GetDownloadUrl() string {
+	if x != nil {
+		return x.DownloadUrl
 	}
 	return ""
 }
@@ -777,17 +793,18 @@ const file___proto_GetDownloadUrls_proto_rawDesc = "" +
 	"\x06field1\x18\x01 \x01(\v29.GetDownloadUrls.Field2.Field5Type.Field5Inner.Field1TypeR\x06field1\x12\x16\n" +
 	"\x06field3\x18\x03 \x01(\x03R\x06field3\x1a\f\n" +
 	"\n" +
-	"Field1Type\"\xbb\x02\n" +
+	"Field1Type\"\xe4\x02\n" +
 	"\x17GetDownloadUrlsResponse\x127\n" +
-	"\x06field1\x18\x01 \x01(\v2\x1f.GetDownloadUrlsResponse.Field1R\x06field1\x1a\xe6\x01\n" +
+	"\x06field1\x18\x01 \x01(\v2\x1f.GetDownloadUrlsResponse.Field1R\x06field1\x1a\x8f\x02\n" +
 	"\x06Field1\x12>\n" +
-	"\x06field5\x18\x05 \x01(\v2&.GetDownloadUrlsResponse.Field1.Field5R\x06field5\x1a\x9b\x01\n" +
-	"\x06Field5\x12E\n" +
-	"\x06field2\x18\x02 \x01(\v2-.GetDownloadUrlsResponse.Field1.Field5.Field2R\x06field2\x1aJ\n" +
-	"\x06Field2\x12\x1d\n" +
-	"\n" +
-	"edited_url\x18\x05 \x01(\tR\teditedUrl\x12!\n" +
-	"\foriginal_url\x18\x06 \x01(\tR\voriginalUrlB\x05Z\x03/pbb\x06proto3"
+	"\x06field5\x18\x05 \x01(\v2&.GetDownloadUrlsResponse.Field1.Field5R\x06field5\x1a\xc4\x01\n" +
+	"\x06Field5\x12\x16\n" +
+	"\x06field1\x18\x01 \x01(\x03R\x06field1\x12E\n" +
+	"\x06field3\x18\x03 \x01(\v2-.GetDownloadUrlsResponse.Field1.Field5.Field3R\x06field3\x1a[\n" +
+	"\x06Field3\x12\x16\n" +
+	"\x06field1\x18\x01 \x01(\tR\x06field1\x12\x16\n" +
+	"\x06field3\x18\x03 \x01(\x03R\x06field3\x12!\n" +
+	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrlB\x05Z\x03/pbb\x06proto3"
 
 var (
 	file___proto_GetDownloadUrls_proto_rawDescOnce sync.Once
@@ -818,7 +835,7 @@ var file___proto_GetDownloadUrls_proto_goTypes = []any{
 	(*GetDownloadUrls_Field2_Field5Type_Field5Inner_Field1Type)(nil), // 12: GetDownloadUrls.Field2.Field5Type.Field5Inner.Field1Type
 	(*GetDownloadUrlsResponse_Field1)(nil),                           // 13: GetDownloadUrlsResponse.Field1
 	(*GetDownloadUrlsResponse_Field1_Field5)(nil),                    // 14: GetDownloadUrlsResponse.Field1.Field5
-	(*GetDownloadUrlsResponse_Field1_Field5_Field2)(nil),             // 15: GetDownloadUrlsResponse.Field1.Field5.Field2
+	(*GetDownloadUrlsResponse_Field1_Field5_Field3)(nil),             // 15: GetDownloadUrlsResponse.Field1.Field5.Field3
 }
 var file___proto_GetDownloadUrls_proto_depIdxs = []int32{
 	2,  // 0: GetDownloadUrls.field1:type_name -> GetDownloadUrls.Field1
@@ -834,7 +851,7 @@ var file___proto_GetDownloadUrls_proto_depIdxs = []int32{
 	8,  // 10: GetDownloadUrls.Field2.Field1Type.Field7Type.field2:type_name -> GetDownloadUrls.Field2.Field1Type.Field7Type.Field2Type
 	12, // 11: GetDownloadUrls.Field2.Field5Type.Field5Inner.field1:type_name -> GetDownloadUrls.Field2.Field5Type.Field5Inner.Field1Type
 	14, // 12: GetDownloadUrlsResponse.Field1.field5:type_name -> GetDownloadUrlsResponse.Field1.Field5
-	15, // 13: GetDownloadUrlsResponse.Field1.Field5.field2:type_name -> GetDownloadUrlsResponse.Field1.Field5.Field2
+	15, // 13: GetDownloadUrlsResponse.Field1.Field5.field3:type_name -> GetDownloadUrlsResponse.Field1.Field5.Field3
 	14, // [14:14] is the sub-list for method output_type
 	14, // [14:14] is the sub-list for method input_type
 	14, // [14:14] is the sub-list for extension type_name

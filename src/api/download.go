@@ -96,9 +96,11 @@ func (a *Api) GetDownloadUrls(mediaKey string) (editedURL, originalURL string, e
 		return "", "", fmt.Errorf("failed to unmarshal protobuf: %w", err)
 	}
 
-	if response.GetField1() != nil && response.GetField1().GetField5() != nil && response.GetField1().GetField5().GetField2() != nil {
-		editedURL = response.GetField1().GetField5().GetField2().GetEditedUrl()
-		originalURL = response.GetField1().GetField5().GetField2().GetOriginalUrl()
+	if response.GetField1() != nil && response.GetField1().GetField5() != nil && response.GetField1().GetField5().GetField3() != nil {
+		downloadURL := response.GetField1().GetField5().GetField3().GetDownloadUrl()
+		// The API returns a single download URL for both edited and original
+		editedURL = downloadURL
+		originalURL = downloadURL
 	}
 
 	return editedURL, originalURL, nil
