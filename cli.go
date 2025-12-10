@@ -204,16 +204,25 @@ func runCLI() {
 				Action: uploadAction,
 			},
 			{
-				Name:      "download-url",
-				Usage:     "Get download URL for a media item",
+				Name:      "download",
+				Usage:     "Download a media item by media key",
 				ArgsUsage: "<media_key>",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "original",
-						Usage: "Get original file URL (default: edited if available)",
+						Usage: "Download original file (default: edited if available)",
+					},
+					&cli.BoolFlag{
+						Name:  "url",
+						Usage: "Only print download URL without downloading",
+					},
+					&cli.StringFlag{
+						Name:  "output",
+						Aliases: []string{"o"},
+						Usage: "Output path (file path or directory)",
 					},
 				},
-				Action: downloadURLAction,
+				Action: downloadAction,
 			},
 			{
 				Name:   "auth",
@@ -457,7 +466,7 @@ func loadConfig() error {
 	return src.LoadConfig()
 }
 
-func downloadURLAction(c *cli.Context) error {
+func downloadAction(c *cli.Context) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -468,6 +477,8 @@ func downloadURLAction(c *cli.Context) error {
 	}
 
 	getOriginal := c.Bool("original")
+	urlOnly := c.Bool("url")
+	outputPath := c.String("output")
 
 	apiClient, err := api.NewApi(api.ApiConfig{
 		AuthOverride: src.AuthOverride,
@@ -486,24 +497,33 @@ func downloadURLAction(c *cli.Context) error {
 		return fmt.Errorf("failed to get download URLs: %w", err)
 	}
 
+	// Select the URL to use
+	var downloadURL string
 	if getOriginal {
 		if originalURL != "" {
-			fmt.Println(originalURL)
+			downloadURL = originalURL
 		} else {
 			return fmt.Errorf("original URL not available")
 		}
 	} else {
 		// Prefer edited URL, fallback to original
 		if editedURL != "" {
-			fmt.Println(editedURL)
+			downloadURL = editedURL
 		} else if originalURL != "" {
-			fmt.Println(originalURL)
+			downloadURL = originalURL
 		} else {
 			return fmt.Errorf("no download URL available")
 		}
 	}
 
-	return nil
+	// If --url flag is set, just print the URL and exit
+	if urlOnly {
+		fmt.Println(downloadURL)
+		return nil
+	}
+
+	// Download the file
+	return downloadFile(apiClient, downloadURL, outputPath)
 }
 
 func authInfoAction(c *cli.Context) error {
