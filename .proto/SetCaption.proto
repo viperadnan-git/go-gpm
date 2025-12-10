@@ -1,0 +1,7 @@
+syntax = "proto3";
+option go_package = "/pb";
+
+message SetCaption {
+  string caption = 2;
+  string item_key = 3; // mediaKey or dedupKey
+}

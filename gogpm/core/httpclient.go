@@ -1,4 +1,4 @@
-package src
+package core
 
 import (
 	"io"
@@ -17,6 +17,7 @@ func SetHTTPClientLogger(logger *log.Logger) {
 	httpClientLogger = logger
 }
 
+// NewHTTPClientWithProxy creates a new HTTP client with optional proxy support
 func NewHTTPClientWithProxy(proxyURLStr string) (*http.Client, error) {
 	// Create the base transport with default values
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -35,9 +36,9 @@ func NewHTTPClientWithProxy(proxyURLStr string) (*http.Client, error) {
 	// Create retryable client with proper configuration
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 3
-	retryClient.RetryWaitMin = 1 * time.Second   // Start with 1 second
-	retryClient.RetryWaitMax = 30 * time.Second  // Maximum wait time
-	retryClient.HTTPClient.Transport = transport // Set transport here
+	retryClient.RetryWaitMin = 1 * time.Second  // Start with 1 second
+	retryClient.RetryWaitMax = 30 * time.Second // Maximum wait time
+	retryClient.HTTPClient.Transport = transport
 
 	// Configure logger based on global setting
 	if httpClientLogger != nil {
