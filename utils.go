@@ -130,6 +130,10 @@ func writeToFile(filePath string, reader io.Reader) error {
 // Otherwise returns input as-is (assumed to be mediaKey or dedupKey)
 // Use this for APIs that accept both mediaKey and dedupKey (delete, archive, favourite, caption)
 func ResolveItemKey(ctx context.Context, input string) (string, error) {
+	if input == "" {
+		return "", fmt.Errorf("item key or file path is required")
+	}
+
 	// Check if input is a file path by trying to stat it
 	if _, err := os.Stat(input); err == nil {
 		// File exists, calculate SHA1 and convert to dedup key
@@ -148,6 +152,10 @@ func ResolveItemKey(ctx context.Context, input string) (string, error) {
 // Otherwise returns input as-is (assumed to be mediaKey)
 // Use this for APIs that require mediaKey (thumbnail, download)
 func ResolveMediaKey(ctx context.Context, apiClient *core.Api, input string) (string, error) {
+	if input == "" {
+		return "", fmt.Errorf("item key or file path is required")
+	}
+
 	// Check if input is a file path by trying to stat it
 	if _, err := os.Stat(input); err == nil {
 		// File exists, calculate SHA1 and look up mediaKey

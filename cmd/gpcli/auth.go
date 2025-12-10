@@ -62,15 +62,11 @@ func authInfoAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func credentialsAddAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 1 {
-		return fmt.Errorf("auth-string required")
-	}
-
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	authString := strings.TrimSpace(cmd.Args().First())
+	authString := strings.TrimSpace(cmd.StringArg("auth-string"))
 
 	if err := cfgManager.AddCredentials(authString); err != nil {
 		return fmt.Errorf("invalid credentials: %w", err)
@@ -81,15 +77,11 @@ func credentialsAddAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func credentialsRemoveAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 1 {
-		return fmt.Errorf("number or email required")
-	}
-
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	arg := cmd.Args().First()
+	arg := cmd.StringArg("identifier")
 	config := cfgManager.GetConfig()
 
 	email, err := resolveEmailFromArg(arg, config.Credentials)
@@ -106,15 +98,11 @@ func credentialsRemoveAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func credentialsSetAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 1 {
-		return fmt.Errorf("number or email required")
-	}
-
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 
-	arg := cmd.Args().First()
+	arg := cmd.StringArg("identifier")
 	config := cfgManager.GetConfig()
 
 	email, err := resolveEmailFromArg(arg, config.Credentials)

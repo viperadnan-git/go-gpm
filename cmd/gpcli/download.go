@@ -15,11 +15,7 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	cfg := cfgManager.GetConfig()
 
-	input := cmd.Args().First()
-	if input == "" {
-		return fmt.Errorf("item key or file path required")
-	}
-
+	input := cmd.StringArg("input")
 	urlOnly := cmd.Bool("url")
 	outputPath := cmd.String("output")
 
@@ -76,11 +72,7 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	cfg := cfgManager.GetConfig()
 
-	input := cmd.Args().First()
-	if input == "" {
-		return fmt.Errorf("item key or file path required")
-	}
-
+	input := cmd.StringArg("input")
 	outputPath := cmd.String("output")
 	width := int(cmd.Int("width"))
 	height := int(cmd.Int("height"))

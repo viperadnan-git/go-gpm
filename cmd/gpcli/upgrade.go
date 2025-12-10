@@ -11,10 +11,7 @@ import (
 
 func upgradeAction(ctx context.Context, cmd *cli.Command) error {
 	// Get target version (empty string = latest)
-	targetVersion := ""
-	if cmd.NArg() > 0 {
-		targetVersion = cmd.Args().First()
-	}
+	targetVersion := cmd.StringArg("version")
 	checkOnly := cmd.Bool("check")
 
 	// Configure updater for GitHub

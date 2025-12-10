@@ -12,11 +12,7 @@ import (
 )
 
 func uploadAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 1 {
-		return fmt.Errorf("filepath required")
-	}
-
-	filePath := cmd.Args().First()
+	filePath := cmd.StringArg("filepath")
 
 	// Validate that filepath exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {

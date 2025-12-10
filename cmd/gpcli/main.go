@@ -73,9 +73,14 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			{
-				Name:      "upload",
-				Usage:     "Upload a file or directory to Google Photos",
-				ArgsUsage: "[flags] <filepath>",
+				Name:  "upload",
+				Usage: "Upload a file or directory to Google Photos",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name: "filepath",
+						UsageText: "Path to the file or directory to upload",
+					},
+				},
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "recursive",
@@ -134,9 +139,14 @@ func main() {
 				Action: uploadAction,
 			},
 			{
-				Name:      "download",
-				Usage:     "Download a media item",
-				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Name:  "download",
+				Usage: "Download a media item",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "Media key, dedup key, or file path",
+					},
+				},
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "url",
@@ -151,9 +161,14 @@ func main() {
 				Action: downloadAction,
 			},
 			{
-				Name:      "thumbnail",
-				Usage:     "Download thumbnail for a media item",
-				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Name:  "thumbnail",
+				Usage: "Download thumbnail for a media item",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "Media key, dedup key, or file path",
+					},
+				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "output",
@@ -186,10 +201,15 @@ func main() {
 				Action: authInfoAction,
 				Commands: []*cli.Command{
 					{
-						Name:      "add",
-						Usage:     "Add a new authentication",
-						ArgsUsage: "<auth-string>",
-						Action:    credentialsAddAction,
+						Name:  "add",
+						Usage: "Add a new authentication",
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name:      "auth-string",
+								UsageText: "Authentication string from browser",
+							},
+						},
+						Action: credentialsAddAction,
 					},
 					{
 						Name:    "list",
@@ -198,24 +218,39 @@ func main() {
 						Action:  authInfoAction,
 					},
 					{
-						Name:      "remove",
-						Aliases:   []string{"rm"},
-						Usage:     "Remove an authentication by number or email",
-						ArgsUsage: "<number|email>",
-						Action:    credentialsRemoveAction,
+						Name:    "remove",
+						Aliases: []string{"rm"},
+						Usage:   "Remove an authentication by number or email",
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name:      "identifier",
+								UsageText: "Account number or email address",
+							},
+						},
+						Action: credentialsRemoveAction,
 					},
 					{
-						Name:      "set",
-						Usage:     "Set active authentication by number or email",
-						ArgsUsage: "<number|email>",
-						Action:    credentialsSetAction,
+						Name:  "set",
+						Usage: "Set active authentication by number or email",
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name:      "identifier",
+								UsageText: "Account number or email address",
+							},
+						},
+						Action: credentialsSetAction,
 					},
 				},
 			},
 			{
-				Name:      "delete",
-				Usage:     "Move item to trash or restore from trash",
-				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Name:  "delete",
+				Usage: "Move item to trash or restore from trash",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "Media key, dedup key, or file path",
+					},
+				},
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "restore",
@@ -226,9 +261,14 @@ func main() {
 				Action: deleteAction,
 			},
 			{
-				Name:      "archive",
-				Usage:     "Archive or unarchive item",
-				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Name:  "archive",
+				Usage: "Archive or unarchive item",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "Media key, dedup key, or file path",
+					},
+				},
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "unarchive",
@@ -239,9 +279,14 @@ func main() {
 				Action: archiveAction,
 			},
 			{
-				Name:      "favourite",
-				Usage:     "Add or remove favourite status",
-				ArgsUsage: "<media_key|dedup_key|file_path>",
+				Name:  "favourite",
+				Usage: "Add or remove favourite status",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "Media key, dedup key, or file path",
+					},
+				},
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "remove",
@@ -252,15 +297,29 @@ func main() {
 				Action: favouriteAction,
 			},
 			{
-				Name:      "caption",
-				Usage:     "Set item caption",
-				ArgsUsage: "<media_key|dedup_key|file_path> <caption>",
-				Action:    captionAction,
+				Name:  "caption",
+				Usage: "Set item caption",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "Media key, dedup key, or file path",
+					},
+					&cli.StringArg{
+						Name:      "caption",
+						UsageText: "Caption text to set",
+					},
+				},
+				Action: captionAction,
 			},
 			{
-				Name:      "upgrade",
-				Usage:     "Upgrade gpcli to latest or specific version",
-				ArgsUsage: "[version]",
+				Name:  "upgrade",
+				Usage: "Upgrade gpcli to latest or specific version",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "version",
+						UsageText: "Target version (optional, defaults to latest)",
+					},
+				},
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "check",

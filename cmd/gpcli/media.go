@@ -10,16 +10,12 @@ import (
 )
 
 func deleteAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 1 {
-		return fmt.Errorf("item key or file path required")
-	}
-
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 	cfg := cfgManager.GetConfig()
 
-	input := cmd.Args().First()
+	input := cmd.StringArg("input")
 	restore := cmd.Bool("restore")
 
 	itemKey, err := gogpm.ResolveItemKey(ctx, input)
@@ -56,16 +52,12 @@ func deleteAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func archiveAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 1 {
-		return fmt.Errorf("item key or file path required")
-	}
-
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 	cfg := cfgManager.GetConfig()
 
-	input := cmd.Args().First()
+	input := cmd.StringArg("input")
 	unarchive := cmd.Bool("unarchive")
 
 	itemKey, err := gogpm.ResolveItemKey(ctx, input)
@@ -101,16 +93,12 @@ func archiveAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func favouriteAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 1 {
-		return fmt.Errorf("item key or file path required")
-	}
-
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 	cfg := cfgManager.GetConfig()
 
-	input := cmd.Args().First()
+	input := cmd.StringArg("input")
 	remove := cmd.Bool("remove")
 
 	itemKey, err := gogpm.ResolveItemKey(ctx, input)
@@ -146,17 +134,13 @@ func favouriteAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func captionAction(ctx context.Context, cmd *cli.Command) error {
-	if cmd.NArg() < 2 {
-		return fmt.Errorf("item key/file path and caption required")
-	}
-
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 	cfg := cfgManager.GetConfig()
 
-	input := cmd.Args().First()
-	caption := cmd.Args().Get(1)
+	input := cmd.StringArg("input")
+	caption := cmd.StringArg("caption")
 
 	itemKey, err := gogpm.ResolveItemKey(ctx, input)
 	if err != nil {
