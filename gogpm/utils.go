@@ -1,6 +1,7 @@
 package gogpm
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gpcli/gogpm/core"
 )
 
 // DownloadFromReader saves data from an io.Reader to the specified output path
@@ -120,4 +123,47 @@ func writeToFile(filePath string, reader io.Reader) error {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 	return nil
+}
+
+// ResolveItemKey resolves input to an item key (dedupKey for file paths)
+// If input is a file path (file exists on disk), calculates SHA1 and converts to dedup key
+// Otherwise returns input as-is (assumed to be mediaKey or dedupKey)
+// Use this for APIs that accept both mediaKey and dedupKey (delete, archive, favourite, caption)
+func ResolveItemKey(ctx context.Context, input string) (string, error) {
+	// Check if input is a file path by trying to stat it
+	if _, err := os.Stat(input); err == nil {
+		// File exists, calculate SHA1 and convert to dedup key
+		hash, err := CalculateSHA1(ctx, input)
+		if err != nil {
+			return "", fmt.Errorf("failed to calculate SHA1: %w", err)
+		}
+		return core.SHA1ToDedupeKey(hash), nil
+	}
+	// Assume it's already a media key or dedup key
+	return input, nil
+}
+
+// ResolveMediaKey resolves input to a mediaKey
+// If input is a file path, calculates SHA1 and looks up mediaKey via API
+// Otherwise returns input as-is (assumed to be mediaKey)
+// Use this for APIs that require mediaKey (thumbnail, download)
+func ResolveMediaKey(ctx context.Context, apiClient *core.Api, input string) (string, error) {
+	// Check if input is a file path by trying to stat it
+	if _, err := os.Stat(input); err == nil {
+		// File exists, calculate SHA1 and look up mediaKey
+		hash, err := CalculateSHA1(ctx, input)
+		if err != nil {
+			return "", fmt.Errorf("failed to calculate SHA1: %w", err)
+		}
+		mediaKey, err := apiClient.FindRemoteMediaByHash(hash)
+		if err != nil {
+			return "", fmt.Errorf("failed to find media in library: %w", err)
+		}
+		if mediaKey == "" {
+			return "", fmt.Errorf("file not found in Google Photos library")
+		}
+		return mediaKey, nil
+	}
+	// Assume it's already a media key
+	return input, nil
 }

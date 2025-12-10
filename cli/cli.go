@@ -213,8 +213,8 @@ func Run() {
 			},
 			{
 				Name:      "download",
-				Usage:     "Download a media item by media key",
-				ArgsUsage: "<media_key>",
+				Usage:     "Download a media item",
+				ArgsUsage: "<media_key|dedup_key|file_path>",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "original",
@@ -235,7 +235,7 @@ func Run() {
 			{
 				Name:      "thumbnail",
 				Usage:     "Download thumbnail for a media item",
-				ArgsUsage: "<media_key>",
+				ArgsUsage: "<media_key|dedup_key|file_path>",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "output",
@@ -302,6 +302,7 @@ func Run() {
 					&cli.BoolFlag{
 						Name:  "restore",
 						Usage: "Restore from trash instead of delete",
+						Aliases: []string{"r"},
 					},
 				},
 				Action: deleteAction,
@@ -313,7 +314,7 @@ func Run() {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "unarchive",
-						Aliases: []string{"u"},
+						Aliases: []string{"r","u"},
 						Usage:   "Unarchive instead of archive",
 					},
 				},
@@ -531,9 +532,9 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	cfg := cfgManager.GetConfig()
 
-	mediaKey := cmd.Args().First()
-	if mediaKey == "" {
-		return fmt.Errorf("media_key is required")
+	input := cmd.Args().First()
+	if input == "" {
+		return fmt.Errorf("item key or file path required")
 	}
 
 	getOriginal := cmd.Bool("original")
@@ -551,6 +552,11 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	mediaKey, err := gogpm.ResolveMediaKey(ctx, apiClient, input)
+	if err != nil {
+		return err
 	}
 
 	if !urlOnly {
@@ -607,9 +613,9 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	cfg := cfgManager.GetConfig()
 
-	mediaKey := cmd.Args().First()
-	if mediaKey == "" {
-		return fmt.Errorf("media_key is required")
+	input := cmd.Args().First()
+	if input == "" {
+		return fmt.Errorf("item key or file path required")
 	}
 
 	outputPath := cmd.String("output")
@@ -629,6 +635,11 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	mediaKey, err := gogpm.ResolveMediaKey(ctx, apiClient, input)
+	if err != nil {
+		return err
 	}
 
 	logger.Info("downloading thumbnail", "media_key", mediaKey)
@@ -780,7 +791,7 @@ func deleteAction(ctx context.Context, cmd *cli.Command) error {
 	input := cmd.Args().First()
 	restore := cmd.Bool("restore")
 
-	itemKey, err := resolveItemKey(ctx, input)
+	itemKey, err := gogpm.ResolveItemKey(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -828,7 +839,7 @@ func archiveAction(ctx context.Context, cmd *cli.Command) error {
 	input := cmd.Args().First()
 	unarchive := cmd.Bool("unarchive")
 
-	itemKey, err := resolveItemKey(ctx, input)
+	itemKey, err := gogpm.ResolveItemKey(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -879,7 +890,7 @@ func favouriteAction(ctx context.Context, cmd *cli.Command) error {
 	input := cmd.Args().First()
 	remove := cmd.Bool("remove")
 
-	itemKey, err := resolveItemKey(ctx, input)
+	itemKey, err := gogpm.ResolveItemKey(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -930,7 +941,7 @@ func captionAction(ctx context.Context, cmd *cli.Command) error {
 	input := cmd.Args().First()
 	caption := cmd.Args().Get(1)
 
-	itemKey, err := resolveItemKey(ctx, input)
+	itemKey, err := gogpm.ResolveItemKey(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -965,22 +976,6 @@ func containsSubstring(str, substr string) bool {
 	return strings.Contains(strLower, substrLower)
 }
 
-// resolveItemKey resolves input to an item key
-// If input is a file path (file exists on disk), calculates SHA1 and converts to dedup key
-// Otherwise returns input as-is (assumed to be mediaKey or dedupKey)
-func resolveItemKey(ctx context.Context, input string) (string, error) {
-	// Check if input is a file path by trying to stat it
-	if _, err := os.Stat(input); err == nil {
-		// File exists, calculate SHA1 and convert to dedup key
-		hash, err := gogpm.CalculateSHA1(ctx, input)
-		if err != nil {
-			return "", fmt.Errorf("failed to calculate SHA1: %w", err)
-		}
-		return core.SHA1ToDedupeKey(hash), nil
-	}
-	// Assume it's already a media key or dedup key
-	return input, nil
-}
 
 // resolveEmailFromArg resolves an email from either an index number (1-based) or email string
 func resolveEmailFromArg(arg string, credentials []string) (string, error) {
