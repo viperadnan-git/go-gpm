@@ -26,6 +26,7 @@ type RequestConfig struct {
 	Context           context.Context   // Request context
 	StreamingResponse bool              // Return body as stream (caller closes)
 	CheckStatus       bool              // Check response status with checkResponse
+	ChunkedTransfer   bool              // Enable chunked transfer encoding
 }
 
 // RequestOption modifies a RequestConfig
@@ -71,6 +72,11 @@ func WithStreamingResponse() RequestOption {
 // WithStatusCheck enables response status validation via checkResponse
 func WithStatusCheck() RequestOption {
 	return func(c *RequestConfig) { c.CheckStatus = true }
+}
+
+// WithChunkedTransfer enables chunked transfer encoding (ContentLength = -1)
+func WithChunkedTransfer() RequestOption {
+	return func(c *RequestConfig) { c.ChunkedTransfer = true }
 }
 
 // ApiConfig holds the configuration needed to create an API client
@@ -338,6 +344,11 @@ func (a *Api) DoRequest(url string, body io.Reader, opts ...RequestOption) ([]by
 	req, err := http.NewRequestWithContext(cfg.Context, cfg.Method, url, body)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Enable chunked transfer if requested
+	if cfg.ChunkedTransfer {
+		req.ContentLength = -1
 	}
 
 	// Apply headers

@@ -5,8 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -90,43 +88,17 @@ func (a *Api) UploadFile(ctx context.Context, filePath string, uploadToken strin
 
 	uploadURL := "https://photos.googleapis.com/data/upload/uploadmedia/interactive?upload_id=" + uploadToken
 
-	req, err := http.NewRequestWithContext(ctx, "PUT", uploadURL, file)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	// Enable chunked transfer encoding
-	req.ContentLength = -1
-
-	bearerToken, err := a.BearerToken()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get bearer token: %w", err)
-	}
-
-	headers := map[string]string{
-		"Accept-Encoding": "gzip",
-		"Accept-Language": a.Language,
-		"User-Agent":      a.UserAgent,
-		"Authorization":   "Bearer " + bearerToken,
-	}
-
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-
-	resp, err := a.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if err := checkResponse(resp); err != nil {
+	bodyBytes, _, err := a.DoRequest(
+		uploadURL,
+		file,
+		WithMethod("PUT"),
+		WithContext(ctx),
+		WithAuth(),
+		WithCommonHeaders(),
+		WithStatusCheck(),
+		WithChunkedTransfer(),
+	); if err != nil {
 		return nil, err
-	}
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var commitToken pb.CommitToken
