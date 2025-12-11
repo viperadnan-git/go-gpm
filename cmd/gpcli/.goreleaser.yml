@@ -2,7 +2,7 @@
 version: 2
 
 builds:
-  - dir: ./cmd/gpcli
+  - main: .
     binary: gpcli
     env:
       - CGO_ENABLED=0
