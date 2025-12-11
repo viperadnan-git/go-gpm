@@ -97,7 +97,8 @@ func (a *Api) UploadFile(ctx context.Context, filePath string, uploadToken strin
 		WithCommonHeaders(),
 		WithStatusCheck(),
 		WithChunkedTransfer(),
-	); if err != nil {
+	)
+	if err != nil {
 		return nil, err
 	}
 

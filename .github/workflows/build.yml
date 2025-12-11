@@ -29,13 +29,13 @@ jobs:
           go-version-file: go.mod
 
       - name: Build
-        run: go build -o gogpm-${{ matrix.goos }}-${{ matrix.goarch }} .
+        run: cd cmd/gpcli && go build -o gpcli .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gogpm-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: gogpm-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: gpcli-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: cmd/gpcli/gpcli
           retention-days: 90
 
   release:
@@ -59,5 +59,6 @@ jobs:
           distribution: goreleaser
           version: '~> v2'
           args: release --clean
+          workdir: cmd/gpcli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

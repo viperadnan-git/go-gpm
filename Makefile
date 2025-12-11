@@ -4,10 +4,10 @@ PREFIX ?= /usr/local
 GO ?= $(shell which go)
 
 build:
-	cd cmd/gpcli && $(GO) build -o ../../gpcli .
+	cd cmd/gpcli && $(GO) build -o gpcli .
 
 clean:
-	rm -f gpcli
+	rm -f cmd/gpcli/gpcli
 
 install: build
 	install -d $(PREFIX)/bin

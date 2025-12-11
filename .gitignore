@@ -1,9 +1,5 @@
-# Build output
-/gpcli
-
 # Config files
 gpcli.config
-*.config
 
 # IDE
 .vscode/
