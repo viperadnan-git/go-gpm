@@ -10,8 +10,8 @@ clean:
 	rm -f cmd/gpcli/gpcli
 
 install: build
-	install -d $(PREFIX)/bin
-	install -m 755 gpcli $(PREFIX)/bin/gpcli
+	install -d $(PREFIX)/bin 
+	install -m 755 cmd/gpcli/gpcli $(PREFIX)/bin/gpcli
 
 uninstall:
 	rm -f $(PREFIX)/bin/gpcli

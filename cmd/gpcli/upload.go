@@ -26,7 +26,9 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 
 	// Get CLI flags
 	threads := int(cmd.Int("threads"))
+	if threads == 0 { threads = cfg.UploadThreads }
 	quality := cmd.String("quality")
+	if quality == "" { quality = cfg.Quality }
 	if quality != "original" && quality != "storage-saver" {
 		return fmt.Errorf("invalid quality: %s (use 'original' or 'storage-saver')", quality)
 	}
@@ -43,7 +45,7 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		ShouldFavourite: cmd.Bool("favourite"),
 		ShouldArchive:   cmd.Bool("archive"),
 		Quality:         quality,
-		UseQuota:        cmd.Bool("use-quota"),
+		UseQuota:        cmd.Bool("use-quota") || cfg.UseQuota,
 	}
 
 	// Resolve auth data

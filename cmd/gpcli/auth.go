@@ -115,3 +115,12 @@ func credentialsSetAction(ctx context.Context, cmd *cli.Command) error {
 
 	return nil
 }
+
+func authFileAction(ctx context.Context, cmd *cli.Command) error {
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+
+	fmt.Println(cfgManager.GetConfigPath())
+	return nil
+}

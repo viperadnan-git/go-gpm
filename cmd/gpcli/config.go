@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
@@ -14,16 +15,12 @@ import (
 
 // Config represents the persistent configuration
 type Config struct {
-	Credentials                   []string `json:"credentials" koanf:"credentials"`
-	Selected                      string   `json:"selected" koanf:"selected"`
-	Proxy                         string   `json:"proxy" koanf:"proxy"`
-	UseQuota                      bool     `json:"useQuota" koanf:"use_quota"`
-	Quality                       string   `json:"quality" koanf:"quality"` // "original" or "storage-saver"
-	Recursive                     bool     `json:"recursive" koanf:"recursive"`
-	ForceUpload                   bool     `json:"forceUpload" koanf:"force_upload"`
-	UploadThreads                 int      `json:"uploadThreads" koanf:"upload_threads"`
-	DeleteFromHost                bool     `json:"deleteFromHost" koanf:"delete_from_host"`
-	DisableUnsupportedFilesFilter bool     `json:"disableUnsupportedFilesFilter" koanf:"disable_unsupported_files_filter"`
+	Credentials   []string `json:"credentials" koanf:"credentials"`
+	Selected      string   `json:"selected" koanf:"selected"`
+	Proxy         string   `json:"proxy" koanf:"proxy"`
+	UseQuota      bool     `json:"useQuota" koanf:"use_quota"`
+	Quality       string   `json:"quality" koanf:"quality"` // "original" or "storage-saver"
+	UploadThreads int      `json:"uploadThreads" koanf:"upload_threads"`
 }
 
 // DefaultConfig returns the default configuration values
@@ -42,8 +39,35 @@ type ConfigManager struct {
 
 // NewConfigManager creates a new ConfigManager and loads the configuration from the given path
 func NewConfigManager(configPath string) (*ConfigManager, error) {
-	if configPath == "" {
-		configPath = "gpcli.config"
+	if configPath != "" {
+		// If --config flag is provided, use that path only (expand ~ if present)
+		if len(configPath) > 0 && configPath[0] == '~' {
+			homeDir, err := os.UserHomeDir()
+			if err != nil {
+				return nil, fmt.Errorf("failed to expand ~ in config path: %w", err)
+			}
+			configPath = filepath.Join(homeDir, configPath[1:])
+		}
+	} else {
+		// No flag provided: check ~/.config/gpcli, then current directory
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user home directory: %w", err)
+		}
+
+		xdgPath := filepath.Join(homeDir, ".config", "gpcli", "gpcli.config")
+		localPath := "gpcli.config"
+
+		// Check XDG path first
+		if _, err := os.Stat(xdgPath); err == nil {
+			configPath = xdgPath
+		} else if _, err := os.Stat(localPath); err == nil {
+			// Fallback to local path if it exists
+			configPath = localPath
+		} else {
+			// Neither exists, use XDG path for new config
+			configPath = xdgPath
+		}
 	}
 
 	m := &ConfigManager{
@@ -83,6 +107,13 @@ func (m *ConfigManager) Save() error {
 	b, err := k.Marshal(yaml.Parser())
 	if err != nil {
 		slog.Error("failed to marshal config", "error", err)
+		return err
+	}
+
+	// Create directory if it doesn't exist
+	configDir := filepath.Dir(m.configPath)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		slog.Error("failed to create config directory", "error", err)
 		return err
 	}
 
@@ -150,30 +181,6 @@ func (m *ConfigManager) SetQuality(quality string) {
 		m.config.Quality = quality
 		m.Save()
 	}
-}
-
-// SetRecursive updates the recursive setting
-func (m *ConfigManager) SetRecursive(recursive bool) {
-	m.config.Recursive = recursive
-	m.Save()
-}
-
-// SetForceUpload updates the force upload setting
-func (m *ConfigManager) SetForceUpload(forceUpload bool) {
-	m.config.ForceUpload = forceUpload
-	m.Save()
-}
-
-// SetDeleteFromHost updates the delete from host setting
-func (m *ConfigManager) SetDeleteFromHost(deleteFromHost bool) {
-	m.config.DeleteFromHost = deleteFromHost
-	m.Save()
-}
-
-// SetDisableUnsupportedFilesFilter updates the filter setting
-func (m *ConfigManager) SetDisableUnsupportedFilesFilter(disableUnsupportedFilesFilter bool) {
-	m.config.DisableUnsupportedFilesFilter = disableUnsupportedFilesFilter
-	m.Save()
 }
 
 // SetUploadThreads updates the upload threads setting

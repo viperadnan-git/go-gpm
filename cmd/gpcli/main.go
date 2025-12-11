@@ -24,7 +24,7 @@ func main() {
 				Aliases:     []string{"c"},
 				Usage:       "Path to config file",
 				Sources:     cli.EnvVars("GPCLI_CONFIG"),
-				DefaultText: "./gpcli.config",
+				DefaultText: "~/.config/gpcli/gpcli.config",
 			},
 			&cli.StringFlag{
 				Name:    "log-level",
@@ -68,7 +68,7 @@ func main() {
 			// Set auth override from flag (strip whitespace)
 			if auth := cmd.String("auth"); auth != "" {
 				authOverride = strings.TrimSpace(auth)
-			}
+			}  
 			return ctx, nil
 		},
 		Commands: []*cli.Command{
@@ -238,6 +238,11 @@ func main() {
 							},
 						},
 						Action: credentialsSetAction,
+					},
+					{
+						Name:   "file",
+						Usage:  "Print config file path",
+						Action: authFileAction,
 					},
 				},
 			},
