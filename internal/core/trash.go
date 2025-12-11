@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 
@@ -71,12 +70,7 @@ func (a *Api) MoveToTrash(itemKeys []string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return checkResponse(resp)
 }
 
 // RestoreFromTrash restores items from trash
@@ -134,10 +128,5 @@ func (a *Api) RestoreFromTrash(itemKeys []string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return checkResponse(resp)
 }

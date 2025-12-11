@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -31,6 +32,7 @@ type Api struct {
 	AuthData          string
 	Client            *http.Client
 	authTokenCache    map[string]string
+	authMu            sync.Mutex // Protects authTokenCache
 	Quality           string // Default quality: "original" or "storage-saver"
 	UseQuota          bool   // If true, uploaded files count against storage quota (default: false)
 }
@@ -80,6 +82,9 @@ func NewApi(cfg ApiConfig) (*Api, error) {
 
 // BearerToken returns a valid bearer token, refreshing if necessary
 func (a *Api) BearerToken() (string, error) {
+	a.authMu.Lock()
+	defer a.authMu.Unlock()
+
 	expiryStr := a.authTokenCache["Expiry"]
 	expiry, err := strconv.ParseInt(expiryStr, 10, 64)
 	if err != nil {
@@ -94,7 +99,7 @@ func (a *Api) BearerToken() (string, error) {
 		a.authTokenCache = resp
 	}
 
-	if token, ok := a.authTokenCache["Auth"]; ok && token != "" {
+	if token := a.authTokenCache["Auth"]; token != "" {
 		return token, nil
 	}
 
@@ -149,26 +154,15 @@ func (a *Api) refreshAuthToken() (map[string]string, error) {
 
 	resp, err := a.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("auth request failed after retries: %w", err)
+		return nil, fmt.Errorf("auth request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Check for errors
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return make(map[string]string), fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	if err := checkResponse(resp); err != nil {
+		return nil, err
 	}
 
-	// Handle gzip encoding if present
-	var reader io.Reader
-	reader, err = gzip.NewReader(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
-	}
-	defer reader.(*gzip.Reader).Close()
-
-	// Parse the response body
-	bodyBytes, err := io.ReadAll(reader)
+	bodyBytes, err := readGzipBody(resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
@@ -218,4 +212,28 @@ func (a *Api) DeviceInfo() (model, make string, apiVersion int64) {
 // SetModel updates the device model (used for quality settings)
 func (a *Api) SetModel(model string) {
 	a.Model = model
+}
+
+// checkResponse checks if the HTTP response status is successful (2xx).
+// Returns an error with the response body if status is not 2xx.
+func checkResponse(resp *http.Response) error {
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return nil
+	}
+	body, _ := io.ReadAll(resp.Body)
+	return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+}
+
+// readGzipBody reads the response body, handling gzip decompression if needed.
+func readGzipBody(resp *http.Response) ([]byte, error) {
+	var reader io.Reader = resp.Body
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gr, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+		}
+		defer gr.Close()
+		reader = gr
+	}
+	return io.ReadAll(reader)
 }

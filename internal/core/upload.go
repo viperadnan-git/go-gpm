@@ -2,12 +2,10 @@ package core
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -67,9 +65,8 @@ func (a *Api) GetUploadToken(sha1HashBase64 string, fileSize int64) (string, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	if err := checkResponse(resp); err != nil {
+		return "", err
 	}
 
 	uploadToken := resp.Header.Get("X-GUploader-UploadID")
@@ -128,30 +125,21 @@ func (a *Api) FindRemoteMediaByHash(sha1Hash []byte) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	if err := checkResponse(resp); err != nil {
+		return "", err
 	}
 
-	var reader io.Reader
-	reader, err = gzip.NewReader(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to create gzip reader: %w", err)
-	}
-	defer reader.(*gzip.Reader).Close()
-
-	bodyBytes, err := io.ReadAll(reader)
+	bodyBytes, err := readGzipBody(resp)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	var response pb.RemoteMatches
 	if err := proto.Unmarshal(bodyBytes, &response); err != nil {
-		log.Fatalf("Failed to unmarshal protobuf: %v", err)
+		return "", fmt.Errorf("failed to unmarshal protobuf: %w", err)
 	}
 
-	mediaKey := response.GetMediaKey()
-	return mediaKey, nil
+	return response.GetMediaKey(), nil
 }
 
 // UploadFile uploads a file to Google Photos using the provided upload token
@@ -194,9 +182,8 @@ func (a *Api) UploadFile(ctx context.Context, filePath string, uploadToken strin
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	if err := checkResponse(resp); err != nil {
+		return nil, err
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
@@ -301,21 +288,11 @@ func (a *Api) CommitUpload(
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	if err := checkResponse(resp); err != nil {
+		return "", err
 	}
 
-	var reader io.Reader = resp.Body
-	if resp.Header.Get("Content-Encoding") == "gzip" {
-		reader, err = gzip.NewReader(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("failed to create gzip reader: %w", err)
-		}
-		defer reader.(*gzip.Reader).Close()
-	}
-
-	bodyBytes, err := io.ReadAll(reader)
+	bodyBytes, err := readGzipBody(resp)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}

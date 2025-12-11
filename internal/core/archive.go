@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/viperadnan-git/gogpm/internal/pb"
@@ -67,10 +66,5 @@ func (a *Api) SetArchived(itemKeys []string, isArchived bool) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return checkResponse(resp)
 }

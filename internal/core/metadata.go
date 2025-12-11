@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/viperadnan-git/gogpm/internal/pb"
@@ -50,12 +49,7 @@ func (a *Api) SetCaption(itemKey, caption string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return checkResponse(resp)
 }
 
 // SetFavourite sets or removes the favourite status for a media item
@@ -113,10 +107,5 @@ func (a *Api) SetFavourite(itemKey string, isFavourite bool) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return checkResponse(resp)
 }

@@ -2,9 +2,7 @@ package core
 
 import (
 	"bytes"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -69,21 +67,11 @@ func (a *Api) CreateAlbum(albumName string, mediaKeys []string) (string, error) 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	if err := checkResponse(resp); err != nil {
+		return "", err
 	}
 
-	var reader io.Reader = resp.Body
-	if resp.Header.Get("Content-Encoding") == "gzip" {
-		reader, err = gzip.NewReader(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("failed to create gzip reader: %w", err)
-		}
-		defer reader.(*gzip.Reader).Close()
-	}
-
-	bodyBytes, err := io.ReadAll(reader)
+	bodyBytes, err := readGzipBody(resp)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
@@ -150,10 +138,5 @@ func (a *Api) AddMediaToAlbum(albumMediaKey string, mediaKeys []string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return checkResponse(resp)
 }

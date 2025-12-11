@@ -2,9 +2,7 @@ package core
 
 import (
 	"bytes"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/viperadnan-git/gogpm/internal/pb"
@@ -69,24 +67,14 @@ func (a *Api) GetDownloadUrl(mediaKey string) (downloadURL string, isEdited bool
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		if resp.StatusCode == 404 {
-			return "", false, fmt.Errorf("media item not found (status 404) - verify the media_key is correct")
-		}
-		body, _ := io.ReadAll(resp.Body)
-		return "", false, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	if resp.StatusCode == 404 {
+		return "", false, fmt.Errorf("media item not found (status 404) - verify the media_key is correct")
+	}
+	if err := checkResponse(resp); err != nil {
+		return "", false, err
 	}
 
-	var reader io.Reader = resp.Body
-	if resp.Header.Get("Content-Encoding") == "gzip" {
-		reader, err = gzip.NewReader(resp.Body)
-		if err != nil {
-			return "", false, fmt.Errorf("failed to create gzip reader: %w", err)
-		}
-		defer reader.(*gzip.Reader).Close()
-	}
-
-	bodyBytes, err := io.ReadAll(reader)
+	bodyBytes, err := readGzipBody(resp)
 	if err != nil {
 		return "", false, fmt.Errorf("failed to read response body: %w", err)
 	}
@@ -98,7 +86,6 @@ func (a *Api) GetDownloadUrl(mediaKey string) (downloadURL string, isEdited bool
 
 	if response.GetField1() != nil && response.GetField1().GetField5() != nil && response.GetField1().GetField5().GetField3() != nil {
 		downloadURL = response.GetField1().GetField5().GetField3().GetDownloadUrl()
-		// The API returns a single download URL; isEdited indicates if edits were applied
 		isEdited = response.GetField1().GetField5().GetField1() > 0
 	}
 
