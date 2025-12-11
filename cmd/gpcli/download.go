@@ -99,17 +99,10 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("downloading thumbnail", "media_key", mediaKey)
 
-	body, err := apiClient.GetThumbnail(mediaKey, width, height, forceJpeg, noOverlay)
+	savedPath, err := apiClient.DownloadThumbnail(mediaKey, width, height, forceJpeg, noOverlay, outputPath)
 	if err != nil {
 		return err
 	}
-	defer body.Close()
-
-	filename := mediaKey + ".jpg"
-	savedPath, err := gogpm.DownloadFromReader(body, outputPath, filename)
-	if err != nil {
-		return err
-	}
-	logger.Info("thumbnail saved", "path", savedPath)
+	logger.Info("thumbnail downloaded", "path", savedPath)
 	return nil
 }
