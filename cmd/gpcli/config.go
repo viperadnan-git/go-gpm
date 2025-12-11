@@ -41,13 +41,11 @@ type ConfigManager struct {
 func NewConfigManager(configPath string) (*ConfigManager, error) {
 	if configPath != "" {
 		// If --config flag is provided, use that path only (expand ~ if present)
-		if len(configPath) > 0 && configPath[0] == '~' {
-			homeDir, err := os.UserHomeDir()
-			if err != nil {
-				return nil, fmt.Errorf("failed to expand ~ in config path: %w", err)
-			}
-			configPath = filepath.Join(homeDir, configPath[1:])
+		absPath, err := filepath.Abs(configPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve path: %w", err)
 		}
+		configPath = absPath
 	} else {
 		// No flag provided: check ~/.config/gpcli, then current directory
 		homeDir, err := os.UserHomeDir()
@@ -56,14 +54,17 @@ func NewConfigManager(configPath string) (*ConfigManager, error) {
 		}
 
 		xdgPath := filepath.Join(homeDir, ".config", "gpcli", "gpcli.config")
-		localPath := "gpcli.config"
+		localPath, err := filepath.Abs("gpcli.config")
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve path: %w", err)
+		}
 
-		// Check XDG path first
-		if _, err := os.Stat(xdgPath); err == nil {
-			configPath = xdgPath
-		} else if _, err := os.Stat(localPath); err == nil {
-			// Fallback to local path if it exists
+		// Check local path first
+		if _, err := os.Stat(localPath); err == nil {
 			configPath = localPath
+		} else if _, err := os.Stat(xdgPath); err == nil {
+			// Fallback to XDG path if it exists
+			configPath = xdgPath
 		} else {
 			// Neither exists, use XDG path for new config
 			configPath = xdgPath
