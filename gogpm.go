@@ -2,9 +2,9 @@ package gogpm
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/viperadnan-git/gogpm/internal/core"
-	"sync"
 )
 
 // ApiConfig holds configuration for the Google Photos API client
@@ -13,9 +13,7 @@ type ApiConfig = core.ApiConfig
 // GooglePhotosAPI is the main API client for Google Photos operations
 type GooglePhotosAPI struct {
 	*core.Api
-	wg      sync.WaitGroup
-	cancel  chan struct{}
-	running bool
+	uploadMu sync.Mutex // Serializes upload batches
 }
 
 // NewGooglePhotosAPI creates a new Google Photos API client
@@ -25,19 +23,6 @@ func NewGooglePhotosAPI(cfg ApiConfig) (*GooglePhotosAPI, error) {
 		return nil, err
 	}
 	return &GooglePhotosAPI{Api: coreApi}, nil
-}
-
-// IsRunning returns true if an upload operation is currently running
-func (g *GooglePhotosAPI) IsRunning() bool {
-	return g.running
-}
-
-// Cancel cancels the current upload operation
-func (g *GooglePhotosAPI) Cancel() {
-	if g.cancel != nil {
-		close(g.cancel)
-		g.cancel = nil
-	}
 }
 
 // DownloadThumbnail downloads a thumbnail to the specified output path

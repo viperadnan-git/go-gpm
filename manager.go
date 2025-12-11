@@ -14,12 +14,33 @@ import (
 	"github.com/viperadnan-git/gogpm/internal/core"
 )
 
-// ProgressCallback is a function type for upload progress updates
-type ProgressCallback func(event string, data any)
+// UploadStatus represents the state of a file upload
+type UploadStatus string
+
+const (
+	StatusHashing    UploadStatus = "hashing"
+	StatusChecking   UploadStatus = "checking"
+	StatusUploading  UploadStatus = "uploading"
+	StatusFinalizing UploadStatus = "finalizing"
+	StatusCompleted  UploadStatus = "completed"
+	StatusSkipped    UploadStatus = "skipped" // Already in library
+	StatusFailed     UploadStatus = "failed"
+)
+
+// UploadEvent represents a status update for a file upload
+type UploadEvent struct {
+	Path     string
+	Status   UploadStatus
+	MediaKey string
+	DedupKey string
+	Error    error
+	WorkerID int
+	Total    int // Total files in batch (set on first event)
+}
 
 // UploadOptions contains runtime options for upload operations
 type UploadOptions struct {
-	Threads         int
+	Workers         int
 	Recursive       bool
 	ForceUpload     bool
 	DeleteFromHost  bool
@@ -31,446 +52,220 @@ type UploadOptions struct {
 	UseQuota        bool
 }
 
-// Event types
-type UploadBatchStart struct {
-	Total int
-}
+// Upload uploads files to Google Photos and returns a channel for status events.
+// The channel is closed when upload completes. Multiple calls are queued automatically.
+func (g *GooglePhotosAPI) Upload(ctx context.Context, paths []string, opts UploadOptions) <-chan UploadEvent {
+	events := make(chan UploadEvent)
 
-type FileUploadResult struct {
-	MediaKey   string
-	DedupKey   string // URL-safe base64 encoded SHA1 hash for archive operations
-	IsError    bool
-	IsExisting bool
-	Error      error
-	Path       string
-}
-
-// UploadResult is the return type for uploadFileWithCallback
-type UploadResult struct {
-	MediaKey   string
-	DedupKey   string // URL-safe base64 encoded SHA1 hash for archive operations
-	IsExisting bool
-	Error      error
-}
-
-type ThreadStatus struct {
-	WorkerID int
-	Status   string // "idle", "hashing", "checking", "uploading", "finalizing", "completed", "error"
-	FilePath string
-	FileName string
-	Message  string
-}
-
-// Upload uploads files to Google Photos with progress callbacks
-func (g *GooglePhotosAPI) Upload(paths []string, opts UploadOptions, callback ProgressCallback) {
-	if g.running {
-		return
-	}
-
-	g.running = true
-	g.cancel = make(chan struct{})
-
-	// Ensure callback is not nil
-	if callback == nil {
-		callback = func(event string, data any) {}
-	}
-
-	targetPaths, err := filterGooglePhotosFiles(paths, opts.Recursive, opts.DisableFilter)
-	if err != nil {
-		callback("FileStatus", FileUploadResult{
-			IsError: true,
-			Error:   err,
-		})
-		callback("uploadStop", nil)
-		g.running = false
-		return
-	}
-
-	if len(targetPaths) == 0 {
-		callback("uploadStop", nil)
-		g.running = false
-		return
-	}
-
-	callback("uploadStart", UploadBatchStart{
-		Total: len(targetPaths),
-	})
-
-	threads := opts.Threads
-	if threads < 1 {
-		threads = 1
-	}
-
-	// Don't start more threads than files to process
-	numWorkers := min(threads, len(targetPaths))
-
-	// Create a worker pool for concurrent uploads
-	workChan := make(chan string, len(targetPaths))
-	results := make(chan FileUploadResult, len(targetPaths))
-
-	// Start workers using shared Api
-	for i := range numWorkers {
-		g.wg.Add(1)
-		go startUploadWorker(i, workChan, results, g.cancel, &g.wg, g.Api, opts, callback)
-	}
-
-	// Send work to workers
 	go func() {
-	LOOP:
-		for _, path := range targetPaths {
+		// Serialize upload batches
+		g.uploadMu.Lock()
+		defer g.uploadMu.Unlock()
+		defer close(events)
+
+		// Filter files
+		files, err := filterGooglePhotosFiles(paths, opts.Recursive, opts.DisableFilter)
+		if err != nil {
+			events <- UploadEvent{Status: StatusFailed, Error: err}
+			return
+		}
+		if len(files) == 0 {
+			return
+		}
+
+		// Send total count with first event
+		workers := max(1, opts.Workers)
+		workers = min(workers, len(files))
+
+		workChan := make(chan string, len(files))
+		var wg sync.WaitGroup
+
+		// Start workers
+		for i := range workers {
+			wg.Add(1)
+			go func(workerID int) {
+				defer wg.Done()
+				for path := range workChan {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+					}
+					uploadFile(ctx, g.Api, path, workerID, opts, events)
+				}
+			}(i)
+		}
+
+		// Send work (with total on first)
+		first := true
+		for _, path := range files {
 			select {
-			case <-g.cancel:
-				break LOOP
-			case workChan <- path:
+			case <-ctx.Done():
+				close(workChan)
+				wg.Wait()
+				return
+			default:
+			}
+			if first {
+				events <- UploadEvent{Path: path, Status: StatusHashing, Total: len(files), WorkerID: 0}
+				first = false
+				workChan <- path
+			} else {
+				workChan <- path
 			}
 		}
 		close(workChan)
+		wg.Wait()
 	}()
 
-	// Wait for workers to finish and close results channel
-	go func() {
-		g.wg.Wait()
-		close(results)
-	}()
-
-	// Process results, then emit uploadStop when done
-	go func() {
-		for result := range results {
-			callback("FileStatus", result)
-			if result.IsError {
-				slog.Error("upload error", "error", result.Error)
-			} else {
-				slog.Info("upload success", "path", result.Path, "media_key", result.MediaKey, "existing", result.IsExisting)
-			}
-		}
-		// Only emit uploadStop after all results have been processed
-		callback("uploadStop", nil)
-		g.running = false
-	}()
+	return events
 }
 
-// isSupportedByGooglePhotos checks if a file extension is supported by Google Photos
+func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID int, opts UploadOptions, events chan<- UploadEvent) {
+	send := func(status UploadStatus, mediaKey, dedupKey string, err error) {
+		events <- UploadEvent{
+			Path: filePath, Status: status, MediaKey: mediaKey, DedupKey: dedupKey, Error: err, WorkerID: workerID,
+		}
+	}
+
+	// Hash file
+	send(StatusHashing, "", "", nil)
+	sha1Hash, err := CalculateSHA1(ctx, filePath)
+	if err != nil {
+		send(StatusFailed, "", "", fmt.Errorf("hash error: %w", err))
+		return
+	}
+	dedupKey := core.SHA1ToDedupeKey(sha1Hash)
+
+	// Check if exists
+	if !opts.ForceUpload {
+		send(StatusChecking, "", dedupKey, nil)
+		if mediaKey, _ := api.FindRemoteMediaByHash(sha1Hash); mediaKey != "" {
+			if opts.DeleteFromHost {
+				os.Remove(filePath)
+			}
+			send(StatusSkipped, mediaKey, dedupKey, nil)
+			return
+		}
+	}
+
+	// Get file info
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		send(StatusFailed, "", dedupKey, fmt.Errorf("stat error: %w", err))
+		return
+	}
+
+	// Upload
+	send(StatusUploading, "", dedupKey, nil)
+	sha1Base64 := base64.StdEncoding.EncodeToString([]byte(sha1Hash))
+	token, err := api.GetUploadToken(sha1Base64, fileInfo.Size())
+	if err != nil {
+		send(StatusFailed, "", dedupKey, fmt.Errorf("upload token error: %w", err))
+		return
+	}
+
+	commitToken, err := api.UploadFile(ctx, filePath, token)
+	if err != nil {
+		send(StatusFailed, "", dedupKey, fmt.Errorf("upload error: %w", err))
+		return
+	}
+
+	// Finalize
+	send(StatusFinalizing, "", dedupKey, nil)
+	mediaKey, err := api.CommitUpload(commitToken, fileInfo.Name(), sha1Hash, fileInfo.ModTime().Unix(), opts.Quality, opts.UseQuota)
+	if err != nil {
+		send(StatusFailed, "", dedupKey, fmt.Errorf("commit error: %w", err))
+		return
+	}
+	if mediaKey == "" {
+		send(StatusFailed, "", dedupKey, fmt.Errorf("no media key returned"))
+		return
+	}
+
+	// Post-upload ops
+	if opts.Caption != "" {
+		if err := api.SetCaption(mediaKey, opts.Caption); err != nil {
+			slog.Error("caption failed", "path", filePath, "error", err)
+		}
+	}
+	if opts.ShouldFavourite {
+		if err := api.SetFavourite(mediaKey, true); err != nil {
+			slog.Error("favourite failed", "path", filePath, "error", err)
+		}
+	}
+	if opts.ShouldArchive {
+		if err := api.SetArchived([]string{mediaKey}, true); err != nil {
+			slog.Error("archive failed", "path", filePath, "error", err)
+		}
+	}
+	if opts.DeleteFromHost {
+		os.Remove(filePath)
+	}
+
+	send(StatusCompleted, mediaKey, dedupKey, nil)
+}
+
+// isSupportedByGooglePhotos checks if a file extension is supported
 func isSupportedByGooglePhotos(filename string) bool {
-	// Convert to lowercase for case-insensitive comparison
 	ext := strings.ToLower(filepath.Ext(filename))
 	if ext == "" {
 		return false
 	}
-
-	// Remove the dot from the extension
 	ext = ext[1:]
 
-	// Supported photo formats
 	photoFormats := []string{
-		"avif", "bmp", "gif", "heic", "ico",
-		"jpg", "jpeg", "png", "tiff", "webp",
-		"cr2", "cr3", "nef", "arw", "orf",
-		"raf", "rw2", "pef", "sr2", "dng",
+		"avif", "bmp", "gif", "heic", "ico", "jpg", "jpeg", "png", "tiff", "webp",
+		"cr2", "cr3", "nef", "arw", "orf", "raf", "rw2", "pef", "sr2", "dng",
 	}
-
-	// Supported video formats
 	videoFormats := []string{
-		"3gp", "3g2", "asf", "avi", "divx",
-		"m2t", "m2ts", "m4v", "mkv", "mmv",
-		"mod", "mov", "mp4", "mpg", "mpeg",
-		"mts", "tod", "wmv", "ts",
+		"3gp", "3g2", "asf", "avi", "divx", "m2t", "m2ts", "m4v", "mkv", "mmv",
+		"mod", "mov", "mp4", "mpg", "mpeg", "mts", "tod", "wmv", "ts",
 	}
-
-	// Check if extension is in either supported format
 	return slices.Contains(photoFormats, ext) || slices.Contains(videoFormats, ext)
 }
 
-func scanDirectoryForFiles(path string, recursive bool) ([]string, error) {
-	var files []string
+func filterGooglePhotosFiles(paths []string, recursive, disableFilter bool) ([]string, error) {
+	var result []string
+	for _, path := range paths {
+		info, err := os.Stat(path)
+		if err != nil {
+			return nil, fmt.Errorf("error accessing %s: %w", path, err)
+		}
+		if info.IsDir() {
+			files, err := scanDir(path, recursive)
+			if err != nil {
+				return nil, err
+			}
+			for _, f := range files {
+				if disableFilter || isSupportedByGooglePhotos(f) {
+					result = append(result, f)
+				}
+			}
+		} else if disableFilter || isSupportedByGooglePhotos(path) {
+			result = append(result, path)
+		}
+	}
+	return result, nil
+}
 
+func scanDir(path string, recursive bool) ([]string, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, entry := range entries {
-		fullPath := filepath.Join(path, entry.Name())
-		if entry.IsDir() {
-			if recursive {
-				subFiles, err := scanDirectoryForFiles(fullPath, recursive)
-				if err != nil {
-					return nil, err
-				}
-				files = append(files, subFiles...)
-			}
-		} else {
-			files = append(files, fullPath)
-		}
-	}
-
-	return files, nil
-}
-
-// filterGooglePhotosFiles returns a list of files that are supported by Google Photos
-func filterGooglePhotosFiles(paths []string, recursive, disableFilter bool) ([]string, error) {
-	var supportedFiles []string
-
-	for _, path := range paths {
-		fileInfo, err := os.Stat(path)
-		if err != nil {
-			return nil, fmt.Errorf("error accessing path %s: %v", path, err)
-		}
-
-		if fileInfo.IsDir() {
-			files, err := scanDirectoryForFiles(path, recursive)
+	var files []string
+	for _, e := range entries {
+		full := filepath.Join(path, e.Name())
+		if e.IsDir() && recursive {
+			sub, err := scanDir(full, true)
 			if err != nil {
-				return nil, fmt.Errorf("error scanning directory %s: %v", path, err)
+				return nil, err
 			}
-
-			for _, file := range files {
-				if disableFilter {
-					supportedFiles = append(supportedFiles, file)
-				} else {
-					if isSupportedByGooglePhotos(file) {
-						supportedFiles = append(supportedFiles, file)
-					}
-				}
-
-			}
-		} else {
-			if disableFilter {
-				supportedFiles = append(supportedFiles, path)
-			} else {
-				if isSupportedByGooglePhotos(path) {
-					supportedFiles = append(supportedFiles, path)
-				}
-			}
-
+			files = append(files, sub...)
+		} else if !e.IsDir() {
+			files = append(files, full)
 		}
 	}
-
-	return supportedFiles, nil
-}
-
-func uploadFileWithCallback(ctx context.Context, apiClient *core.Api, filePath string, workerID int, opts UploadOptions, callback ProgressCallback) UploadResult {
-	fileName := filepath.Base(filePath)
-	mediakey := ""
-
-	// Stage 1: Hashing
-	callback("ThreadStatus", ThreadStatus{
-		WorkerID: workerID,
-		Status:   "hashing",
-		FilePath: filePath,
-		FileName: fileName,
-		Message:  "Hashing...",
-	})
-
-	sha1HashBytes, err := CalculateSHA1(ctx, filePath)
-	if err != nil {
-		return UploadResult{Error: fmt.Errorf("error calculating hash file: %w", err)}
-	}
-
-	sha1HashBase64 := base64.StdEncoding.EncodeToString([]byte(sha1HashBytes))
-	dedupKey := core.SHA1ToDedupeKey(sha1HashBytes)
-
-	// Stage 2: Checking if exists in library
-	if !opts.ForceUpload {
-		callback("ThreadStatus", ThreadStatus{
-			WorkerID: workerID,
-			Status:   "checking",
-			FilePath: filePath,
-			FileName: fileName,
-			Message:  "Checking if file exists in library...",
-		})
-
-		mediakey, err = apiClient.FindRemoteMediaByHash(sha1HashBytes)
-		if err != nil {
-			slog.Error("error checking for remote matches", "error", err)
-		}
-		if len(mediakey) > 0 {
-			callback("ThreadStatus", ThreadStatus{
-				WorkerID: workerID,
-				Status:   "completed",
-				FilePath: filePath,
-				FileName: fileName,
-				Message:  "Already in library",
-			})
-			if opts.DeleteFromHost {
-				if err := os.Remove(filePath); err != nil {
-					slog.Warn("failed to delete file", "path", filePath, "error", err)
-				} else {
-					slog.Debug("deleted file", "path", filePath)
-				}
-			}
-			return UploadResult{MediaKey: mediakey, DedupKey: dedupKey, IsExisting: true}
-		}
-	}
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		return UploadResult{Error: fmt.Errorf("error opening file: %w", err)}
-	}
-	fileInfo, err := file.Stat()
-	file.Close()
-
-	if err != nil {
-		return UploadResult{Error: fmt.Errorf("error getting file info: %w", err)}
-	}
-
-	// Stage 3: Uploading
-	callback("ThreadStatus", ThreadStatus{
-		WorkerID: workerID,
-		Status:   "uploading",
-		FilePath: filePath,
-		FileName: fileName,
-		Message:  "Uploading...",
-	})
-
-	token, err := apiClient.GetUploadToken(sha1HashBase64, fileInfo.Size())
-	if err != nil {
-		return UploadResult{Error: fmt.Errorf("error uploading file: %w", err)}
-	}
-
-	commitToken, err := apiClient.UploadFile(ctx, filePath, token)
-	if err != nil {
-		return UploadResult{Error: fmt.Errorf("error uploading file: %w", err)}
-	}
-
-	// Stage 4: Finalizing
-	callback("ThreadStatus", ThreadStatus{
-		WorkerID: workerID,
-		Status:   "finalizing",
-		FilePath: filePath,
-		FileName: fileName,
-		Message:  "Committing upload...",
-	})
-
-	mediaKey, err := apiClient.CommitUpload(commitToken, fileInfo.Name(), sha1HashBytes, fileInfo.ModTime().Unix(), opts.Quality, opts.UseQuota)
-	if err != nil {
-		return UploadResult{Error: fmt.Errorf("error commiting file: %w", err)}
-	}
-
-	if len(mediaKey) == 0 {
-		return UploadResult{Error: fmt.Errorf("media key not received")}
-	}
-
-	if opts.DeleteFromHost {
-		if err := os.Remove(filePath); err != nil {
-			slog.Warn("failed to delete file", "path", filePath, "error", err)
-		} else {
-			slog.Debug("deleted file", "path", filePath)
-		}
-	}
-
-	return UploadResult{MediaKey: mediaKey, DedupKey: dedupKey}
-}
-
-func startUploadWorker(workerID int, workChan <-chan string, results chan<- FileUploadResult, cancel <-chan struct{}, wg *sync.WaitGroup, apiClient *core.Api, opts UploadOptions, callback ProgressCallback) {
-	defer wg.Done()
-
-	// Emit idle status initially
-	callback("ThreadStatus", ThreadStatus{
-		WorkerID: workerID,
-		Status:   "idle",
-		Message:  "Waiting for files...",
-	})
-
-	for path := range workChan {
-		select {
-		case <-cancel:
-			callback("ThreadStatus", ThreadStatus{
-				WorkerID: workerID,
-				Status:   "idle",
-				Message:  "Cancelled",
-			})
-			return // Stop if cancellation is requested
-		default:
-			ctx, cancelUpload := context.WithCancel(context.Background())
-			go func() {
-				<-cancel // If global cancel happens, cancel this upload
-				cancelUpload()
-			}()
-
-			result := uploadFileWithCallback(ctx, apiClient, path, workerID, opts, callback)
-			if result.Error != nil {
-				results <- FileUploadResult{IsError: true, Error: result.Error, Path: path}
-				callback("ThreadStatus", ThreadStatus{
-					WorkerID: workerID,
-					Status:   "error",
-					FilePath: path,
-					FileName: filepath.Base(path),
-					Message:  fmt.Sprintf("Error: %v", result.Error),
-				})
-			} else {
-				// Execute post-upload operations immediately after each successful upload
-				postUploadOps(apiClient, result.MediaKey, path, workerID, opts, callback)
-
-				results <- FileUploadResult{IsError: false, IsExisting: result.IsExisting, Path: path, MediaKey: result.MediaKey, DedupKey: result.DedupKey}
-				callback("ThreadStatus", ThreadStatus{
-					WorkerID: workerID,
-					Status:   "completed",
-					FilePath: path,
-					FileName: filepath.Base(path),
-					Message:  "Completed",
-				})
-			}
-			cancelUpload()
-
-			// Mark as idle after completing file
-			callback("ThreadStatus", ThreadStatus{
-				WorkerID: workerID,
-				Status:   "idle",
-				Message:  "Waiting for next file...",
-			})
-		}
-	}
-
-	// Final idle status when no more work
-	callback("ThreadStatus", ThreadStatus{
-		WorkerID: workerID,
-		Status:   "idle",
-		Message:  "Finished",
-	})
-}
-
-// postUploadOps executes caption, favourite, and archive operations immediately after upload
-func postUploadOps(apiClient *core.Api, mediaKey, filePath string, workerID int, opts UploadOptions, callback ProgressCallback) {
-	fileName := filepath.Base(filePath)
-
-	// Set caption if configured
-	if opts.Caption != "" {
-		callback("ThreadStatus", ThreadStatus{
-			WorkerID: workerID,
-			Status:   "finalizing",
-			FilePath: filePath,
-			FileName: fileName,
-			Message:  "Setting caption...",
-		})
-		if err := apiClient.SetCaption(mediaKey, opts.Caption); err != nil {
-			slog.Error("failed to set caption", "path", filePath, "error", err)
-		}
-	}
-
-	// Set favourite if configured
-	if opts.ShouldFavourite {
-		callback("ThreadStatus", ThreadStatus{
-			WorkerID: workerID,
-			Status:   "finalizing",
-			FilePath: filePath,
-			FileName: fileName,
-			Message:  "Setting favourite...",
-		})
-		if err := apiClient.SetFavourite(mediaKey, true); err != nil {
-			slog.Error("failed to set favourite", "path", filePath, "error", err)
-		}
-	}
-
-	// Archive if configured
-	if opts.ShouldArchive {
-		callback("ThreadStatus", ThreadStatus{
-			WorkerID: workerID,
-			Status:   "finalizing",
-			FilePath: filePath,
-			FileName: fileName,
-			Message:  "Archiving...",
-		})
-		if err := apiClient.SetArchived([]string{mediaKey}, true); err != nil {
-			slog.Error("failed to archive", "path", filePath, "error", err)
-		}
-	}
+	return files, nil
 }
