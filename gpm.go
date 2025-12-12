@@ -1,10 +1,10 @@
-package gogpm
+package gpm
 
 import (
 	"fmt"
 	"sync"
 
-	"github.com/viperadnan-git/gogpm/internal/core"
+	"github.com/viperadnan-git/go-gpm/internal/core"
 )
 
 // ApiConfig holds configuration for the Google Photos API client

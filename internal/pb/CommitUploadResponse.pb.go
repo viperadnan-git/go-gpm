@@ -2012,7 +2012,7 @@ const file___proto_CommitUploadResponse_proto_rawDesc = "" +
 	"\x06field7\x18\a \x01(\x03R\x06field7\x12\x18\n" +
 	"\afield11\x18\v \x01(\x03R\afield11\x1a%\n" +
 	"\vfield5_type\x12\x16\n" +
-	"\x06field1\x18\x01 \x01(\x03R\x06field1B-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
+	"\x06field1\x18\x01 \x01(\x03R\x06field1B.Z,github.com/viperadnan-git/go-gpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_CommitUploadResponse_proto_rawDescOnce sync.Once

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	gogpm "github.com/viperadnan-git/gogpm"
+	gpm "github.com/viperadnan-git/go-gpm"
 
 	"github.com/urfave/cli/v3"
 )
@@ -24,7 +24,7 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
 	}
 
-	apiClient, err := gogpm.NewGooglePhotosAPI(gogpm.ApiConfig{
+	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
 		AuthData: authData,
 		Proxy:    cfg.Proxy,
 	})
@@ -58,7 +58,7 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 
 	// Download the file
 	logger.Info("downloading", "is_edited", isEdited)
-	savedPath, err := gogpm.DownloadFile(downloadURL, outputPath)
+	savedPath, err := gpm.DownloadFile(downloadURL, outputPath)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
 	}
 
-	apiClient, err := gogpm.NewGooglePhotosAPI(gogpm.ApiConfig{
+	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
 		AuthData: authData,
 		Proxy:    cfg.Proxy,
 	})

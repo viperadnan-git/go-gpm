@@ -1,4 +1,4 @@
-package gogpm
+package gpm
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/viperadnan-git/gogpm/internal/core"
+	"github.com/viperadnan-git/go-gpm/internal/core"
 )
 
 // dedupKeyPattern matches dedup keys (URL-safe base64 encoded SHA1)

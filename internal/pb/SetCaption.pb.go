@@ -81,7 +81,7 @@ const file___proto_SetCaption_proto_rawDesc = "" +
 	"\n" +
 	"SetCaption\x12\x18\n" +
 	"\acaption\x18\x02 \x01(\tR\acaption\x12\x19\n" +
-	"\bitem_key\x18\x03 \x01(\tR\aitemKeyB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
+	"\bitem_key\x18\x03 \x01(\tR\aitemKeyB.Z,github.com/viperadnan-git/go-gpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_SetCaption_proto_rawDescOnce sync.Once

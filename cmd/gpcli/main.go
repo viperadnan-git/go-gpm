@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	gogpm "github.com/viperadnan-git/gogpm"
+	gpm "github.com/viperadnan-git/go-gpm"
 
 	"github.com/urfave/cli/v3"
 )
@@ -15,7 +15,7 @@ func main() {
 	cmd := &cli.Command{
 		Name:                   "gpcli",
 		Usage:                  "Google Photos unofficial CLI client",
-		Version:                gogpm.Version,
+		Version:                gpm.Version,
 		UseShortOptionHandling: true,
 		EnableShellCompletion:  true,
 		Flags: []cli.Flag{
@@ -68,7 +68,7 @@ func main() {
 			// Set auth override from flag (strip whitespace)
 			if auth := cmd.String("auth"); auth != "" {
 				authOverride = strings.TrimSpace(auth)
-			}  
+			}
 			return ctx, nil
 		},
 		Commands: []*cli.Command{

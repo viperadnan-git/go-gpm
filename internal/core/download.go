@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/viperadnan-git/gogpm/internal/pb"
+	"github.com/viperadnan-git/go-gpm/internal/pb"
 )
 
 // GetDownloadUrl gets the download URL for a media item

@@ -19,11 +19,11 @@ Quick reference from project root:
 export PATH=$PATH:$(go env GOPATH)/bin
 
 # Generate single file
-protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/gogpm .proto/MessageName.proto
+protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/go-gpm .proto/MessageName.proto
 
 # Generate all files
 for proto in .proto/*.proto; do
-  protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/gogpm "$proto"
+  protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/go-gpm "$proto"
 done
 ```
 
@@ -34,10 +34,10 @@ This is a monorepo containing both a CLI tool and a Go library for managing Goog
 ### Project Structure
 
 ```
-gogpm/
+go-gpm/
 ├── cmd/
 │   └── gpcli/           # CLI application (separate module)
-│       ├── go.mod       # module github.com/viperadnan-git/gogpm/cmd/gpcli
+│       ├── go.mod       # module github.com/viperadnan-git/go-gpm/cmd/gpcli
 │       ├── main.go      # Entry point + command definitions
 │       ├── config.go    # YAML config file management
 │       └── ...
@@ -49,29 +49,29 @@ gogpm/
 │   │   └── ...
 │   └── pb/              # Protobuf-generated Go code (internal)
 ├── .proto/              # Protobuf definitions
-├── gogpm.go             # Public API: GooglePhotosAPI struct
+├── gpm.go               # Public API: GooglePhotosAPI struct
 ├── uploader.go          # Upload orchestration with worker pool
 ├── sha1.go              # File hash calculation
 ├── utils.go             # Download utilities, key resolution
 ├── version.go           # Version constant
-└── go.mod               # module github.com/viperadnan-git/gogpm (library only)
+└── go.mod               # module github.com/viperadnan-git/go-gpm (library only)
 ```
 
 ### Module Structure
 
 The project uses two Go modules to separate library and CLI dependencies:
 
-- **Root module** (`go.mod`): `github.com/viperadnan-git/gogpm` - Library with minimal dependencies (protobuf, retryablehttp)
-- **CLI module** (`cmd/gpcli/go.mod`): `github.com/viperadnan-git/gogpm/cmd/gpcli` - CLI with additional dependencies (urfave/cli, koanf, go-selfupdate)
+- **Root module** (`go.mod`): `github.com/viperadnan-git/go-gpm` - Library with minimal dependencies (protobuf, retryablehttp)
+- **CLI module** (`cmd/gpcli/go.mod`): `github.com/viperadnan-git/go-gpm/cmd/gpcli` - CLI with additional dependencies (urfave/cli, koanf, go-selfupdate)
 
 The CLI module uses a `replace` directive for local development:
 ```go
-replace github.com/viperadnan-git/gogpm => ../..
+replace github.com/viperadnan-git/go-gpm => ../..
 ```
 
 ### Key Components
 
-- **Root package (gogpm)** - Public library API
+- **Root package (gpm)** - Public library API
   - `api.go` - GooglePhotosAPI struct embedding internal/core.Api
   - `uploader.go` - Upload orchestration with worker pool. Emits progress events.
   - `utils.go` - Download utilities, ResolveItemKey, ResolveMediaKey
@@ -96,10 +96,10 @@ replace github.com/viperadnan-git/gogpm => ../..
 ### Library Usage
 
 ```go
-import "github.com/viperadnan-git/gogpm"
+import "github.com/viperadnan-git/go-gpm"
 
 // Create API client
-api, err := gogpm.NewGooglePhotosAPI(gogpm.ApiConfig{
+api, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
     AuthData: authString,
 })
 
@@ -107,7 +107,7 @@ api, err := gogpm.NewGooglePhotosAPI(gogpm.ApiConfig{
 api.Upload(paths, opts, callback)
 
 // Download files
-gogpm.DownloadFile(url, outputPath)
+gpm.DownloadFile(url, outputPath)
 ```
 
 ### Event-Based Progress System

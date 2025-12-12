@@ -19,14 +19,14 @@ From the project root directory:
 export PATH=$PATH:$(go env GOPATH)/bin
 
 for proto in .proto/*.proto; do
-  protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/gogpm "$proto"
+  protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/go-gpm "$proto"
 done
 ```
 
 ### Generate Single File
 
 ```bash
-protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/gogpm .proto/MessageName.proto
+protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/go-gpm .proto/MessageName.proto
 ```
 
 ## Creating New Proto Files
@@ -51,7 +51,7 @@ After creating the proto file, add the go_package option:
 ```protobuf
 syntax = "proto3";
 
-option go_package = "github.com/viperadnan-git/gogpm/internal/pb";
+option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
 
 message MessageName {
   // fields

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/viperadnan-git/gogpm/internal/pb"
+	"github.com/viperadnan-git/go-gpm/internal/pb"
 )
 
 // CreateAlbum creates a new album with the specified media keys

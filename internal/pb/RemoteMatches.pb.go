@@ -383,7 +383,7 @@ const file___proto_RemoteMatches_proto_rawDesc = "" +
 	"\x06field2\x18\x02 \x01(\v2J.RemoteMatches.field1_type.field2_type.field2_type.field6_type.field2_typeR\x06field2\x1a=\n" +
 	"\vfield2_type\x12\x16\n" +
 	"\x06field1\x18\x01 \x01(\tR\x06field1\x12\x16\n" +
-	"\x06field3\x18\x03 \x01(\tR\x06field3B-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
+	"\x06field3\x18\x03 \x01(\tR\x06field3B.Z,github.com/viperadnan-git/go-gpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_RemoteMatches_proto_rawDescOnce sync.Once

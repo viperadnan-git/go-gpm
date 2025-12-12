@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	gogpm "github.com/viperadnan-git/gogpm"
+	gpm "github.com/viperadnan-git/go-gpm"
 
 	"github.com/urfave/cli/v3"
 )
@@ -26,16 +26,20 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 
 	// Get CLI flags
 	threads := int(cmd.Int("threads"))
-	if threads == 0 { threads = cfg.UploadThreads }
+	if threads == 0 {
+		threads = cfg.UploadThreads
+	}
 	quality := cmd.String("quality")
-	if quality == "" { quality = cfg.Quality }
+	if quality == "" {
+		quality = cfg.Quality
+	}
 	if quality != "original" && quality != "storage-saver" {
 		return fmt.Errorf("invalid quality: %s (use 'original' or 'storage-saver')", quality)
 	}
 	albumName := cmd.String("album")
 
 	// Build upload options from CLI flags
-	uploadOpts := gogpm.UploadOptions{
+	uploadOpts := gpm.UploadOptions{
 		Workers:         threads,
 		Recursive:       cmd.Bool("recursive"),
 		ForceUpload:     cmd.Bool("force"),
@@ -55,7 +59,7 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// Build API config
-	apiCfg := gogpm.ApiConfig{
+	apiCfg := gpm.ApiConfig{
 		AuthData: authData,
 		Proxy:    cfg.Proxy,
 	}
@@ -63,7 +67,7 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 	// Log start
 	logger.Info("scanning files", "path", filePath)
 
-	api, err := gogpm.NewGooglePhotosAPI(apiCfg)
+	api, err := gpm.NewGooglePhotosAPI(apiCfg)
 	if err != nil {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
@@ -80,23 +84,23 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		switch event.Status {
-		case gogpm.StatusHashing, gogpm.StatusUploading:
+		case gpm.StatusHashing, gpm.StatusUploading:
 			logger.Debug(string(event.Status), "file", event.Path)
-		case gogpm.StatusCompleted:
+		case gpm.StatusCompleted:
 			uploaded++
 			progress := fmt.Sprintf("[%d/%d]", uploaded+existing+failed, totalFiles)
 			logger.Info(progress+" uploaded", "mediaKey", event.MediaKey, "file", event.Path)
 			if event.MediaKey != "" {
 				successfulMediaKeys = append(successfulMediaKeys, event.MediaKey)
 			}
-		case gogpm.StatusSkipped:
+		case gpm.StatusSkipped:
 			existing++
 			progress := fmt.Sprintf("[%d/%d]", uploaded+existing+failed, totalFiles)
 			logger.Info(progress+" skipped", "mediaKey", event.MediaKey, "file", event.Path, "exists", true)
 			if event.MediaKey != "" {
 				successfulMediaKeys = append(successfulMediaKeys, event.MediaKey)
 			}
-		case gogpm.StatusFailed:
+		case gpm.StatusFailed:
 			failed++
 			progress := fmt.Sprintf("[%d/%d]", uploaded+existing+failed, totalFiles)
 			logger.Error(progress+" failed", "file", event.Path, "error", event.Error)

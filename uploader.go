@@ -1,4 +1,4 @@
-package gogpm
+package gpm
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/viperadnan-git/gogpm/internal/core"
+	"github.com/viperadnan-git/go-gpm/internal/core"
 )
 
 // UploadStatus represents the state of a file upload

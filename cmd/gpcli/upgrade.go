@@ -6,7 +6,7 @@ import (
 
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/urfave/cli/v3"
-	gogpm "github.com/viperadnan-git/gogpm"
+	gpm "github.com/viperadnan-git/go-gpm"
 )
 
 func upgradeAction(ctx context.Context, cmd *cli.Command) error {
@@ -54,7 +54,7 @@ func upgradeAction(ctx context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
-	currentVersion := gogpm.Version
+	currentVersion := gpm.Version
 
 	// Compare versions (skip if same and no specific version requested)
 	if targetVersion == "" && release.Version() == currentVersion {

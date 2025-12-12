@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/viperadnan-git/gogpm/internal/pb"
+	"github.com/viperadnan-git/go-gpm/internal/pb"
 
 	"google.golang.org/protobuf/proto"
 )

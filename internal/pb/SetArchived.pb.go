@@ -182,7 +182,7 @@ const file___proto_SetArchived_proto_rawDesc = "" +
 	"\bitem_key\x18\x01 \x01(\tR\aitemKey\x122\n" +
 	"\x06action\x18\x02 \x01(\v2\x1a.SetArchived.ArchiveActionR\x06action\x1a'\n" +
 	"\rArchiveAction\x12\x16\n" +
-	"\x06action\x18\x01 \x01(\x03R\x06actionB-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
+	"\x06action\x18\x01 \x01(\x03R\x06actionB.Z,github.com/viperadnan-git/go-gpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_SetArchived_proto_rawDescOnce sync.Once

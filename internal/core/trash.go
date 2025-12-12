@@ -3,7 +3,7 @@ package core
 import (
 	"strconv"
 
-	"github.com/viperadnan-git/gogpm/internal/pb"
+	"github.com/viperadnan-git/go-gpm/internal/pb"
 )
 
 // MoveToTrash moves items to trash

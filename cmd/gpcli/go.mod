@@ -1,4 +1,4 @@
-module github.com/viperadnan-git/gogpm/cmd/gpcli
+module github.com/viperadnan-git/go-gpm/cmd/gpcli
 
 go 1.25
 
@@ -9,7 +9,7 @@ require (
 	github.com/knadh/koanf/providers/structs v1.0.0
 	github.com/knadh/koanf/v2 v2.3.0
 	github.com/urfave/cli/v3 v3.6.1
-	github.com/viperadnan-git/gogpm v0.0.0
+	github.com/viperadnan-git/go-gpm v0.0.0
 )
 
 require (
@@ -41,4 +41,4 @@ require (
 )
 
 // Use local library during development
-replace github.com/viperadnan-git/gogpm => ../..
+replace github.com/viperadnan-git/go-gpm => ../..

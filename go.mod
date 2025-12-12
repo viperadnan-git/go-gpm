@@ -1,4 +1,4 @@
-module github.com/viperadnan-git/gogpm
+module github.com/viperadnan-git/go-gpm
 
 go 1.25
 

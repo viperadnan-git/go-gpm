@@ -310,7 +310,7 @@ const file___proto_SetFavourite_proto_rawDesc = "" +
 	"\x06field1\x18\x01 \x01(\v2 .SetFavourite.Field3.Field1InnerR\x06field1\x1a\\\n" +
 	"\vField1Inner\x12B\n" +
 	"\afield19\x18\x13 \x01(\v2(.SetFavourite.Field3.Field1Inner.Field19R\afield19\x1a\t\n" +
-	"\aField19B-Z+github.com/viperadnan-git/gogpm/internal/pbb\x06proto3"
+	"\aField19B.Z,github.com/viperadnan-git/go-gpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_SetFavourite_proto_rawDescOnce sync.Once

@@ -1,4 +1,4 @@
-package gogpm
+package gpm
 
 import (
 	"context"
