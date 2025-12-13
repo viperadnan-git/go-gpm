@@ -235,3 +235,33 @@ func captionAction(ctx context.Context, cmd *cli.Command) error {
 
 	return nil
 }
+
+func resolveAction(ctx context.Context, cmd *cli.Command) error {
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	cfg := cfgManager.GetConfig()
+
+	input := cmd.StringArg("input")
+
+	authData := getAuthData(cfg)
+	if authData == "" {
+		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
+	}
+
+	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
+		AuthData: authData,
+		Proxy:    cfg.Proxy,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	mediaKey, err := apiClient.ResolveMediaKey(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(mediaKey)
+	return nil
+}

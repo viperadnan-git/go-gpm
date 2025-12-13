@@ -321,6 +321,17 @@ func main() {
 				Action: captionAction,
 			},
 			{
+				Name:  "resolve",
+				Usage: "Resolve hash, dedup key, or file path to media key",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "Hash, dedup key, media key, or file path",
+					},
+				},
+				Action: resolveAction,
+			},
+			{
 				Name:  "album",
 				Usage: "Manage albums",
 				Commands: []*cli.Command{
