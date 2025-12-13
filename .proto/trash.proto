@@ -1,0 +1,40 @@
+syntax = "proto3";
+option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
+
+enum TrashActionType {
+  TRASH_ACTION_UNSPECIFIED = 0;  // Required for proto3, not used
+  MOVE_TO_TRASH = 1;             // Move items to trash
+  PERMANENT_DELETE = 2;          // Permanently delete items immediately
+  RESTORE_FROM_TRASH = 3;        // Restore items from trash
+}
+
+// TrashAction performs trash operations on media items
+message TrashAction {
+  TrashActionType action_type = 2;  // Type of trash operation to perform
+  repeated string item_keys = 3;    // Media keys or dedup keys to operate on
+  int64 field4 = 4;                 // 1 for move/delete, 2 for restore
+  Field8 field8 = 8;                // Additional metadata fields
+  Field9 field9 = 9;                // Client version info (empty for permanent delete)
+
+  message Field8 {
+    Field4 field4 = 4;
+    message Field4 {
+      Empty field2 = 2;             // Empty metadata field
+      Field3 field3 = 3;            // Nested metadata
+      Empty field4 = 4;             // Empty metadata field (only for move/delete)
+      Field5 field5 = 5;            // Nested metadata (only for move/delete)
+      message Field3 { Empty field1 = 1; }
+      message Field5 { Empty field1 = 1; }
+      message Empty {}
+    }
+  }
+
+  message Field9 {
+    int64 field1 = 1;               // Constant: 5
+    Field2 field2 = 2;              // Client version details
+    message Field2 {
+      int64 field1 = 1;             // Client version code
+      string field2 = 2;            // Android API version as string
+    }
+  }
+}

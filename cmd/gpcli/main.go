@@ -247,19 +247,24 @@ func main() {
 				},
 			},
 			{
-				Name:  "delete",
-				Usage: "Move item to trash or restore from trash",
-				Arguments: []cli.Argument{
-					&cli.StringArg{
-						Name:      "input",
-						UsageText: "Media key, dedup key, or file path",
-					},
-				},
+				Name:      "delete",
+				Usage:     "Move items to trash, restore from trash, or permanently delete",
+				UsageText: "gpcli delete <input> [input...] [--from-file FILE]",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "restore",
 						Usage:   "Restore from trash instead of delete",
 						Aliases: []string{"r"},
+					},
+					&cli.BoolFlag{
+						Name:    "force",
+						Usage:   "Permanently delete (can't be undone)",
+						Aliases: []string{"f"},
+					},
+					&cli.StringFlag{
+						Name:    "from-file",
+						Aliases: []string{"i"},
+						Usage:   "Read item keys from file (one per line)",
 					},
 				},
 				Action: deleteAction,

@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always implement root fixes and never add patch fixes
 - Update this doc if any reference is changed
 - Write minimal lines of code
+- While updating .proto files add/update minimal comments for important parts
 
 ## Build Commands
 

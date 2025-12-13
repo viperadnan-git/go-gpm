@@ -15,8 +15,35 @@ func deleteAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	cfg := cfgManager.GetConfig()
 
-	input := cmd.StringArg("input")
 	restore := cmd.Bool("restore")
+	forceDelete := cmd.Bool("force")
+
+	// Ensure restore and permanent are mutually exclusive
+	if restore && forceDelete {
+		return fmt.Errorf("--restore and --force flags are mutually exclusive")
+	}
+
+	// Collect inputs from both command-line args and file
+	var inputs []string
+
+	// Get all arguments
+	allArgs := cmd.Args().Slice()
+	if len(allArgs) > 0 {
+		inputs = append(inputs, allArgs...)
+	}
+
+	// Get items from file if --from-file is provided
+	if fromFile := cmd.String("from-file"); fromFile != "" {
+		fileInputs, err := readLinesFromFile(fromFile)
+		if err != nil {
+			return err
+		}
+		inputs = append(inputs, fileInputs...)
+	}
+
+	if len(inputs) == 0 {
+		return fmt.Errorf("at least one item is required (provide via command-line or --from-file)")
+	}
 
 	authData := getAuthData(cfg)
 	if authData == "" {
@@ -31,21 +58,34 @@ func deleteAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to create API client: %w", err)
 	}
 
-	itemKey, err := apiClient.ResolveItemKey(ctx, input)
-	if err != nil {
-		return err
+	logger.Info("resolving items", "count", len(inputs))
+	itemKeys := make([]string, 0, len(inputs))
+	for _, input := range inputs {
+		itemKey, err := apiClient.ResolveItemKey(ctx, input)
+		if err != nil {
+			return fmt.Errorf("failed to resolve item key for %s: %w", input, err)
+		}
+		itemKeys = append(itemKeys, itemKey)
 	}
 
 	if restore {
-		logger.Info("restoring from trash", "item_key", itemKey)
-		if err := apiClient.RestoreFromTrash([]string{itemKey}); err != nil {
+		logger.Info("restoring from trash", "count", len(itemKeys))
+		if err := apiClient.RestoreFromTrash(itemKeys); err != nil {
 			return fmt.Errorf("failed to restore from trash: %w", err)
 		}
+		logger.Info("successfully restored from trash", "count", len(itemKeys))
+	} else if forceDelete {
+		logger.Info("permanently deleting", "count", len(itemKeys))
+		if err := apiClient.PermanentDelete(itemKeys); err != nil {
+			return fmt.Errorf("failed to permanently delete: %w", err)
+		}
+		logger.Info("successfully permanently deleted", "count", len(itemKeys))
 	} else {
-		logger.Info("moving to trash", "item_key", itemKey)
-		if err := apiClient.MoveToTrash([]string{itemKey}); err != nil {
+		logger.Info("moving to trash", "count", len(itemKeys))
+		if err := apiClient.MoveToTrash(itemKeys); err != nil {
 			return fmt.Errorf("failed to move to trash: %w", err)
 		}
+		logger.Info("successfully moved to trash", "count", len(itemKeys))
 	}
 
 	return nil
