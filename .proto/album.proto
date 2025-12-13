@@ -1,10 +1,18 @@
 syntax = "proto3";
 option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
 
+// AlbumCreationMode indicates whether album is created with media or empty
+enum AlbumCreationMode {
+  ALBUM_CREATION_MODE_UNSPECIFIED = 0;
+  WITH_MEDIA = 1;   // Creating album with media items
+  EMPTY = 2;        // Creating empty album
+}
+
+// CreateAlbum creates a new album with optional media items
 message CreateAlbum {
   string album_name = 1;
   int64 timestamp = 2;
-  int64 field3 = 3;
+  AlbumCreationMode has_media = 3;
   repeated MediaKeyRef media_keys = 4;
   Field6Type field6 = 6;
   Field7Type field7 = 7;
@@ -32,6 +40,7 @@ message CreateAlbumResponse {
   }
 }
 
+// AddMediaToAlbum adds media items to an existing album
 message AddMediaToAlbum {
   repeated string media_keys = 1;
   string album_key = 2;
@@ -47,10 +56,12 @@ message AddMediaToAlbum {
   }
 }
 
+// DeleteAlbum deletes an album
 message DeleteAlbum {
   string album_key = 1;
 }
 
+// RenameAlbum renames an album
 message RenameAlbum {
   string album_key = 1;
   string new_name = 2;

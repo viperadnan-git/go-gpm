@@ -172,7 +172,7 @@ func (g *GooglePhotosAPI) ResolveMediaKey(ctx context.Context, input string) (st
 		if err != nil {
 			return "", fmt.Errorf("failed to decode dedup key: %w", err)
 		}
-		mediaKey, err := g.FindRemoteMediaByHash(hash)
+		mediaKey, err := g.FindMediaKeyByHash(hash)
 		if err != nil {
 			return "", fmt.Errorf("failed to find media in library: %w", err)
 		}
@@ -189,7 +189,7 @@ func (g *GooglePhotosAPI) ResolveMediaKey(ctx context.Context, input string) (st
 		if err != nil {
 			return "", fmt.Errorf("failed to calculate SHA1: %w", err)
 		}
-		mediaKey, err := g.FindRemoteMediaByHash(hash)
+		mediaKey, err := g.FindMediaKeyByHash(hash)
 		if err != nil {
 			return "", fmt.Errorf("failed to find media in library: %w", err)
 		}

@@ -2,13 +2,27 @@ syntax = "proto3";
 
 option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
 
-
-message RemoteMatches {
-
+// FindMediaByHashRequest checks if media with given hash already exists
+message FindMediaByHashRequest {
   message field1_type {
+    message field1_type {
+      bytes sha1Hash = 1;
+    }
 
+    field1_type field1 = 1;
+
+    message field2_type {}
+
+    field2_type field2 = 2;
+  }
+
+  field1_type field1 = 1;
+}
+
+// FindMediaByHashResponse contains matching media if hash exists
+message FindMediaByHashResponse {
+  message field1_type {
     message field2_type {
-
       message field1_type {
         bytes sha1_hash = 1;
       }
@@ -40,4 +54,3 @@ message RemoteMatches {
 
   field1_type field1 = 1;
 }
-

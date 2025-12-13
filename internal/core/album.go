@@ -10,11 +10,10 @@ import (
 // CreateAlbum creates a new album with optional media keys
 func (a *Api) CreateAlbum(albumName string, mediaKeys []string) (string, error) {
 	var mediaKeyRefs []*pb.CreateAlbum_MediaKeyRef
-	var field3Value int64
+	var hasMedia pb.AlbumCreationMode
 
 	if len(mediaKeys) > 0 {
-		// When creating album with media, Field3 = 1
-		field3Value = 1
+		hasMedia = pb.AlbumCreationMode_WITH_MEDIA
 		mediaKeyRefs = make([]*pb.CreateAlbum_MediaKeyRef, len(mediaKeys))
 		for i, key := range mediaKeys {
 			mediaKeyRefs[i] = &pb.CreateAlbum_MediaKeyRef{
@@ -24,14 +23,13 @@ func (a *Api) CreateAlbum(albumName string, mediaKeys []string) (string, error) 
 			}
 		}
 	} else {
-		// When creating album without media, Field3 = 2
-		field3Value = 2
+		hasMedia = pb.AlbumCreationMode_EMPTY
 	}
 
 	requestBody := pb.CreateAlbum{
 		AlbumName: albumName,
 		Timestamp: time.Now().Unix(),
-		Field3:    field3Value,
+		HasMedia:  hasMedia,
 		MediaKeys: mediaKeyRefs,
 		Field6:    &pb.CreateAlbum_Field6Type{},
 		Field7:    &pb.CreateAlbum_Field7Type{Field1: 3},

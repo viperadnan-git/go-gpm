@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
-
-
-message CommitToken {
-  int64 field1 = 1;
-  bytes field2 = 2;
-}

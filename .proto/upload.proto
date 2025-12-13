@@ -2,10 +2,24 @@ syntax = "proto3";
 
 option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
 
+// CommitToken represents a token used for committing uploads
+message CommitToken {
+  int64 field1 = 1;
+  bytes field2 = 2;
+}
+
+// GetUploadToken requests an upload token
+message GetUploadToken {
+  int32 f1 = 1;
+  int32 f2 = 2;
+  int32 f3 = 3;
+  int32 f4 = 4;
+  int64 file_size_bytes = 7;
+}
+
+// CommitUpload commits an uploaded file
 message CommitUpload {
-
   message field1_type {
-
     message field1_type {
       int64 field1 = 1;
       bytes field2 = 2;
@@ -24,186 +38,148 @@ message CommitUpload {
     int64 quality = 7;
 
     message field8_type {
-
       message field1_type {
-
-        message field1_type {
-        }
+        message field1_type {}
 
         field1_type field1 = 1;
 
-        message field3_type {
-        }
+        message field3_type {}
 
         field3_type field3 = 3;
 
-        message field4_type {
-        }
+        message field4_type {}
 
         field4_type field4 = 4;
 
         message field5_type {
-
-          message field1_type {
-          }
+          message field1_type {}
 
           field1_type field1 = 1;
 
-          message field2_type {
-          }
+          message field2_type {}
 
           field2_type field2 = 2;
 
-          message field3_type {
-          }
+          message field3_type {}
 
           field3_type field3 = 3;
 
-          message field4_type {
-          }
+          message field4_type {}
 
           field4_type field4 = 4;
 
-          message field5_type {
-          }
+          message field5_type {}
 
           field5_type field5 = 5;
 
-          message field7_type {
-          }
+          message field7_type {}
 
           field7_type field7 = 7;
         }
 
         field5_type field5 = 5;
 
-        message field6_type {
-        }
+        message field6_type {}
 
         field6_type field6 = 6;
 
         message field7_type {
-
-          message field2_type {
-          }
+          message field2_type {}
 
           field2_type field2 = 2;
         }
 
         field7_type field7 = 7;
 
-        message field15_type {
-        }
+        message field15_type {}
 
         field15_type field15 = 15;
 
-        message field16_type {
-        }
+        message field16_type {}
 
         field16_type field16 = 16;
 
-        message field17_type {
-        }
+        message field17_type {}
 
         field17_type field17 = 17;
 
-        message field19_type {
-        }
+        message field19_type {}
 
         field19_type field19 = 19;
 
-        message field20_type {
-        }
+        message field20_type {}
 
         field20_type field20 = 20;
 
         message field21_type {
-
           message field5_type {
-
-            message field3_type {
-            }
+            message field3_type {}
 
             field3_type field3 = 3;
           }
 
           field5_type field5 = 5;
 
-          message field6_type {
-          }
+          message field6_type {}
 
           field6_type field6 = 6;
         }
 
         field21_type field21 = 21;
 
-        message field25_type {
-        }
+        message field25_type {}
 
         field25_type field25 = 25;
 
         message field30_type {
-
-          message field2_type {
-          }
+          message field2_type {}
 
           field2_type field2 = 2;
         }
 
         field30_type field30 = 30;
 
-        message field31_type {
-        }
+        message field31_type {}
 
         field31_type field31 = 31;
 
-        message field32_type {
-        }
+        message field32_type {}
 
         field32_type field32 = 32;
 
         message field33_type {
-
-          message field1_type {
-          }
+          message field1_type {}
 
           field1_type field1 = 1;
         }
 
         field33_type field33 = 33;
 
-        message field34_type {
-        }
+        message field34_type {}
 
         field34_type field34 = 34;
 
-        message field36_type {
-        }
+        message field36_type {}
 
         field36_type field36 = 36;
 
-        message field37_type {
-        }
+        message field37_type {}
 
         field37_type field37 = 37;
 
-        message field38_type {
-        }
+        message field38_type {}
 
         field38_type field38 = 38;
 
-        message field39_type {
-        }
+        message field39_type {}
 
         field39_type field39 = 39;
 
-        message field40_type {
-        }
+        message field40_type {}
 
         field40_type field40 = 40;
 
-        message field41_type {
-        }
+        message field41_type {}
 
         field41_type field41 = 41;
       }
@@ -211,15 +187,10 @@ message CommitUpload {
       field1_type field1 = 1;
 
       message field5_type {
-
         message field2_type {
-
           message field2_type {
-
             message field3_type {
-
-              message field2_type {
-              }
+              message field2_type {}
 
               field2_type field2 = 2;
             }
@@ -227,9 +198,7 @@ message CommitUpload {
             field3_type field3 = 3;
 
             message field4_type {
-
-              message field2_type {
-              }
+              message field2_type {}
 
               field2_type field2 = 2;
             }
@@ -240,7 +209,6 @@ message CommitUpload {
           field2_type field2 = 2;
 
           message field4_type {
-
             message field2_type {
               int64 field2 = 2;
             }
@@ -251,9 +219,7 @@ message CommitUpload {
           field4_type field4 = 4;
 
           message field5_type {
-
-            message field2_type {
-            }
+            message field2_type {}
 
             field2_type field2 = 2;
           }
@@ -265,16 +231,12 @@ message CommitUpload {
         field2_type field2 = 2;
 
         message field3_type {
-
           message field2_type {
-
-            message field3_type {
-            }
+            message field3_type {}
 
             field3_type field3 = 3;
 
-            message field4_type {
-            }
+            message field4_type {}
 
             field4_type field4 = 4;
           }
@@ -282,9 +244,7 @@ message CommitUpload {
           field2_type field2 = 2;
 
           message field3_type {
-
-            message field2_type {
-            }
+            message field2_type {}
 
             field2_type field2 = 2;
 
@@ -297,13 +257,11 @@ message CommitUpload {
 
           field3_type field3 = 3;
 
-          message field4_type {
-          }
+          message field4_type {}
 
           field4_type field4 = 4;
 
           message field5_type {
-
             message field2_type {
               int64 field2 = 2;
             }
@@ -313,8 +271,7 @@ message CommitUpload {
 
           field5_type field5 = 5;
 
-          message field7_type {
-          }
+          message field7_type {}
 
           field7_type field7 = 7;
         }
@@ -322,11 +279,8 @@ message CommitUpload {
         field3_type field3 = 3;
 
         message field4_type {
-
           message field2_type {
-
-            message field2_type {
-            }
+            message field2_type {}
 
             field2_type field2 = 2;
           }
@@ -337,18 +291,13 @@ message CommitUpload {
         field4_type field4 = 4;
 
         message field5_type {
-
           message field1_type {
-
             message field2_type {
-
-              message field3_type {
-              }
+              message field3_type {}
 
               field3_type field3 = 3;
 
-              message field4_type {
-              }
+              message field4_type {}
 
               field4_type field4 = 4;
             }
@@ -356,9 +305,7 @@ message CommitUpload {
             field2_type field2 = 2;
 
             message field3_type {
-
-              message field2_type {
-              }
+              message field2_type {}
 
               field2_type field2 = 2;
 
@@ -381,27 +328,21 @@ message CommitUpload {
 
       field5_type field5 = 5;
 
-      message field8_type {
-      }
+      message field8_type {}
 
       field8_type field8 = 8;
 
       message field9_type {
-
-        message field2_type {
-        }
+        message field2_type {}
 
         field2_type field2 = 2;
 
         message field3_type {
-
-          message field1_type {
-          }
+          message field1_type {}
 
           field1_type field1 = 1;
 
-          message field2_type {
-          }
+          message field2_type {}
 
           field2_type field2 = 2;
         }
@@ -409,62 +350,47 @@ message CommitUpload {
         field3_type field3 = 3;
 
         message field4_type {
-
           message field1_type {
-
             message field3_type {
-
               message field1_type {
-
                 message field1_type {
-
                   message field5_type {
-
-                    message field1_type {
-                    }
+                    message field1_type {}
 
                     field1_type field1 = 1;
                   }
 
                   field5_type field5 = 5;
 
-                  message field6_type {
-                  }
+                  message field6_type {}
 
                   field6_type field6 = 6;
                 }
 
                 field1_type field1 = 1;
 
-                message field2_type {
-                }
+                message field2_type {}
 
                 field2_type field2 = 2;
 
                 message field3_type {
-
                   message field1_type {
-
                     message field5_type {
-
-                      message field1_type {
-                      }
+                      message field1_type {}
 
                       field1_type field1 = 1;
                     }
 
                     field5_type field5 = 5;
 
-                    message field6_type {
-                    }
+                    message field6_type {}
 
                     field6_type field6 = 6;
                   }
 
                   field1_type field1 = 1;
 
-                  message field2_type {
-                  }
+                  message field2_type {}
 
                   field2_type field2 = 2;
                 }
@@ -478,11 +404,8 @@ message CommitUpload {
             field3_type field3 = 3;
 
             message field4_type {
-
               message field1_type {
-
-                message field2_type {
-                }
+                message field2_type {}
 
                 field2_type field2 = 2;
               }
@@ -502,19 +425,15 @@ message CommitUpload {
       field9_type field9 = 9;
 
       message field11_type {
-
-        message field2_type {
-        }
+        message field2_type {}
 
         field2_type field2 = 2;
 
-        message field3_type {
-        }
+        message field3_type {}
 
         field3_type field3 = 3;
 
         message field4_type {
-
           message field2_type {
             int64 field1 = 1;
             int64 field2 = 2;
@@ -528,25 +447,20 @@ message CommitUpload {
 
       field11_type field11 = 11;
 
-      message field12_type {
-      }
+      message field12_type {}
 
       field12_type field12 = 12;
 
       message field14_type {
-
-        message field2_type {
-        }
+        message field2_type {}
 
         field2_type field2 = 2;
 
-        message field3_type {
-        }
+        message field3_type {}
 
         field3_type field3 = 3;
 
         message field4_type {
-
           message field2_type {
             int64 field1 = 1;
             int64 field2 = 2;
@@ -561,14 +475,11 @@ message CommitUpload {
       field14_type field14 = 14;
 
       message field15_type {
-
-        message field1_type {
-        }
+        message field1_type {}
 
         field1_type field1 = 1;
 
-        message field4_type {
-        }
+        message field4_type {}
 
         field4_type field4 = 4;
       }
@@ -576,14 +487,11 @@ message CommitUpload {
       field15_type field15 = 15;
 
       message field17_type {
-
-        message field1_type {
-        }
+        message field1_type {}
 
         field1_type field1 = 1;
 
-        message field4_type {
-        }
+        message field4_type {}
 
         field4_type field4 = 4;
       }
@@ -591,19 +499,15 @@ message CommitUpload {
       field17_type field17 = 17;
 
       message field19_type {
-
-        message field2_type {
-        }
+        message field2_type {}
 
         field2_type field2 = 2;
 
-        message field3_type {
-        }
+        message field3_type {}
 
         field3_type field3 = 3;
 
         message field4_type {
-
           message field2_type {
             int64 field1 = 1;
             int64 field2 = 2;
@@ -617,13 +521,11 @@ message CommitUpload {
 
       field19_type field19 = 19;
 
-      message field22_type {
-      }
+      message field22_type {}
 
       field22_type field22 = 22;
 
-      message field23_type {
-      }
+      message field23_type {}
 
       field23_type field23 = 23;
     }
@@ -643,4 +545,216 @@ message CommitUpload {
 
   field2_type field2 = 2;
   bytes field3 = 3;
+}
+
+// CommitUploadResponse contains the response after committing an upload
+message CommitUploadResponse {
+  message field1_type {
+    message field1_type {
+      int64 field1 = 1;
+      bytes field2 = 2;
+    }
+
+    field1_type field1 = 1;
+    int64 field2 = 2;
+
+    message field3_type {
+      string media_key = 1;
+
+      message field2_type {
+        message field1_type {
+          string field1 = 1;
+          fixed32 field2 = 2;
+          string field3 = 3;
+        }
+
+        field1_type field1 = 1;
+
+        message field2_type {
+          string field1 = 1;
+        }
+
+        field2_type field2 = 2;
+
+        message field3_type {}
+
+        field3_type field3 = 3;
+
+        message field4_type {
+          fixed64 field13 = 13;
+        }
+
+        field4_type field4 = 4;
+
+        message field5_type {
+          int64 field1 = 1;
+          int64 field2 = 2;
+          int64 field3 = 3;
+        }
+
+        repeated field5_type field5 = 5;
+        int64 field7 = 7;
+        int64 field8 = 8;
+        int64 field9 = 9;
+        int64 field10 = 10;
+        int64 field11 = 11;
+
+        message field13_type {
+          bytes field1 = 1;
+          bytes field2 = 2;
+        }
+
+        field13_type field13 = 13;
+
+        message field16_type {
+          int64 field1 = 1;
+        }
+
+        field16_type field16 = 16;
+        int64 field19 = 19;
+
+        message field21_type {
+          string field1 = 1;
+          int64 field4 = 4;
+        }
+
+        field21_type field21 = 21;
+
+        message field22_type {
+          int64 field1 = 1;
+        }
+
+        field22_type field22 = 22;
+        int64 field24 = 24;
+        int64 field26 = 26;
+
+        message field29_type {
+          int64 field1 = 1;
+        }
+
+        field29_type field29 = 29;
+
+        message field30_type {
+          int64 field1 = 1;
+        }
+
+        field30_type field30 = 30;
+
+        message field31_type {
+          int64 field1 = 1;
+        }
+
+        field31_type field31 = 31;
+
+        message field35_type {
+          int64 field1 = 1;
+          int64 field2 = 2;
+          int64 field3 = 3;
+          int64 field4 = 4;
+          int64 field6 = 6;
+        }
+
+        field35_type field35 = 35;
+
+        message field37_type {
+          int64 field1 = 1;
+        }
+
+        field37_type field37 = 37;
+
+        message field39_type {
+          int64 field1 = 1;
+        }
+
+        field39_type field39 = 39;
+      }
+
+      field2_type field2 = 2;
+
+      message field5_type {
+        int64 field1 = 1;
+
+        message field2_type {
+          message field1_type {
+            string field1 = 1;
+            int64 field2 = 2;
+            int64 field3 = 3;
+
+            message field9_type {
+              int64 field1 = 1;
+              int64 field2 = 2;
+              int64 field3 = 3;
+            }
+
+            field9_type field9 = 9;
+          }
+
+          field1_type field1 = 1;
+        }
+
+        field2_type field2 = 2;
+      }
+
+      field5_type field5 = 5;
+
+      message field6_type {
+        string field1 = 1;
+
+        message field2_type {
+          string field1 = 1;
+          string field3 = 3;
+        }
+
+        field2_type field2 = 2;
+      }
+
+      field6_type field6 = 6;
+
+      message field11_type {
+        int64 field1 = 1;
+        fixed32 field2 = 2;
+      }
+
+      field11_type field11 = 11;
+
+      message field14_type {
+        int64 field4 = 4;
+      }
+
+      field14_type field14 = 14;
+
+      message field15_type {
+        string field1 = 1;
+      }
+
+      field15_type field15 = 15;
+
+      message field17_type {
+        int64 field4 = 4;
+      }
+
+      field17_type field17 = 17;
+    }
+
+    field3_type field3 = 3;
+  }
+
+  field1_type field1 = 1;
+
+  message field2_type {
+    int64 field1 = 1;
+    int64 field2 = 2;
+    int64 field4 = 4;
+
+    message field5_type {
+      int64 field1 = 1;
+    }
+
+    field5_type field5 = 5;
+    int64 field6 = 6;
+    int64 field7 = 7;
+    int64 field11 = 11;
+  }
+
+  field2_type field2 = 2;
 }

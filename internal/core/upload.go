@@ -52,18 +52,18 @@ func (a *Api) GetUploadToken(sha1HashBase64 string, fileSize int64) (string, err
 	return uploadToken, nil
 }
 
-// FindRemoteMediaByHash checks the library for existing files with the given hash
-func (a *Api) FindRemoteMediaByHash(sha1Hash []byte) (string, error) {
-	requestBody := pb.HashCheck{
-		Field1: &pb.HashCheckField1Type{
-			Field1: &pb.HashCheckField1TypeField1Type{
+// FindMediaKeyByHash checks the library for existing files with the given hash
+func (a *Api) FindMediaKeyByHash(sha1Hash []byte) (string, error) {
+	requestBody := pb.FindMediaByHashRequest{
+		Field1: &pb.FindMediaByHashRequestField1Type{
+			Field1: &pb.FindMediaByHashRequestField1TypeField1Type{
 				Sha1Hash: sha1Hash,
 			},
-			Field2: &pb.HashCheckField1TypeField2Type{},
+			Field2: &pb.FindMediaByHashRequestField1TypeField2Type{},
 		},
 	}
 
-	var response pb.RemoteMatches
+	var response pb.FindMediaByHashResponse
 	if err := a.DoProtoRequest(
 		"https://photosdata-pa.googleapis.com/6439526531001121323/5084965799730810217",
 		&requestBody,

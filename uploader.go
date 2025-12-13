@@ -138,7 +138,7 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 	// Check if exists
 	if !opts.ForceUpload {
 		send(StatusChecking, "", dedupKey, nil)
-		if mediaKey, _ := api.FindRemoteMediaByHash(sha1Hash); mediaKey != "" {
+		if mediaKey, _ := api.FindMediaKeyByHash(sha1Hash); mediaKey != "" {
 			if opts.DeleteFromHost {
 				os.Remove(filePath)
 			}

@@ -1,6 +1,7 @@
 syntax = "proto3";
 option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
 
+// GetDownloadUrl requests the download URL for a media item
 message GetDownloadUrl {
   Field1 field1 = 1;
   Field2 field2 = 2;
@@ -45,6 +46,7 @@ message GetDownloadUrl {
   }
 }
 
+// GetDownloadUrlResponse contains the download URL for a media item
 message GetDownloadUrlResponse {
   Field1 field1 = 1;
 

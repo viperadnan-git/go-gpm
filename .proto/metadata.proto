@@ -1,6 +1,13 @@
 syntax = "proto3";
 option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
 
+// SetCaption sets the caption for a media item
+message SetCaption {
+  string caption = 2;
+  string item_key = 3; // mediaKey or dedupKey
+}
+
+// SetFavourite sets the favourite status for a media item
 message SetFavourite {
   Field1 field1 = 1;
   Field2 field2 = 2;
