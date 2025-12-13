@@ -127,3 +127,37 @@ func albumAddAction(ctx context.Context, cmd *cli.Command) error {
 	logger.Info("successfully added media to album", "album_key", albumMediaKey, "media_count", len(mediaKeys))
 	return nil
 }
+
+func albumDeleteAction(ctx context.Context, cmd *cli.Command) error {
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	cfg := cfgManager.GetConfig()
+
+	albumMediaKey := cmd.StringArg("album-key")
+	if albumMediaKey == "" {
+		return fmt.Errorf("album media key is required")
+	}
+
+	authData := getAuthData(cfg)
+	if authData == "" {
+		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
+	}
+
+	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
+		AuthData: authData,
+		Proxy:    cfg.Proxy,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create API client: %w", err)
+	}
+
+	logger.Info("deleting album", "album_key", albumMediaKey)
+
+	if err := apiClient.DeleteAlbum(albumMediaKey); err != nil {
+		return fmt.Errorf("failed to delete album: %w", err)
+	}
+
+	logger.Info("album deleted successfully", "album_key", albumMediaKey)
+	return nil
+}

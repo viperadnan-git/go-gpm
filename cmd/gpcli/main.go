@@ -350,6 +350,19 @@ func main() {
 						},
 						Action: albumAddAction,
 					},
+					{
+						Name:      "delete",
+						Aliases:   []string{"rm"},
+						Usage:     "Delete an album",
+						UsageText: "gpcli album delete <album-key>",
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name:      "album-key",
+								UsageText: "Album media key",
+							},
+						},
+						Action: albumDeleteAction,
+					},
 				},
 			},
 			{

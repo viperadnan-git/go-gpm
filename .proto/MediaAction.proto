@@ -15,3 +15,7 @@ message AddMediaToAlbum {
     int64 android_api_version = 5;
   }
 }
+
+message DeleteAlbum {
+  string album_media_key = 1;
+}

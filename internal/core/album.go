@@ -89,3 +89,19 @@ func (a *Api) AddMediaToAlbum(albumMediaKey string, mediaKeys []string) error {
 		WithStatusCheck(),
 	)
 }
+
+// DeleteAlbum deletes an album by its media key
+func (a *Api) DeleteAlbum(albumMediaKey string) error {
+	requestBody := pb.DeleteAlbum{
+		AlbumMediaKey: albumMediaKey,
+	}
+
+	return a.DoProtoRequest(
+		"https://photosdata-pa.googleapis.com/6439526531001121323/11165707358190966680",
+		&requestBody,
+		nil,
+		WithAuth(),
+		WithCommonHeaders(),
+		WithStatusCheck(),
+	)
+}
