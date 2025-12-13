@@ -37,20 +37,18 @@ func albumCreateAction(ctx context.Context, cmd *cli.Command) error {
 	// Note: cmd.Args().Slice() returns unconsumed args (album name is already consumed by StringArg)
 	mediaInputs := cmd.Args().Slice()
 
-	// Google Photos API requires at least one media item when creating an album
-	if len(mediaInputs) == 0 {
-		return fmt.Errorf("at least one media item is required to create an album\nUsage: gpcli album create <name> <media-key> [media-key...]")
-	}
-
-	// Resolve all media keys
-	logger.Info("resolving media items", "count", len(mediaInputs))
-	mediaKeys := make([]string, 0, len(mediaInputs))
-	for _, input := range mediaInputs {
-		mediaKey, err := apiClient.ResolveMediaKey(ctx, input)
-		if err != nil {
-			return fmt.Errorf("failed to resolve media key for %s: %w", input, err)
+	// Resolve all media keys (if any provided)
+	var mediaKeys []string
+	if len(mediaInputs) > 0 {
+		logger.Info("resolving media items", "count", len(mediaInputs))
+		mediaKeys = make([]string, 0, len(mediaInputs))
+		for _, input := range mediaInputs {
+			mediaKey, err := apiClient.ResolveMediaKey(ctx, input)
+			if err != nil {
+				return fmt.Errorf("failed to resolve media key for %s: %w", input, err)
+			}
+			mediaKeys = append(mediaKeys, mediaKey)
 		}
-		mediaKeys = append(mediaKeys, mediaKey)
 	}
 
 	logger.Info("creating album", "name", albumName, "media_count", len(mediaKeys))

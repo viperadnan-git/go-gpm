@@ -7,21 +7,31 @@ import (
 	"github.com/viperadnan-git/go-gpm/internal/pb"
 )
 
-// CreateAlbum creates a new album with the specified media keys
+// CreateAlbum creates a new album with optional media keys
 func (a *Api) CreateAlbum(albumName string, mediaKeys []string) (string, error) {
-	mediaKeyRefs := make([]*pb.CreateAlbum_MediaKeyRef, len(mediaKeys))
-	for i, key := range mediaKeys {
-		mediaKeyRefs[i] = &pb.CreateAlbum_MediaKeyRef{
-			Field1: &pb.CreateAlbum_MediaKeyRef_MediaKeyInner{
-				MediaKey: key,
-			},
+	var mediaKeyRefs []*pb.CreateAlbum_MediaKeyRef
+	var field3Value int64
+
+	if len(mediaKeys) > 0 {
+		// When creating album with media, Field3 = 1
+		field3Value = 1
+		mediaKeyRefs = make([]*pb.CreateAlbum_MediaKeyRef, len(mediaKeys))
+		for i, key := range mediaKeys {
+			mediaKeyRefs[i] = &pb.CreateAlbum_MediaKeyRef{
+				Field1: &pb.CreateAlbum_MediaKeyRef_MediaKeyInner{
+					MediaKey: key,
+				},
+			}
 		}
+	} else {
+		// When creating album without media, Field3 = 2
+		field3Value = 2
 	}
 
 	requestBody := pb.CreateAlbum{
 		AlbumName: albumName,
 		Timestamp: time.Now().Unix(),
-		Field3:    1,
+		Field3:    field3Value,
 		MediaKeys: mediaKeyRefs,
 		Field6:    &pb.CreateAlbum_Field6Type{},
 		Field7:    &pb.CreateAlbum_Field7Type{Field1: 3},
