@@ -1,6 +1,7 @@
 package gpm
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -38,8 +39,8 @@ func NewGooglePhotosAPI(cfg ApiConfig) (*GooglePhotosAPI, error) {
 
 // DownloadThumbnail downloads a thumbnail to the specified output path
 // Returns the final output path
-func (g *GooglePhotosAPI) DownloadThumbnail(mediaKey string, width, height int, forceJpeg, noOverlay bool, outputPath string) (string, error) {
-	body, err := g.GetThumbnail(mediaKey, width, height, forceJpeg, noOverlay)
+func (g *GooglePhotosAPI) DownloadThumbnail(ctx context.Context, mediaKey string, width, height int, forceJpeg, noOverlay bool, outputPath string) (string, error) {
+	body, err := g.GetThumbnail(ctx, mediaKey, width, height, forceJpeg, noOverlay)
 	if err != nil {
 		return "", err
 	}
@@ -51,8 +52,8 @@ func (g *GooglePhotosAPI) DownloadThumbnail(mediaKey string, width, height int, 
 
 // DownloadMedia downloads a media item to the specified output path
 // Returns the final output path
-func (g *GooglePhotosAPI) DownloadMedia(mediaKey string, outputPath string) (string, error) {
-	downloadURL, _, err := g.GetDownloadUrl(mediaKey)
+func (g *GooglePhotosAPI) DownloadMedia(ctx context.Context, mediaKey string, outputPath string) (string, error) {
+	downloadURL, _, err := g.GetDownloadUrl(ctx, mediaKey)
 	if err != nil {
 		return "", err
 	}

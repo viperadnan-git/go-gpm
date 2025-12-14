@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"time"
 
 	"github.com/viperadnan-git/go-gpm/internal/pb"
@@ -8,13 +9,14 @@ import (
 
 // SetCaption sets the caption for a media item
 // itemKey can be either mediaKey or dedupKey
-func (a *Api) SetCaption(itemKey, caption string) error {
+func (a *Api) SetCaption(ctx context.Context, itemKey, caption string) error {
 	requestBody := pb.SetCaption{
 		Caption: caption,
 		ItemKey: itemKey,
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/1552790390512470739",
 		&requestBody,
 		nil,
@@ -27,7 +29,7 @@ func (a *Api) SetCaption(itemKey, caption string) error {
 // SetFavourite sets or removes the favourite status for a media item
 // itemKey can be either mediaKey or dedupKey
 // isFavourite: true = favourite, false = unfavourite
-func (a *Api) SetFavourite(itemKey string, isFavourite bool) error {
+func (a *Api) SetFavourite(ctx context.Context, itemKey string, isFavourite bool) error {
 	// Action map: true (favourite) = 1, false (unfavourite) = 2
 	var action int64 = 2
 	if isFavourite {
@@ -49,6 +51,7 @@ func (a *Api) SetFavourite(itemKey string, isFavourite bool) error {
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/5144645502632292153",
 		&requestBody,
 		nil,
@@ -61,7 +64,7 @@ func (a *Api) SetFavourite(itemKey string, isFavourite bool) error {
 // SetLocation sets the geographic location for a media item
 // itemKey can be either mediaKey or dedupKey
 // latitude and longitude are in decimal degrees
-func (a *Api) SetLocation(itemKey string, latitude, longitude float32) error {
+func (a *Api) SetLocation(ctx context.Context, itemKey string, latitude, longitude float32) error {
 	// Convert coordinates to int32 by multiplying by 10^7
 	// Google Photos stores coordinates as sfixed32 integers scaled by 10,000,000
 	const scale = 10000000
@@ -110,6 +113,7 @@ func (a *Api) SetLocation(itemKey string, latitude, longitude float32) error {
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/227609453150053792",
 		&requestBody,
 		nil,
@@ -122,7 +126,7 @@ func (a *Api) SetLocation(itemKey string, latitude, longitude float32) error {
 // SetDateTime sets the date and time for one or more media items
 // itemKeys can be mediaKey or dedupKey (one or more)
 // timestamp is a time.Time value
-func (a *Api) SetDateTime(itemKeys []string, timestamp time.Time) error {
+func (a *Api) SetDateTime(ctx context.Context, itemKeys []string, timestamp time.Time) error {
 	// Convert to Unix seconds (as float64)
 	timestampSec := float64(timestamp.Unix())
 
@@ -138,6 +142,7 @@ func (a *Api) SetDateTime(itemKeys []string, timestamp time.Time) error {
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/17462398412150687934",
 		&requestBody,
 		nil,

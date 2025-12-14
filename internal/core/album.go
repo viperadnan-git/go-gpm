@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 )
 
 // CreateAlbum creates a new album with optional media keys
-func (a *Api) CreateAlbum(albumName string, mediaKeys []string) (string, error) {
+func (a *Api) CreateAlbum(ctx context.Context, albumName string, mediaKeys []string) (string, error) {
 	var mediaKeyRefs []*pb.CreateAlbum_MediaKeyRef
 	var hasMedia pb.AlbumCreationMode
 
@@ -42,6 +43,7 @@ func (a *Api) CreateAlbum(albumName string, mediaKeys []string) (string, error) 
 
 	var response pb.CreateAlbumResponse
 	if err := a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/8386163679468898444",
 		&requestBody,
 		&response,
@@ -65,7 +67,7 @@ func (a *Api) CreateAlbum(albumName string, mediaKeys []string) (string, error) 
 }
 
 // AddMediaToAlbum adds media items to an existing album
-func (a *Api) AddMediaToAlbum(albumKey string, mediaKeys []string) error {
+func (a *Api) AddMediaToAlbum(ctx context.Context, albumKey string, mediaKeys []string) error {
 	requestBody := pb.AddMediaToAlbum{
 		MediaKeys: mediaKeys,
 		AlbumKey:  albumKey,
@@ -79,6 +81,7 @@ func (a *Api) AddMediaToAlbum(albumKey string, mediaKeys []string) error {
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/484917746253879292",
 		&requestBody,
 		nil,
@@ -89,12 +92,13 @@ func (a *Api) AddMediaToAlbum(albumKey string, mediaKeys []string) error {
 }
 
 // DeleteAlbum deletes an album by its key
-func (a *Api) DeleteAlbum(albumKey string) error {
+func (a *Api) DeleteAlbum(ctx context.Context, albumKey string) error {
 	requestBody := pb.DeleteAlbum{
 		AlbumKey: albumKey,
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/11165707358190966680",
 		&requestBody,
 		nil,
@@ -105,7 +109,7 @@ func (a *Api) DeleteAlbum(albumKey string) error {
 }
 
 // RenameAlbum renames an album
-func (a *Api) RenameAlbum(albumKey string, newName string) error {
+func (a *Api) RenameAlbum(ctx context.Context, albumKey string, newName string) error {
 	requestBody := pb.RenameAlbum{
 		AlbumKey: albumKey,
 		NewName:  newName,
@@ -113,6 +117,7 @@ func (a *Api) RenameAlbum(albumKey string, newName string) error {
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/16466587394238175348",
 		&requestBody,
 		nil,

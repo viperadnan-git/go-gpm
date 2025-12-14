@@ -61,19 +61,19 @@ func deleteAction(ctx context.Context, cmd *cli.Command) error {
 
 	if restore {
 		logger.Info("restoring from trash", "count", len(itemKeys))
-		if err := apiClient.RestoreFromTrash(itemKeys); err != nil {
+		if err := apiClient.RestoreFromTrash(ctx, itemKeys); err != nil {
 			return fmt.Errorf("failed to restore from trash: %w", err)
 		}
 		logger.Info("successfully restored from trash", "count", len(itemKeys))
 	} else if forceDelete {
 		logger.Info("permanently deleting", "count", len(itemKeys))
-		if err := apiClient.PermanentDelete(itemKeys); err != nil {
+		if err := apiClient.PermanentDelete(ctx, itemKeys); err != nil {
 			return fmt.Errorf("failed to permanently delete: %w", err)
 		}
 		logger.Info("successfully permanently deleted", "count", len(itemKeys))
 	} else {
 		logger.Info("moving to trash", "count", len(itemKeys))
-		if err := apiClient.MoveToTrash(itemKeys); err != nil {
+		if err := apiClient.MoveToTrash(ctx, itemKeys); err != nil {
 			return fmt.Errorf("failed to move to trash: %w", err)
 		}
 		logger.Info("successfully moved to trash", "count", len(itemKeys))
@@ -134,7 +134,7 @@ func archiveAction(ctx context.Context, cmd *cli.Command) error {
 		logger.Info("unarchiving items", "count", len(itemKeys))
 	}
 
-	if err := apiClient.SetArchived(itemKeys, isArchived); err != nil {
+	if err := apiClient.SetArchived(ctx, itemKeys, isArchived); err != nil {
 		return fmt.Errorf("failed to set archived status: %w", err)
 	}
 
@@ -167,7 +167,7 @@ func favouriteAction(ctx context.Context, cmd *cli.Command) error {
 		logger.Info("removing from favourites", "item_key", itemKey)
 	}
 
-	if err := apiClient.SetFavourite(itemKey, isFavourite); err != nil {
+	if err := apiClient.SetFavourite(ctx, itemKey, isFavourite); err != nil {
 		return fmt.Errorf("failed to set favourite status: %w", err)
 	}
 
@@ -195,7 +195,7 @@ func captionAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("setting caption", "item_key", itemKey, "caption", caption)
 
-	if err := apiClient.SetCaption(itemKey, caption); err != nil {
+	if err := apiClient.SetCaption(ctx, itemKey, caption); err != nil {
 		return fmt.Errorf("failed to set caption: %w", err)
 	}
 
@@ -256,7 +256,7 @@ func locationAction(ctx context.Context, cmd *cli.Command) error {
 		"latitude", latitude,
 		"longitude", longitude)
 
-	if err := apiClient.SetLocation(itemKey, latitude, longitude); err != nil {
+	if err := apiClient.SetLocation(ctx, itemKey, latitude, longitude); err != nil {
 		return fmt.Errorf("failed to set location: %w", err)
 	}
 
@@ -324,7 +324,7 @@ func datetimeAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("setting datetime", "count", len(itemKeys), "datetime", timestamp.Format(time.RFC3339))
 
-	if err := apiClient.SetDateTime(itemKeys, timestamp); err != nil {
+	if err := apiClient.SetDateTime(ctx, itemKeys, timestamp); err != nil {
 		return fmt.Errorf("failed to set datetime: %w", err)
 	}
 

@@ -1,12 +1,14 @@
 package core
 
 import (
+	"context"
+
 	"github.com/viperadnan-git/go-gpm/internal/pb"
 )
 
 // GetDownloadUrl gets the download URL for a media item
 // Returns downloadURL and isEdited (true if the URL is for an edited version)
-func (a *Api) GetDownloadUrl(mediaKey string) (downloadURL string, isEdited bool, err error) {
+func (a *Api) GetDownloadUrl(ctx context.Context, mediaKey string) (downloadURL string, isEdited bool, err error) {
 	requestBody := pb.GetDownloadUrl{
 		Field1: &pb.GetDownloadUrl_Field1{
 			Field1: &pb.GetDownloadUrl_Field1_Field1Inner{
@@ -32,6 +34,7 @@ func (a *Api) GetDownloadUrl(mediaKey string) (downloadURL string, isEdited bool
 
 	var response pb.GetDownloadUrlResponse
 	if err := a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/$rpc/social.frontend.photos.preparedownloaddata.v1.PhotosPrepareDownloadDataService/PhotosPrepareDownload",
 		&requestBody,
 		&response,

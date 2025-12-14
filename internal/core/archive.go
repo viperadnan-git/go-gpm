@@ -1,13 +1,15 @@
 package core
 
 import (
+	"context"
+
 	"github.com/viperadnan-git/go-gpm/internal/pb"
 )
 
 // SetArchived sets or removes the archived status for multiple items
 // itemKeys can be either mediaKeys or dedupKeys (URL-safe base64 encoded SHA1 hashes)
 // isArchived: true = archive, false = unarchive
-func (a *Api) SetArchived(itemKeys []string, isArchived bool) error {
+func (a *Api) SetArchived(ctx context.Context, itemKeys []string, isArchived bool) error {
 	var actionType pb.ArchiveActionType
 	if isArchived {
 		actionType = pb.ArchiveActionType_ARCHIVE
@@ -31,6 +33,7 @@ func (a *Api) SetArchived(itemKeys []string, isArchived bool) error {
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/6715446385130606868",
 		&requestBody,
 		nil,

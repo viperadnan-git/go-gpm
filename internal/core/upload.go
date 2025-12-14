@@ -15,7 +15,7 @@ import (
 )
 
 // GetUploadToken obtains a file upload token from the Google Photos API
-func (a *Api) GetUploadToken(sha1HashBase64 string, fileSize int64) (string, error) {
+func (a *Api) GetUploadToken(ctx context.Context, sha1HashBase64 string, fileSize int64) (string, error) {
 	requestBody := pb.GetUploadToken{
 		F1:            2,
 		F2:            2,
@@ -30,6 +30,7 @@ func (a *Api) GetUploadToken(sha1HashBase64 string, fileSize int64) (string, err
 	}
 
 	_, resp, err := a.DoRequest(
+		ctx,
 		"https://photos.googleapis.com/data/upload/uploadmedia/interactive",
 		bytes.NewReader(serializedData),
 		WithAuth(),
@@ -53,7 +54,7 @@ func (a *Api) GetUploadToken(sha1HashBase64 string, fileSize int64) (string, err
 }
 
 // FindMediaKeyByHash checks the library for existing files with the given hash
-func (a *Api) FindMediaKeyByHash(sha1Hash []byte) (string, error) {
+func (a *Api) FindMediaKeyByHash(ctx context.Context, sha1Hash []byte) (string, error) {
 	requestBody := pb.FindMediaByHashRequest{
 		Field1: &pb.FindMediaByHashRequestField1Type{
 			Field1: &pb.FindMediaByHashRequestField1TypeField1Type{
@@ -65,6 +66,7 @@ func (a *Api) FindMediaKeyByHash(sha1Hash []byte) (string, error) {
 
 	var response pb.FindMediaByHashResponse
 	if err := a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/5084965799730810217",
 		&requestBody,
 		&response,
@@ -89,10 +91,10 @@ func (a *Api) UploadFile(ctx context.Context, filePath string, uploadToken strin
 	uploadURL := "https://photos.googleapis.com/data/upload/uploadmedia/interactive?upload_id=" + uploadToken
 
 	bodyBytes, _, err := a.DoRequest(
+		ctx,
 		uploadURL,
 		file,
 		WithMethod("PUT"),
-		WithContext(ctx),
 		WithAuth(),
 		WithCommonHeaders(),
 		WithStatusCheck(),
@@ -114,6 +116,7 @@ func (a *Api) UploadFile(ctx context.Context, filePath string, uploadToken strin
 // qualityStr: "original" or "storage-saver" (empty string uses Api default)
 // useQuota: override Api default if true
 func (a *Api) CommitUpload(
+	ctx context.Context,
 	commitToken *pb.CommitToken,
 	fileName string,
 	sha1Hash []byte,
@@ -170,6 +173,7 @@ func (a *Api) CommitUpload(
 
 	var response pb.CommitUploadResponse
 	if err := a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/16538846908252377752",
 		&requestBody,
 		&response,

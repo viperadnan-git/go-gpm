@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"io"
 )
@@ -25,10 +26,11 @@ func (a *Api) GetThumbnailURL(mediaKey string, width, height int, forceJpeg, noO
 
 // GetThumbnail returns a streaming response body for the thumbnail
 // Caller is responsible for closing the returned ReadCloser
-func (a *Api) GetThumbnail(mediaKey string, width, height int, forceJpeg, noOverlay bool) (io.ReadCloser, error) {
+func (a *Api) GetThumbnail(ctx context.Context, mediaKey string, width, height int, forceJpeg, noOverlay bool) (io.ReadCloser, error) {
 	url := a.GetThumbnailURL(mediaKey, width, height, forceJpeg, noOverlay)
 
 	_, resp, err := a.DoRequest(
+		ctx,
 		url,
 		nil,
 		WithMethod("GET"),

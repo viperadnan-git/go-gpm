@@ -42,7 +42,7 @@ func albumCreateAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("creating album", "name", albumName, "media_count", len(mediaKeys))
 
-	albumKey, err := apiClient.CreateAlbum(albumName, mediaKeys)
+	albumKey, err := apiClient.CreateAlbum(ctx, albumName, mediaKeys)
 	if err != nil {
 		return fmt.Errorf("failed to create album: %w", err)
 	}
@@ -100,7 +100,7 @@ func albumAddAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("adding media to album", "album_key", albumKey, "media_count", len(mediaKeys))
 
-	if err := apiClient.AddMediaToAlbum(albumKey, mediaKeys); err != nil {
+	if err := apiClient.AddMediaToAlbum(ctx, albumKey, mediaKeys); err != nil {
 		return fmt.Errorf("failed to add media to album: %w", err)
 	}
 
@@ -125,7 +125,7 @@ func albumDeleteAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("deleting album", "album_key", albumKey)
 
-	if err := apiClient.DeleteAlbum(albumKey); err != nil {
+	if err := apiClient.DeleteAlbum(ctx, albumKey); err != nil {
 		return fmt.Errorf("failed to delete album: %w", err)
 	}
 
@@ -155,7 +155,7 @@ func albumRenameAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("renaming album", "album_key", albumKey, "new_name", newName)
 
-	if err := apiClient.RenameAlbum(albumKey, newName); err != nil {
+	if err := apiClient.RenameAlbum(ctx, albumKey, newName); err != nil {
 		return fmt.Errorf("failed to rename album: %w", err)
 	}
 

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/viperadnan-git/go-gpm/internal/pb"
@@ -10,7 +11,7 @@ import (
 // itemKeys can be either mediaKeys or dedupKeys (URL-safe base64 encoded SHA1 hashes)
 // actionType specifies the operation: MOVE_TO_TRASH, PERMANENT_DELETE, or RESTORE_FROM_TRASH
 // This is the main function that can be used directly for any trash operation
-func (a *Api) PerformTrashAction(itemKeys []string, actionType pb.TrashActionType) error {
+func (a *Api) PerformTrashAction(ctx context.Context, itemKeys []string, actionType pb.TrashActionType) error {
 	var field4 int64
 	var field8 *pb.TrashAction_Field8
 	var field9 *pb.TrashAction_Field9
@@ -82,6 +83,7 @@ func (a *Api) PerformTrashAction(itemKeys []string, actionType pb.TrashActionTyp
 	}
 
 	return a.DoProtoRequest(
+		ctx,
 		"https://photosdata-pa.googleapis.com/6439526531001121323/17490284929287180316",
 		&requestBody,
 		nil,
@@ -93,19 +95,19 @@ func (a *Api) PerformTrashAction(itemKeys []string, actionType pb.TrashActionTyp
 
 // MoveToTrash moves items to trash (wrapper around PerformTrashAction)
 // itemKeys can be either mediaKeys or dedupKeys (URL-safe base64 encoded SHA1 hashes)
-func (a *Api) MoveToTrash(itemKeys []string) error {
-	return a.PerformTrashAction(itemKeys, pb.TrashActionType_MOVE_TO_TRASH)
+func (a *Api) MoveToTrash(ctx context.Context, itemKeys []string) error {
+	return a.PerformTrashAction(ctx, itemKeys, pb.TrashActionType_MOVE_TO_TRASH)
 }
 
 // RestoreFromTrash restores items from trash (wrapper around PerformTrashAction)
 // itemKeys can be either mediaKeys or dedupKeys (URL-safe base64 encoded SHA1 hashes)
-func (a *Api) RestoreFromTrash(itemKeys []string) error {
-	return a.PerformTrashAction(itemKeys, pb.TrashActionType_RESTORE_FROM_TRASH)
+func (a *Api) RestoreFromTrash(ctx context.Context, itemKeys []string) error {
+	return a.PerformTrashAction(ctx, itemKeys, pb.TrashActionType_RESTORE_FROM_TRASH)
 }
 
 // PermanentDelete permanently deletes items (wrapper around PerformTrashAction)
 // itemKeys can be either mediaKeys or dedupKeys (URL-safe base64 encoded SHA1 hashes)
 // Items will be permanently deleted immediately, bypassing trash
-func (a *Api) PermanentDelete(itemKeys []string) error {
-	return a.PerformTrashAction(itemKeys, pb.TrashActionType_PERMANENT_DELETE)
+func (a *Api) PermanentDelete(ctx context.Context, itemKeys []string) error {
+	return a.PerformTrashAction(ctx, itemKeys, pb.TrashActionType_PERMANENT_DELETE)
 }

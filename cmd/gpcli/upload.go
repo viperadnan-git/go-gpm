@@ -144,14 +144,14 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		const batchSize = 500
 		firstBatchEnd := min(batchSize, len(successfulMediaKeys))
 
-		albumKey, err := api.CreateAlbum(albumName, successfulMediaKeys[:firstBatchEnd])
+		albumKey, err := api.CreateAlbum(ctx, albumName, successfulMediaKeys[:firstBatchEnd])
 		if err != nil {
 			return fmt.Errorf("failed to create album: %w", err)
 		}
 
 		for i := batchSize; i < len(successfulMediaKeys); i += batchSize {
 			end := min(i+batchSize, len(successfulMediaKeys))
-			if err = api.AddMediaToAlbum(albumKey, successfulMediaKeys[i:end]); err != nil {
+			if err = api.AddMediaToAlbum(ctx, albumKey, successfulMediaKeys[i:end]); err != nil {
 				logger.Warn("failed to add batch to album", "error", err)
 			}
 		}
@@ -166,7 +166,7 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		const batchSize = 500
 		for i := 0; i < len(successfulMediaKeys); i += batchSize {
 			end := min(i+batchSize, len(successfulMediaKeys))
-			if err := api.SetDateTime(successfulMediaKeys[i:end], *timestamp); err != nil {
+			if err := api.SetDateTime(ctx, successfulMediaKeys[i:end], *timestamp); err != nil {
 				logger.Warn("failed to set datetime for batch", "error", err)
 			}
 		}

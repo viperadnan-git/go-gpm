@@ -23,7 +23,6 @@ type RequestConfig struct {
 	Headers           map[string]string // Additional headers to merge
 	Auth              bool              // Include bearer token
 	CommonHeaders     bool              // Include full CommonHeaders vs minimal
-	Context           context.Context   // Request context
 	StreamingResponse bool              // Return body as stream (caller closes)
 	CheckStatus       bool              // Check response status with checkResponse
 	ChunkedTransfer   bool              // Enable chunked transfer encoding
@@ -47,11 +46,6 @@ func WithHeaders(headers map[string]string) RequestOption {
 			c.Headers[k] = v
 		}
 	}
-}
-
-// WithContext sets the request context
-func WithContext(ctx context.Context) RequestOption {
-	return func(c *RequestConfig) { c.Context = ctx }
 }
 
 // WithAuth enables bearer token authentication
@@ -310,13 +304,12 @@ func readGzipBody(resp *http.Response) ([]byte, error) {
 // DoRequest executes an HTTP request with full lifecycle management.
 // Returns body bytes, http.Response (for headers), and error.
 // For streaming (WithStreamResponse), body is nil and caller must close resp.Body.
-func (a *Api) DoRequest(url string, body io.Reader, opts ...RequestOption) ([]byte, *http.Response, error) {
+func (a *Api) DoRequest(ctx context.Context, url string, body io.Reader, opts ...RequestOption) ([]byte, *http.Response, error) {
 	cfg := &RequestConfig{
 		Method:        "POST",
 		Headers:       make(map[string]string),
 		Auth:          false,
 		CommonHeaders: false,
-		Context:       context.Background(),
 	}
 
 	for _, opt := range opts {
@@ -345,7 +338,7 @@ func (a *Api) DoRequest(url string, body io.Reader, opts ...RequestOption) ([]by
 	}
 
 	// Create request
-	req, err := http.NewRequestWithContext(cfg.Context, cfg.Method, url, body)
+	req, err := http.NewRequestWithContext(ctx, cfg.Method, url, body)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -391,13 +384,13 @@ func (a *Api) DoRequest(url string, body io.Reader, opts ...RequestOption) ([]by
 
 // DoProtoRequest marshals a protobuf request, sends it, and optionally unmarshals the response.
 // If respMsg is nil, the response body is not unmarshaled (fire-and-forget).
-func (a *Api) DoProtoRequest(url string, reqMsg proto.Message, respMsg proto.Message, opts ...RequestOption) error {
+func (a *Api) DoProtoRequest(ctx context.Context, url string, reqMsg proto.Message, respMsg proto.Message, opts ...RequestOption) error {
 	serializedData, err := proto.Marshal(reqMsg)
 	if err != nil {
 		return fmt.Errorf("failed to marshal protobuf: %w", err)
 	}
 
-	bodyBytes, _, err := a.DoRequest(url, bytes.NewReader(serializedData), opts...)
+	bodyBytes, _, err := a.DoRequest(ctx, url, bytes.NewReader(serializedData), opts...)
 	if err != nil {
 		return err
 	}

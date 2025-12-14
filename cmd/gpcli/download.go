@@ -32,7 +32,7 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 		logger.Info("fetching download URL", "media_key", mediaKey)
 	}
 
-	downloadURL, isEdited, err := apiClient.GetDownloadUrl(mediaKey)
+	downloadURL, isEdited, err := apiClient.GetDownloadUrl(ctx, mediaKey)
 	if err != nil {
 		return fmt.Errorf("failed to get download URL: %w", err)
 	}
@@ -81,7 +81,7 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 
 	logger.Info("downloading thumbnail", "media_key", mediaKey)
 
-	savedPath, err := apiClient.DownloadThumbnail(mediaKey, width, height, forceJpeg, noOverlay, outputPath)
+	savedPath, err := apiClient.DownloadThumbnail(ctx, mediaKey, width, height, forceJpeg, noOverlay, outputPath)
 	if err != nil {
 		return err
 	}

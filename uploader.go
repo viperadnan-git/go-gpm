@@ -138,7 +138,7 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 	// Check if exists
 	if !opts.ForceUpload {
 		send(StatusChecking, "", dedupKey, nil)
-		if mediaKey, _ := api.FindMediaKeyByHash(sha1Hash); mediaKey != "" {
+		if mediaKey, _ := api.FindMediaKeyByHash(ctx, sha1Hash); mediaKey != "" {
 			if opts.DeleteFromHost {
 				os.Remove(filePath)
 			}
@@ -157,7 +157,7 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 	// Upload
 	send(StatusUploading, "", dedupKey, nil)
 	sha1Base64 := base64.StdEncoding.EncodeToString([]byte(sha1Hash))
-	token, err := api.GetUploadToken(sha1Base64, fileInfo.Size())
+	token, err := api.GetUploadToken(ctx, sha1Base64, fileInfo.Size())
 	if err != nil {
 		send(StatusFailed, "", dedupKey, fmt.Errorf("upload token error: %w", err))
 		return
@@ -171,7 +171,7 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 
 	// Finalize
 	send(StatusFinalizing, "", dedupKey, nil)
-	mediaKey, err := api.CommitUpload(commitToken, fileInfo.Name(), sha1Hash, fileInfo.ModTime().Unix(), opts.Quality, opts.UseQuota)
+	mediaKey, err := api.CommitUpload(ctx, commitToken, fileInfo.Name(), sha1Hash, fileInfo.ModTime().Unix(), opts.Quality, opts.UseQuota)
 	if err != nil {
 		send(StatusFailed, "", dedupKey, fmt.Errorf("commit error: %w", err))
 		return
@@ -183,17 +183,17 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 
 	// Post-upload ops
 	if opts.Caption != "" {
-		if err := api.SetCaption(mediaKey, opts.Caption); err != nil {
+		if err := api.SetCaption(ctx, mediaKey, opts.Caption); err != nil {
 			slog.Error("caption failed", "path", filePath, "error", err)
 		}
 	}
 	if opts.ShouldFavourite {
-		if err := api.SetFavourite(mediaKey, true); err != nil {
+		if err := api.SetFavourite(ctx, mediaKey, true); err != nil {
 			slog.Error("favourite failed", "path", filePath, "error", err)
 		}
 	}
 	if opts.ShouldArchive {
-		if err := api.SetArchived([]string{mediaKey}, true); err != nil {
+		if err := api.SetArchived(ctx, []string{mediaKey}, true); err != nil {
 			slog.Error("archive failed", "path", filePath, "error", err)
 		}
 	}
