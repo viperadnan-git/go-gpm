@@ -214,7 +214,6 @@ func (a *Api) refreshAccessToken() (authToken string, expiry int64, err error) {
 		req.Header.Set(k, v)
 	}
 
-	fmt.Println("Request URL:", req.URL.String())
 	resp, err := a.Client.Do(req)
 	if err != nil {
 		return "", 0, fmt.Errorf("auth request failed: %w", err)
