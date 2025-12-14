@@ -10,6 +10,17 @@ import (
 // ApiConfig holds configuration for the Google Photos API client
 type ApiConfig = core.ApiConfig
 
+// TokenCache defines the interface for token storage
+type TokenCache = core.TokenCache
+
+// MemoryTokenCache stores tokens in memory (thread-safe)
+type MemoryTokenCache = core.MemoryTokenCache
+
+// NewMemoryTokenCache creates a new in-memory token cache
+func NewMemoryTokenCache() *MemoryTokenCache {
+	return core.NewMemoryTokenCache()
+}
+
 // GooglePhotosAPI is the main API client for Google Photos operations
 type GooglePhotosAPI struct {
 	*core.Api

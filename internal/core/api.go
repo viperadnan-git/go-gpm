@@ -81,10 +81,11 @@ func WithChunkedTransfer() RequestOption {
 
 // ApiConfig holds the configuration needed to create an API client
 type ApiConfig struct {
-	AuthData string // Authentication string
-	Proxy    string // Proxy URL
-	Quality  string // Default quality: "original" or "storage-saver"
-	UseQuota bool   // If true, uploaded files count against storage quota (default: false)
+	AuthData   string     // Authentication string
+	Proxy      string     // Proxy URL
+	Quality    string     // Default quality: "original" or "storage-saver"
+	UseQuota   bool       // If true, uploaded files count against storage quota (default: false)
+	TokenCache TokenCache // Optional: custom token cache (nil = use MemoryTokenCache)
 }
 
 // Api represents a Google Photos API client
@@ -97,8 +98,8 @@ type Api struct {
 	Language          string
 	AuthData          string
 	Client            *http.Client
-	authTokenCache    map[string]string
-	authMu            sync.Mutex // Protects authTokenCache
+	tokenCache        TokenCache
+	authMu            sync.Mutex // Protects token refresh
 	Quality           string     // Default quality: "original" or "storage-saver"
 	UseQuota          bool       // If true, uploaded files count against storage quota (default: false)
 }
@@ -120,6 +121,11 @@ func NewApi(cfg ApiConfig) (*Api, error) {
 		return nil, fmt.Errorf("failed to create HTTP client: %w", err)
 	}
 
+	tokenCache := cfg.TokenCache
+	if tokenCache == nil {
+		tokenCache = NewMemoryTokenCache()
+	}
+
 	api := &Api{
 		AndroidAPIVersion: 28,
 		Model:             "Pixel XL",
@@ -128,12 +134,9 @@ func NewApi(cfg ApiConfig) (*Api, error) {
 		Language:          language,
 		AuthData:          strings.TrimSpace(cfg.AuthData),
 		Client:            client,
-		authTokenCache: map[string]string{
-			"Expiry": "0",
-			"Auth":   "",
-		},
-		Quality:  cfg.Quality,
-		UseQuota: cfg.UseQuota,
+		tokenCache:        tokenCache,
+		Quality:           cfg.Quality,
+		UseQuota:          cfg.UseQuota,
 	}
 
 	api.UserAgent = fmt.Sprintf(
@@ -146,37 +149,30 @@ func NewApi(cfg ApiConfig) (*Api, error) {
 	return api, nil
 }
 
-// BearerToken returns a valid bearer token, refreshing if necessary
-func (a *Api) BearerToken() (string, error) {
+// GetAuthToken returns a valid auth token, refreshing if necessary
+func (a *Api) GetAuthToken() (string, error) {
 	a.authMu.Lock()
 	defer a.authMu.Unlock()
 
-	expiryStr := a.authTokenCache["Expiry"]
-	expiry, err := strconv.ParseInt(expiryStr, 10, 64)
-	if err != nil {
-		return "", fmt.Errorf("invalid expiry time: %w", err)
-	}
-
-	if expiry <= time.Now().Unix() {
-		resp, err := a.refreshAuthToken()
-		if err != nil {
-			return "", fmt.Errorf("failed to get auth token: %w", err)
-		}
-		a.authTokenCache = resp
-	}
-
-	if token := a.authTokenCache["Auth"]; token != "" {
+	token, expiry := a.tokenCache.Get()
+	if token != "" && expiry > time.Now().Unix() {
 		return token, nil
 	}
 
-	return "", errors.New("auth response does not contain bearer token")
+	token, expiry, err := a.refreshAccessToken()
+	if err != nil {
+		return "", fmt.Errorf("failed to refresh auth token: %w", err)
+	}
+
+	a.tokenCache.Set(token, expiry)
+	return token, nil
 }
 
-// refreshAuthToken fetches a new auth token from Google
-func (a *Api) refreshAuthToken() (map[string]string, error) {
+// refreshAccessToken fetches a new auth token from Google (expensive operation)
+func (a *Api) refreshAccessToken() (authToken string, expiry int64, err error) {
 	authDataValues, err := url.ParseQuery(a.AuthData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse auth data: %w", err)
+		return "", 0, fmt.Errorf("failed to parse auth data: %w", err)
 	}
 
 	authRequestData := url.Values{
@@ -211,26 +207,27 @@ func (a *Api) refreshAuthToken() (map[string]string, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return "", 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
 
+	fmt.Println("Request URL:", req.URL.String())
 	resp, err := a.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("auth request failed: %w", err)
+		return "", 0, fmt.Errorf("auth request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if err := checkResponse(resp); err != nil {
-		return nil, err
+		return "", 0, err
 	}
 
 	bodyBytes, err := readGzipBody(resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return "", 0, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	// Parse the key=value response format
@@ -247,14 +244,16 @@ func (a *Api) refreshAuthToken() (map[string]string, error) {
 	}
 
 	// Validate we got the required fields
-	if parsedAuthResponse["Auth"] == "" {
-		return nil, errors.New("auth response missing Auth token")
-	}
-	if parsedAuthResponse["Expiry"] == "" {
-		return nil, errors.New("auth response missing Expiry")
+	if parsedAuthResponse["Auth"] == "" || parsedAuthResponse["Expiry"] == "" {
+		return "", 0, errors.New("auth response missing Auth or Expiry token")
 	}
 
-	return parsedAuthResponse, nil
+	expiryInt, err := strconv.ParseInt(parsedAuthResponse["Expiry"], 10, 64)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to parse expiry: %w", err)
+	}
+
+	return parsedAuthResponse["Auth"], expiryInt, nil
 }
 
 // CommonHeaders returns the standard headers for Google Photos API requests
@@ -333,11 +332,11 @@ func (a *Api) DoRequest(url string, body io.Reader, opts ...RequestOption) ([]by
 		}
 	}
 	if cfg.Auth {
-		bearerToken, err := a.BearerToken()
+		authToken, err := a.GetAuthToken()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get bearer token: %w", err)
 		}
-		allHeaders["Authorization"] = "Bearer " + bearerToken
+		allHeaders["Authorization"] = "Bearer " + authToken
 		allHeaders["User-Agent"] = a.UserAgent
 	}
 

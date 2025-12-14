@@ -122,6 +122,8 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 			failed++
 			progress := fmt.Sprintf("[%d/%d]", uploaded+existing+failed, totalFiles)
 			logger.Error(progress+" failed", "file", event.Path, "error", event.Error)
+		default:
+			logger.Debug(string(event.Status), "file", event.Path, "mediaKey", event.MediaKey, "dedupKey", event.DedupKey, "error", event.Error)
 		}
 	}
 
