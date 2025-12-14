@@ -24,20 +24,38 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
-	// Get CLI flags
+	// Get per-account settings
+	account := cfgManager.GetSelectedAccount()
+	var accountThreads int
+	var accountQuality string
+	var accountUseQuota bool
+	if account != nil {
+		accountThreads = account.UploadThreads
+		accountQuality = account.Quality
+		accountUseQuota = account.UseQuota
+	}
+
+	// Get CLI flags with fallback to account settings
 	threads := int(cmd.Int("threads"))
 	if threads == 0 {
-		threads = cfg.UploadThreads
+		threads = accountThreads
 	}
+	if threads == 0 {
+		threads = 3 // default
+	}
+
 	quality := cmd.String("quality")
 	if quality == "" {
-		quality = cfg.Quality
+		quality = accountQuality
+	}
+	if quality == "" {
+		quality = "original" // default
 	}
 	if quality != "original" && quality != "storage-saver" {
 		return fmt.Errorf("invalid quality: %s (use 'original' or 'storage-saver')", quality)
 	}
+
 	albumName := cmd.String("album")
 
 	// Parse datetime flag
@@ -67,28 +85,17 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		ShouldFavourite: cmd.Bool("favourite"),
 		ShouldArchive:   cmd.Bool("archive"),
 		Quality:         quality,
-		UseQuota:        cmd.Bool("use-quota") || cfg.UseQuota,
+		UseQuota:        cmd.Bool("use-quota") || accountUseQuota,
 	}
 
-	// Resolve auth data
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	// Build API config
-	apiCfg := gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
+	// Create API client
+	api, err := createAPIClient()
+	if err != nil {
+		return err
 	}
 
 	// Log start
 	logger.Info("scanning files", "path", filePath)
-
-	api, err := gpm.NewGooglePhotosAPI(apiCfg)
-	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
-	}
 
 	// Track results
 	var totalFiles, uploaded, existing, failed int

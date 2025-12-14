@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	gpm "github.com/viperadnan-git/go-gpm"
-
 	"github.com/urfave/cli/v3"
 )
 
@@ -15,7 +13,6 @@ func deleteAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	restore := cmd.Bool("restore")
 	forceDelete := cmd.Bool("force")
@@ -47,17 +44,9 @@ func deleteAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("at least one item is required (provide via command-line or --from-file)")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	logger.Info("resolving items", "count", len(inputs))
@@ -98,7 +87,6 @@ func archiveAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	unarchive := cmd.Bool("unarchive")
 
@@ -124,17 +112,9 @@ func archiveAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("at least one item is required (provide via command-line or --from-file)")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	logger.Info("resolving items", "count", len(inputs))
@@ -166,22 +146,13 @@ func favouriteAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	input := cmd.StringArg("input")
 	remove := cmd.Bool("remove")
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	itemKey, err := apiClient.ResolveItemKey(ctx, input)
@@ -208,22 +179,13 @@ func captionAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	input := cmd.StringArg("input")
 	caption := cmd.StringArg("caption")
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	itemKey, err := apiClient.ResolveItemKey(ctx, input)
@@ -245,21 +207,12 @@ func resolveAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	input := cmd.StringArg("input")
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	mediaKey, err := apiClient.ResolveMediaKey(ctx, input)
@@ -275,7 +228,6 @@ func locationAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	input := cmd.StringArg("input")
 	latitude := float32(cmd.Float("latitude"))
@@ -289,17 +241,9 @@ func locationAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("longitude must be between -180 and 180")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	itemKey, err := apiClient.ResolveItemKey(ctx, input)
@@ -324,7 +268,6 @@ func datetimeAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	datetimeStr := cmd.StringArg("datetime")
 
@@ -364,17 +307,9 @@ func datetimeAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("at least one item is required (provide via command-line or --from-file)")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	logger.Info("resolving items", "count", len(inputs))

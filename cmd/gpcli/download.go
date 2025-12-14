@@ -13,23 +13,14 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	input := cmd.StringArg("input")
 	urlOnly := cmd.Bool("url")
 	outputPath := cmd.String("output")
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	mediaKey, err := apiClient.ResolveMediaKey(ctx, input)
@@ -70,7 +61,6 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	input := cmd.StringArg("input")
 	outputPath := cmd.String("output")
@@ -79,17 +69,9 @@ func thumbnailAction(ctx context.Context, cmd *cli.Command) error {
 	forceJpeg := cmd.Bool("jpeg")
 	noOverlay := !cmd.Bool("overlay")
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	mediaKey, err := apiClient.ResolveMediaKey(ctx, input)

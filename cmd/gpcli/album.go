@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	gpm "github.com/viperadnan-git/go-gpm"
-
 	"github.com/urfave/cli/v3"
 )
 
@@ -13,24 +11,15 @@ func albumCreateAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	albumName := cmd.StringArg("name")
 	if albumName == "" {
 		return fmt.Errorf("album name is required")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	// Get media items from command-line args
@@ -66,7 +55,6 @@ func albumAddAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	albumKey := cmd.StringArg("album-key")
 	if albumKey == "" {
@@ -95,17 +83,9 @@ func albumAddAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("at least one media item is required (provide via command-line or --from-file)")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	logger.Info("resolving media items", "count", len(mediaInputs))
@@ -132,24 +112,15 @@ func albumDeleteAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	albumKey := cmd.StringArg("album-key")
 	if albumKey == "" {
 		return fmt.Errorf("album key is required")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	logger.Info("deleting album", "album_key", albumKey)
@@ -166,7 +137,6 @@ func albumRenameAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	cfg := cfgManager.GetConfig()
 
 	albumKey := cmd.StringArg("album-key")
 	if albumKey == "" {
@@ -178,17 +148,9 @@ func albumRenameAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("new album name is required")
 	}
 
-	authData := getAuthData(cfg)
-	if authData == "" {
-		return fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
-	}
-
-	apiClient, err := gpm.NewGooglePhotosAPI(gpm.ApiConfig{
-		AuthData: authData,
-		Proxy:    cfg.Proxy,
-	})
+	apiClient, err := createAPIClient()
 	if err != nil {
-		return fmt.Errorf("failed to create API client: %w", err)
+		return err
 	}
 
 	logger.Info("renaming album", "album_key", albumKey, "new_name", newName)

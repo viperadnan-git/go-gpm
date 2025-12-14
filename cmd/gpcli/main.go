@@ -23,7 +23,7 @@ func main() {
 				Aliases:     []string{"c"},
 				Usage:       "Path to config file",
 				Sources:     cli.EnvVars("GPCLI_CONFIG"),
-				DefaultText: "~/.config/gpcli/gpcli.config",
+				DefaultText: "~/.config/gpcli/gpcli.toml",
 				Config:      cli.StringConfig{TrimSpace: true},
 			},
 			&cli.StringFlag{

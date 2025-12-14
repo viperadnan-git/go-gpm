@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	gpm "github.com/viperadnan-git/go-gpm"
 )
 
 var configPath string
@@ -17,51 +19,72 @@ func loadConfig() error {
 	return err
 }
 
+// createAPIClient creates a new Google Photos API client with token caching
+func createAPIClient() (*gpm.GooglePhotosAPI, error) {
+	authData := getAuthData()
+	if authData == "" {
+		return nil, fmt.Errorf("no authentication configured. Use 'gpcli auth add' to add credentials")
+	}
+
+	email := getSelectedEmail()
+	account := cfgManager.GetSelectedAccount()
+
+	var proxy string
+	if account != nil {
+		proxy = account.Proxy
+	}
+
+	// Create token cache for persistent token storage
+	var tokenCache gpm.TokenCache
+	if email != "" && authOverride == "" {
+		tokenCache = NewConfigTokenCache(cfgManager, email)
+	}
+
+	return gpm.NewGooglePhotosAPI(gpm.ApiConfig{
+		AuthData:   authData,
+		Proxy:      proxy,
+		TokenCache: tokenCache,
+	})
+}
+
 // getAuthData returns the auth data string based on authOverride or selected config
-func getAuthData(cfg Config) string {
+func getAuthData() string {
 	if authOverride != "" {
 		return authOverride
 	}
-	// Find credentials for selected account
-	for _, cred := range cfg.Credentials {
-		params, err := ParseAuthString(cred)
-		if err != nil {
-			continue
-		}
-		if params.Get("Email") == cfg.Selected {
-			return cred
-		}
-	}
-	// Return first credential if no match
-	if len(cfg.Credentials) > 0 {
-		return cfg.Credentials[0]
+	account := cfgManager.GetSelectedAccount()
+	if account != nil {
+		return account.Auth
 	}
 	return ""
 }
 
+// getSelectedEmail returns the email of the currently selected account
+func getSelectedEmail() string {
+	if authOverride != "" {
+		params, err := ParseAuthString(authOverride)
+		if err == nil {
+			return params.Get("Email")
+		}
+		return ""
+	}
+	return cfgManager.GetConfig().Selected
+}
+
 // resolveEmailFromArg resolves an email from either an index number (1-based) or email string
-func resolveEmailFromArg(arg string, credentials []string) (string, error) {
+func resolveEmailFromArg(arg string, emails []string) (string, error) {
 	// Try to parse as number first
 	if num, err := fmt.Sscanf(arg, "%d", new(int)); err == nil && num == 1 {
 		var idx int
 		fmt.Sscanf(arg, "%d", &idx)
-		if idx < 1 || idx > len(credentials) {
-			return "", fmt.Errorf("invalid index %d: must be between 1 and %d", idx, len(credentials))
+		if idx < 1 || idx > len(emails) {
+			return "", fmt.Errorf("invalid index %d: must be between 1 and %d", idx, len(emails))
 		}
-		params, err := ParseAuthString(credentials[idx-1])
-		if err != nil {
-			return "", fmt.Errorf("invalid credential at index %d", idx)
-		}
-		return params.Get("Email"), nil
+		return emails[idx-1], nil
 	}
 
 	// Otherwise treat as email - try exact match first
-	for _, cred := range credentials {
-		params, err := ParseAuthString(cred)
-		if err != nil {
-			continue
-		}
-		email := params.Get("Email")
+	for _, email := range emails {
 		if email == arg {
 			return email, nil
 		}
@@ -69,12 +92,7 @@ func resolveEmailFromArg(arg string, credentials []string) (string, error) {
 
 	// Try fuzzy matching
 	var candidates []string
-	for _, cred := range credentials {
-		params, err := ParseAuthString(cred)
-		if err != nil {
-			continue
-		}
-		email := params.Get("Email")
+	for _, email := range emails {
 		if containsSubstring(email, arg) {
 			candidates = append(candidates, email)
 		}

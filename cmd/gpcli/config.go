@@ -2,32 +2,41 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync"
 
-	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/file"
-	"github.com/knadh/koanf/providers/structs"
-	"github.com/knadh/koanf/v2"
+	"github.com/pelletier/go-toml/v2"
 )
 
-// Config represents the persistent configuration
-type Config struct {
-	Credentials   []string `json:"credentials" koanf:"credentials"`
-	Selected      string   `json:"selected" koanf:"selected"`
-	Proxy         string   `json:"proxy" koanf:"proxy"`
-	UseQuota      bool     `json:"useQuota" koanf:"use_quota"`
-	Quality       string   `json:"quality" koanf:"quality"` // "original" or "storage-saver"
-	UploadThreads int      `json:"uploadThreads" koanf:"upload_threads"`
+// CachedToken holds the cached access token and expiry
+type CachedToken struct {
+	Token  string `toml:"token"`
+	Expiry int64  `toml:"expiry"`
 }
 
-// DefaultConfig returns the default configuration values
-func DefaultConfig() Config {
-	return Config{
-		UploadThreads: 3,
+// AccountConfig holds per-account settings
+type AccountConfig struct {
+	Auth          string       `toml:"auth"`           // Auth string (androidId, Token, Email, etc.)
+	AuthToken     *CachedToken `toml:"auth_token"`     // Cached access token
+	Quality       string       `toml:"quality"`        // "original" or "storage-saver"
+	UseQuota      bool         `toml:"use_quota"`      // If true, uploads count against storage quota
+	UploadThreads int          `toml:"upload_threads"` // Number of upload threads
+	Proxy         string       `toml:"proxy"`          // Proxy URL
+}
+
+// Config represents the TOML configuration
+type Config struct {
+	Selected string                    `toml:"selected"` // Currently selected account email
+	Accounts map[string]*AccountConfig `toml:"accounts"` // Map of email -> account config
+}
+
+// DefaultAccountConfig returns the default account configuration
+func DefaultAccountConfig() *AccountConfig {
+	return &AccountConfig{
 		Quality:       "original",
+		UploadThreads: 3,
 	}
 }
 
@@ -35,26 +44,25 @@ func DefaultConfig() Config {
 type ConfigManager struct {
 	config     Config
 	configPath string
+	mu         sync.RWMutex
 }
 
-// NewConfigManager creates a new ConfigManager and loads the configuration from the given path
+// NewConfigManager creates a new ConfigManager and loads the configuration
 func NewConfigManager(configPath string) (*ConfigManager, error) {
 	if configPath != "" {
-		// If --config flag is provided, use that path only (expand ~ if present)
 		absPath, err := filepath.Abs(configPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve path: %w", err)
 		}
 		configPath = absPath
 	} else {
-		// No flag provided: check ~/.config/gpcli, then current directory
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get user home directory: %w", err)
 		}
 
-		xdgPath := filepath.Join(homeDir, ".config", "gpcli", "gpcli.config")
-		localPath, err := filepath.Abs("gpcli.config")
+		xdgPath := filepath.Join(homeDir, ".config", "gpcli", "gpcli.toml")
+		localPath, err := filepath.Abs("gpcli.toml")
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve path: %w", err)
 		}
@@ -63,7 +71,6 @@ func NewConfigManager(configPath string) (*ConfigManager, error) {
 		if _, err := os.Stat(localPath); err == nil {
 			configPath = localPath
 		} else if _, err := os.Stat(xdgPath); err == nil {
-			// Fallback to XDG path if it exists
 			configPath = xdgPath
 		} else {
 			// Neither exists, use XDG path for new config
@@ -73,14 +80,20 @@ func NewConfigManager(configPath string) (*ConfigManager, error) {
 
 	m := &ConfigManager{
 		configPath: configPath,
+		config: Config{
+			Accounts: make(map[string]*AccountConfig),
+		},
 	}
 
-	// Load config from file, or use defaults if file doesn't exist
-	data, _ := os.ReadFile(configPath)
-	if len(data) == 0 {
-		m.config = DefaultConfig()
-	} else {
-		m.config = m.loadFromFile()
+	// Load config from file if it exists
+	if data, err := os.ReadFile(configPath); err == nil && len(data) > 0 {
+		if err := toml.Unmarshal(data, &m.config); err != nil {
+			return nil, fmt.Errorf("failed to parse config: %w", err)
+		}
+		// Initialize map if nil
+		if m.config.Accounts == nil {
+			m.config.Accounts = make(map[string]*AccountConfig)
+		}
 	}
 
 	return m, nil
@@ -88,6 +101,8 @@ func NewConfigManager(configPath string) (*ConfigManager, error) {
 
 // GetConfig returns the current configuration
 func (m *ConfigManager) GetConfig() Config {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return m.config
 }
 
@@ -96,120 +111,58 @@ func (m *ConfigManager) GetConfigPath() string {
 	return m.configPath
 }
 
+// GetSelectedAccount returns the currently selected account config
+func (m *ConfigManager) GetSelectedAccount() *AccountConfig {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if m.config.Selected == "" {
+		return nil
+	}
+	return m.config.Accounts[m.config.Selected]
+}
+
 // Save persists the current configuration to disk
 func (m *ConfigManager) Save() error {
-	k := koanf.New(".")
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
-	err := k.Load(structs.Provider(m.config, "koanf"), nil)
+	data, err := toml.Marshal(m.config)
 	if err != nil {
-		slog.Error("failed to load config struct", "error", err)
-		return err
-	}
-	b, err := k.Marshal(yaml.Parser())
-	if err != nil {
-		slog.Error("failed to marshal config", "error", err)
-		return err
+		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
 	// Create directory if it doesn't exist
 	configDir := filepath.Dir(m.configPath)
 	if err := os.MkdirAll(configDir, 0755); err != nil {
-		slog.Error("failed to create config directory", "error", err)
-		return err
+		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	err = os.WriteFile(m.configPath, b, 0644)
-	if err != nil {
-		slog.Error("failed to write config file", "error", err)
-		return err
+	if err := os.WriteFile(m.configPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
 	return nil
 }
 
-// loadFromFile loads config from the config file
-func (m *ConfigManager) loadFromFile() Config {
-	var c Config
-	k := koanf.New(".")
-	if err := k.Load(file.Provider(m.configPath), yaml.Parser()); err != nil {
-		slog.Error("error parsing app config", "error", err)
-		return DefaultConfig()
-	}
-	err := k.Unmarshal("", &c)
-	if err != nil {
-		slog.Error("error unmarshaling app config", "error", err)
-		return DefaultConfig()
-	}
-
-	if c.UploadThreads < 1 {
-		c.UploadThreads = DefaultConfig().UploadThreads
-	}
-
-	// Set default quality if not set
-	if c.Quality == "" {
-		c.Quality = DefaultConfig().Quality
-	}
-
-	return c
-}
-
-// ParseAuthString parses an auth string and returns url.Values (exported for CLI use)
-func ParseAuthString(authString string) (url.Values, error) {
-	return url.ParseQuery(authString)
-}
-
-// SetProxy updates the proxy setting
-func (m *ConfigManager) SetProxy(proxy string) {
-	m.config.Proxy = proxy
-	m.Save()
-}
-
 // SetSelected updates the selected email
-func (m *ConfigManager) SetSelected(email string) {
+func (m *ConfigManager) SetSelected(email string) error {
+	m.mu.Lock()
+	if _, exists := m.config.Accounts[email]; !exists {
+		m.mu.Unlock()
+		return fmt.Errorf("account %s does not exist", email)
+	}
 	m.config.Selected = email
-	m.Save()
+	m.mu.Unlock()
+	return m.Save()
 }
 
-// SetUseQuota updates the use quota setting
-func (m *ConfigManager) SetUseQuota(useQuota bool) {
-	m.config.UseQuota = useQuota
-	m.Save()
-}
+// AddCredentials adds a new account with the given auth string
+func (m *ConfigManager) AddCredentials(authString string) (email string, err error) {
+	requiredFields := []string{"androidId", "app", "client_sig", "Email", "Token", "lang", "service"}
 
-// SetQuality updates the quality setting
-func (m *ConfigManager) SetQuality(quality string) {
-	if quality == "original" || quality == "storage-saver" {
-		m.config.Quality = quality
-		m.Save()
-	}
-}
-
-// SetUploadThreads updates the upload threads setting
-func (m *ConfigManager) SetUploadThreads(uploadThreads int) {
-	if uploadThreads < 1 {
-		return
-	}
-	m.config.UploadThreads = uploadThreads
-	m.Save()
-}
-
-// AddCredentials adds a new credential to the config
-func (m *ConfigManager) AddCredentials(newAuthString string) (email string, err error) {
-	// Required fields that must be present in the auth string
-	requiredFields := []string{
-		"androidId",
-		"app",
-		"client_sig",
-		"Email",
-		"Token",
-		"lang",
-		"service",
-	}
-
-	// Parse the auth string
-	params, err := url.ParseQuery(newAuthString)
+	params, err := url.ParseQuery(authString)
 	if err != nil {
-		return "", fmt.Errorf("invalid auth string format: %v", err)
+		return "", fmt.Errorf("invalid auth string format: %w", err)
 	}
 
 	// Validate required fields
@@ -223,66 +176,117 @@ func (m *ConfigManager) AddCredentials(newAuthString string) (email string, err 
 		return "", fmt.Errorf("auth string missing required fields: %v", missingFields)
 	}
 
-	// Get and validate email
 	email = params.Get("Email")
 	if email == "" {
 		return "", fmt.Errorf("email cannot be empty")
 	}
 
-	// Check for duplicate email in existing credentials
-	for _, cred := range m.config.Credentials {
-		existingParams, err := url.ParseQuery(cred)
-		if err != nil {
-			continue // skip malformed entries
-		}
-		if existingParams.Get("Email") == email {
-			return "", fmt.Errorf("auth string with email %s already exists", email)
-		}
+	m.mu.Lock()
+	if _, exists := m.config.Accounts[email]; exists {
+		m.mu.Unlock()
+		return "", fmt.Errorf("account %s already exists", email)
 	}
 
-	// If validation passed, add the new credentials
-	m.config.Credentials = append(m.config.Credentials, newAuthString)
+	// Create new account with defaults
+	account := DefaultAccountConfig()
+	account.Auth = authString
+	m.config.Accounts[email] = account
 	m.config.Selected = email
-	m.Save()
+	m.mu.Unlock()
+
+	if err := m.Save(); err != nil {
+		return "", err
+	}
+
 	return email, nil
 }
 
-// RemoveCredentials removes a credential by email
+// RemoveCredentials removes an account by email
 func (m *ConfigManager) RemoveCredentials(email string) error {
-	if email == "" {
-		return fmt.Errorf("email cannot be empty")
+	m.mu.Lock()
+	if _, exists := m.config.Accounts[email]; !exists {
+		m.mu.Unlock()
+		return fmt.Errorf("account %s does not exist", email)
 	}
 
-	// Find and remove the credential with matching email
-	found := false
-	var updatedCredentials []string
+	delete(m.config.Accounts, email)
 
-	for _, cred := range m.config.Credentials {
-		params, err := url.ParseQuery(cred)
-		if err != nil {
-			continue // skip malformed entries
-		}
-
-		if params.Get("Email") == email {
-			found = true
-			continue // skip this credential (effectively removing it)
-		}
-
-		updatedCredentials = append(updatedCredentials, cred)
-	}
-
-	if !found {
-		return fmt.Errorf("no credentials found for email %s", email)
-	}
-
-	// Update the configuration
-	m.config.Credentials = updatedCredentials
-
-	// If we're removing the currently selected credential, clear the selection
+	// Clear selection if we're removing the selected account
 	if m.config.Selected == email {
 		m.config.Selected = ""
+		// Select first available account if any
+		for e := range m.config.Accounts {
+			m.config.Selected = e
+			break
+		}
+	}
+	m.mu.Unlock()
+
+	return m.Save()
+}
+
+// UpdateAccountToken updates the cached auth token for an account
+func (m *ConfigManager) UpdateAccountToken(email, token string, expiry int64) error {
+	m.mu.Lock()
+	account, exists := m.config.Accounts[email]
+	if !exists {
+		m.mu.Unlock()
+		return fmt.Errorf("account %s does not exist", email)
 	}
 
-	m.Save()
-	return nil
+	account.AuthToken = &CachedToken{
+		Token:  token,
+		Expiry: expiry,
+	}
+	m.mu.Unlock()
+
+	return m.Save()
+}
+
+// GetAccountEmails returns a list of all account emails
+func (m *ConfigManager) GetAccountEmails() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	emails := make([]string, 0, len(m.config.Accounts))
+	for email := range m.config.Accounts {
+		emails = append(emails, email)
+	}
+	return emails
+}
+
+// ParseAuthString parses an auth string and returns url.Values
+func ParseAuthString(authString string) (url.Values, error) {
+	return url.ParseQuery(authString)
+}
+
+// ConfigTokenCache implements gpm.TokenCache for file-based persistence
+type ConfigTokenCache struct {
+	manager *ConfigManager
+	email   string
+}
+
+// NewConfigTokenCache creates a new ConfigTokenCache for the given account
+func NewConfigTokenCache(manager *ConfigManager, email string) *ConfigTokenCache {
+	return &ConfigTokenCache{
+		manager: manager,
+		email:   email,
+	}
+}
+
+// Get retrieves the cached token and expiry
+func (c *ConfigTokenCache) Get() (string, int64) {
+	c.manager.mu.RLock()
+	defer c.manager.mu.RUnlock()
+
+	account, exists := c.manager.config.Accounts[c.email]
+	if !exists || account.AuthToken == nil {
+		return "", 0
+	}
+	return account.AuthToken.Token, account.AuthToken.Expiry
+}
+
+// Set stores the token with its expiry timestamp
+func (c *ConfigTokenCache) Set(token string, expiry int64) {
+	c.manager.UpdateAccountToken(c.email, token, expiry)
 }

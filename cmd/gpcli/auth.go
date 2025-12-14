@@ -36,24 +36,20 @@ func authInfoAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// List all available accounts
-	if len(config.Credentials) == 0 {
+	if len(config.Accounts) == 0 {
 		fmt.Println("\nNo accounts configured. Use 'gpcli auth add <auth-string>' to add one.")
 		return nil
 	}
 
 	fmt.Println("\nAvailable accounts:")
-	for i, cred := range config.Credentials {
-		params, err := ParseAuthString(cred)
-		if err != nil {
-			fmt.Printf("  %d. [Invalid]\n", i+1)
-			continue
-		}
-		email := params.Get("Email")
+	i := 1
+	for email := range config.Accounts {
 		marker := ""
 		if email == config.Selected {
 			marker = " *"
 		}
-		fmt.Printf("  %d. %s%s\n", i+1, email, marker)
+		fmt.Printf("  %d. %s%s\n", i, email, marker)
+		i++
 	}
 
 	fmt.Println("\nUse 'gpcli auth set <number|email>' to change active authentication")
@@ -83,9 +79,9 @@ func credentialsRemoveAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	arg := cmd.StringArg("identifier")
-	config := cfgManager.GetConfig()
+	emails := cfgManager.GetAccountEmails()
 
-	email, err := resolveEmailFromArg(arg, config.Credentials)
+	email, err := resolveEmailFromArg(arg, emails)
 	if err != nil {
 		return err
 	}
@@ -104,14 +100,16 @@ func credentialsSetAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	arg := cmd.StringArg("identifier")
-	config := cfgManager.GetConfig()
+	emails := cfgManager.GetAccountEmails()
 
-	email, err := resolveEmailFromArg(arg, config.Credentials)
+	email, err := resolveEmailFromArg(arg, emails)
 	if err != nil {
 		return err
 	}
 
-	cfgManager.SetSelected(email)
+	if err := cfgManager.SetSelected(email); err != nil {
+		return fmt.Errorf("error setting active account: %w", err)
+	}
 	slog.Info("active account set", "email", email)
 
 	return nil
