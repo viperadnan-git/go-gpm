@@ -285,8 +285,14 @@ func checkResponse(resp *http.Response) error {
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return nil
 	}
-	body, _ := io.ReadAll(resp.Body)
-	return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
+	// Try to read and decompress the error response
+	body, err := readGzipBody(resp)
+	if err != nil {
+		return fmt.Errorf("request failed with status %d (could not read response: %v)", resp.StatusCode, err)
+	}
+	// Use errors.New to avoid interpreting % characters in the response body
+	bodyStr := string(body)
+	return fmt.Errorf("request failed with status %d: %w", resp.StatusCode, errors.New(bodyStr))
 }
 
 // readGzipBody reads the response body, handling gzip decompression if needed.

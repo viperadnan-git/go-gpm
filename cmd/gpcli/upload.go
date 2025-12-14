@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	gpm "github.com/viperadnan-git/go-gpm"
 
@@ -37,6 +39,22 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("invalid quality: %s (use 'original' or 'storage-saver')", quality)
 	}
 	albumName := cmd.String("album")
+
+	// Parse datetime flag
+	var timestamp *time.Time
+	if datetimeStr := cmd.String("datetime"); datetimeStr != "" {
+		var ts time.Time
+		var err error
+		if strings.ToLower(datetimeStr) == "now" {
+			ts = time.Now()
+		} else {
+			ts, err = time.Parse(time.RFC3339, datetimeStr)
+			if err != nil {
+				return fmt.Errorf("invalid datetime format: %w", err)
+			}
+		}
+		timestamp = &ts
+	}
 
 	// Build upload options from CLI flags
 	uploadOpts := gpm.UploadOptions{
@@ -130,6 +148,21 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		}
 
 		logger.Info("album ready", "album", albumName, "items", len(successfulMediaKeys))
+	}
+
+	// Handle datetime setting if timestamp was specified
+	if timestamp != nil && len(successfulMediaKeys) > 0 {
+		logger.Info("setting datetime", "count", len(successfulMediaKeys), "datetime", timestamp.Format(time.RFC3339))
+
+		const batchSize = 500
+		for i := 0; i < len(successfulMediaKeys); i += batchSize {
+			end := min(i+batchSize, len(successfulMediaKeys))
+			if err := api.SetDateTime(successfulMediaKeys[i:end], *timestamp); err != nil {
+				logger.Warn("failed to set datetime for batch", "error", err)
+			}
+		}
+
+		logger.Info("datetime set successfully", "count", len(successfulMediaKeys))
 	}
 
 	return nil

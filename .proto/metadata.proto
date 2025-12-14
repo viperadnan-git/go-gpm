@@ -31,3 +31,65 @@ message SetFavourite {
     }
   }
 }
+
+// SetLocation sets the geographic location for a media item
+message SetLocation {
+  Field3 field3 = 3;  // Media metadata (required, mostly empty)
+  Field4 field4 = 4;  // Location data
+
+  // Field 3 - Media metadata (can be mostly empty)
+  message Field3 {
+    Field1 field1 = 1;
+    message Field1 {}
+  }
+
+  // Field 4 - Location data
+  message Field4 {
+    Field1 field1 = 1;
+    Field2 field2 = 2;
+
+    message Field1 {
+      string media_key = 2;  // mediaKey or dedupKey
+    }
+
+    message Field2 {
+      int64 action = 1;  // Always 2 for setting location
+
+      message Coordinates {
+        sfixed32 latitude = 1;   // Latitude * 10000000
+        sfixed32 longitude = 2;  // Longitude * 10000000
+      }
+
+      message Bounds {
+        sfixed32 field1 = 1;  // Coordinate * 10000000
+        sfixed32 field2 = 2;  // Coordinate * 10000000
+      }
+
+      message Field3 {
+        Bounds field1 = 1;
+        Bounds field2 = 2;
+      }
+
+      message PlaceName {
+        string name = 1;    // e.g., "New Delhi"
+        int64 field3 = 3;   // Always 1
+      }
+
+      Coordinates coordinates = 2;
+      Field3 field3 = 3;      // Viewport bounds
+      PlaceName place_name = 4;
+      string place_id = 5;    // Google Maps Place ID (optional)
+    }
+  }
+}
+
+// SetDateTime sets the date and time for one or more media items
+message SetDateTime {
+  Field1 field1 = 1;
+
+  message Field1 {
+    repeated string media_key = 1;  // One or more mediaKey or dedupKey
+    double timestamp = 2;            // Unix timestamp in seconds (as double/float64)
+    int32 timezone_offset = 3;       // Timezone offset in seconds from UTC
+  }
+}

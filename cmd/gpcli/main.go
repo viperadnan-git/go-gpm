@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"strings"
 
 	gpm "github.com/viperadnan-git/go-gpm"
 
@@ -42,6 +41,7 @@ func main() {
 				Name:    "auth",
 				Usage:   "Authentication string (overrides config file)",
 				Sources: cli.EnvVars("GPCLI_AUTH"),
+				Config:  cli.StringConfig{TrimSpace: true},
 			},
 			&cli.StringFlag{
 				Name:    "log-format",
@@ -67,11 +67,63 @@ func main() {
 
 			// Set auth override from flag (strip whitespace)
 			if auth := cmd.String("auth"); auth != "" {
-				authOverride = strings.TrimSpace(auth)
+				authOverride = auth
 			}
 			return ctx, nil
 		},
 		Commands: []*cli.Command{
+			{
+				Name:   "auth",
+				Usage:  "Manage Google Photos authentication",
+				Action: authInfoAction,
+				Commands: []*cli.Command{
+					{
+						Name:  "add",
+						Usage: "Add a new authentication",
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name:      "auth-string",
+								UsageText: "Authentication string from browser",
+							},
+						},
+						Action: credentialsAddAction,
+					},
+					{
+						Name:    "list",
+						Aliases: []string{"ls"},
+						Usage:   "List all authentications",
+						Action:  authInfoAction,
+					},
+					{
+						Name:    "remove",
+						Aliases: []string{"rm"},
+						Usage:   "Remove an authentication by number or email",
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name:      "identifier",
+								UsageText: "Account number or email address",
+							},
+						},
+						Action: credentialsRemoveAction,
+					},
+					{
+						Name:  "set",
+						Usage: "Set active authentication by number or email",
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name:      "identifier",
+								UsageText: "Account number or email address",
+							},
+						},
+						Action: credentialsSetAction,
+					},
+					{
+						Name:   "file",
+						Usage:  "Print config file path",
+						Action: authFileAction,
+					},
+				},
+			},
 			{
 				Name:  "upload",
 				Usage: "Upload a file or directory to Google Photos",
@@ -134,6 +186,10 @@ func main() {
 						Name:  "favourite",
 						Usage: "Mark uploaded files as favourites",
 					},
+					&cli.StringFlag{
+						Name:  "datetime",
+						Usage: "Override datetime for uploaded files (ISO 8601 format or 'now')",
+					},
 				},
 				Action: uploadAction,
 			},
@@ -193,58 +249,6 @@ func main() {
 					},
 				},
 				Action: thumbnailAction,
-			},
-			{
-				Name:   "auth",
-				Usage:  "Manage Google Photos authentication",
-				Action: authInfoAction,
-				Commands: []*cli.Command{
-					{
-						Name:  "add",
-						Usage: "Add a new authentication",
-						Arguments: []cli.Argument{
-							&cli.StringArg{
-								Name:      "auth-string",
-								UsageText: "Authentication string from browser",
-							},
-						},
-						Action: credentialsAddAction,
-					},
-					{
-						Name:    "list",
-						Aliases: []string{"ls"},
-						Usage:   "List all authentications",
-						Action:  authInfoAction,
-					},
-					{
-						Name:    "remove",
-						Aliases: []string{"rm"},
-						Usage:   "Remove an authentication by number or email",
-						Arguments: []cli.Argument{
-							&cli.StringArg{
-								Name:      "identifier",
-								UsageText: "Account number or email address",
-							},
-						},
-						Action: credentialsRemoveAction,
-					},
-					{
-						Name:  "set",
-						Usage: "Set active authentication by number or email",
-						Arguments: []cli.Argument{
-							&cli.StringArg{
-								Name:      "identifier",
-								UsageText: "Account number or email address",
-							},
-						},
-						Action: credentialsSetAction,
-					},
-					{
-						Name:   "file",
-						Usage:  "Print config file path",
-						Action: authFileAction,
-					},
-				},
 			},
 			{
 				Name:      "delete",
@@ -330,6 +334,51 @@ func main() {
 					},
 				},
 				Action: resolveAction,
+			},
+			{
+				Name:        "location",
+				Usage:       "Set geographic location for a media item",
+				Description: "Sets the location coordinates for a media item. Note: The place name will be generic and not specific to the coordinates.",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "input",
+						UsageText: "ITEM-KEY",
+					},
+				},
+				Flags: []cli.Flag{
+					&cli.Float64Flag{
+						Name:     "latitude",
+						Aliases:  []string{"lat"},
+						Usage:    "Latitude in decimal degrees (required)",
+						Required: true,
+					},
+					&cli.Float64Flag{
+						Name:     "longitude",
+						Aliases:  []string{"lon", "lng"},
+						Usage:    "Longitude in decimal degrees (required)",
+						Required: true,
+					},
+				},
+				Action: locationAction,
+			},
+			{
+				Name:      "datetime",
+				Usage:     "Set date and time for one or more media items",
+				UsageText: "gpcli datetime <datetime> <input> [input...] [--from-file FILE]",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name:      "datetime",
+						UsageText: "Date and time in ISO 8601 format (e.g., '2024-12-24T15:30:00+05:30') or 'now'",
+					},
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "from-file",
+						Aliases: []string{"i"},
+						Usage:   "Read item keys from file (one per line)",
+					},
+				},
+				Action: datetimeAction,
 			},
 			{
 				Name:  "album",

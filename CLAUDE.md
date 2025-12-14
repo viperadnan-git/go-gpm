@@ -23,7 +23,7 @@ See `.proto/README.md` for detailed instructions on generating protobuf files.
 
 Quick reference from project root:
 ```bash
-export PATH=$PATH:$(go env GOPATH)/bin
+export PATH=$PATH:$(go env GOPATH)/bin  # optional, if path not already added
 
 # Generate single file
 protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/go-gpm .proto/MessageName.proto

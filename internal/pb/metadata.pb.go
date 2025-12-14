@@ -135,6 +135,104 @@ func (x *SetFavourite) GetField3() *SetFavourite_Field3 {
 	return nil
 }
 
+// SetLocation sets the geographic location for a media item
+type SetLocation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Field3        *SetLocation_Field3    `protobuf:"bytes,3,opt,name=field3,proto3" json:"field3,omitempty"` // Media metadata (required, mostly empty)
+	Field4        *SetLocation_Field4    `protobuf:"bytes,4,opt,name=field4,proto3" json:"field4,omitempty"` // Location data
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation) Reset() {
+	*x = SetLocation{}
+	mi := &file___proto_metadata_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation) ProtoMessage() {}
+
+func (x *SetLocation) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation.ProtoReflect.Descriptor instead.
+func (*SetLocation) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *SetLocation) GetField3() *SetLocation_Field3 {
+	if x != nil {
+		return x.Field3
+	}
+	return nil
+}
+
+func (x *SetLocation) GetField4() *SetLocation_Field4 {
+	if x != nil {
+		return x.Field4
+	}
+	return nil
+}
+
+// SetDateTime sets the date and time for one or more media items
+type SetDateTime struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Field1        *SetDateTime_Field1    `protobuf:"bytes,1,opt,name=field1,proto3" json:"field1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetDateTime) Reset() {
+	*x = SetDateTime{}
+	mi := &file___proto_metadata_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetDateTime) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetDateTime) ProtoMessage() {}
+
+func (x *SetDateTime) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetDateTime.ProtoReflect.Descriptor instead.
+func (*SetDateTime) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SetDateTime) GetField1() *SetDateTime_Field1 {
+	if x != nil {
+		return x.Field1
+	}
+	return nil
+}
+
 type SetFavourite_Field1 struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ItemKey       string                 `protobuf:"bytes,2,opt,name=item_key,json=itemKey,proto3" json:"item_key,omitempty"` // mediaKey or dedupKey
@@ -144,7 +242,7 @@ type SetFavourite_Field1 struct {
 
 func (x *SetFavourite_Field1) Reset() {
 	*x = SetFavourite_Field1{}
-	mi := &file___proto_metadata_proto_msgTypes[2]
+	mi := &file___proto_metadata_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -156,7 +254,7 @@ func (x *SetFavourite_Field1) String() string {
 func (*SetFavourite_Field1) ProtoMessage() {}
 
 func (x *SetFavourite_Field1) ProtoReflect() protoreflect.Message {
-	mi := &file___proto_metadata_proto_msgTypes[2]
+	mi := &file___proto_metadata_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -188,7 +286,7 @@ type SetFavourite_Field2 struct {
 
 func (x *SetFavourite_Field2) Reset() {
 	*x = SetFavourite_Field2{}
-	mi := &file___proto_metadata_proto_msgTypes[3]
+	mi := &file___proto_metadata_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -200,7 +298,7 @@ func (x *SetFavourite_Field2) String() string {
 func (*SetFavourite_Field2) ProtoMessage() {}
 
 func (x *SetFavourite_Field2) ProtoReflect() protoreflect.Message {
-	mi := &file___proto_metadata_proto_msgTypes[3]
+	mi := &file___proto_metadata_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -232,7 +330,7 @@ type SetFavourite_Field3 struct {
 
 func (x *SetFavourite_Field3) Reset() {
 	*x = SetFavourite_Field3{}
-	mi := &file___proto_metadata_proto_msgTypes[4]
+	mi := &file___proto_metadata_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -244,7 +342,7 @@ func (x *SetFavourite_Field3) String() string {
 func (*SetFavourite_Field3) ProtoMessage() {}
 
 func (x *SetFavourite_Field3) ProtoReflect() protoreflect.Message {
-	mi := &file___proto_metadata_proto_msgTypes[4]
+	mi := &file___proto_metadata_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -276,7 +374,7 @@ type SetFavourite_Field3_Field1Inner struct {
 
 func (x *SetFavourite_Field3_Field1Inner) Reset() {
 	*x = SetFavourite_Field3_Field1Inner{}
-	mi := &file___proto_metadata_proto_msgTypes[5]
+	mi := &file___proto_metadata_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -288,7 +386,7 @@ func (x *SetFavourite_Field3_Field1Inner) String() string {
 func (*SetFavourite_Field3_Field1Inner) ProtoMessage() {}
 
 func (x *SetFavourite_Field3_Field1Inner) ProtoReflect() protoreflect.Message {
-	mi := &file___proto_metadata_proto_msgTypes[5]
+	mi := &file___proto_metadata_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -319,7 +417,7 @@ type SetFavourite_Field3_Field1Inner_Field19 struct {
 
 func (x *SetFavourite_Field3_Field1Inner_Field19) Reset() {
 	*x = SetFavourite_Field3_Field1Inner_Field19{}
-	mi := &file___proto_metadata_proto_msgTypes[6]
+	mi := &file___proto_metadata_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -331,7 +429,7 @@ func (x *SetFavourite_Field3_Field1Inner_Field19) String() string {
 func (*SetFavourite_Field3_Field1Inner_Field19) ProtoMessage() {}
 
 func (x *SetFavourite_Field3_Field1Inner_Field19) ProtoReflect() protoreflect.Message {
-	mi := &file___proto_metadata_proto_msgTypes[6]
+	mi := &file___proto_metadata_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -345,6 +443,528 @@ func (x *SetFavourite_Field3_Field1Inner_Field19) ProtoReflect() protoreflect.Me
 // Deprecated: Use SetFavourite_Field3_Field1Inner_Field19.ProtoReflect.Descriptor instead.
 func (*SetFavourite_Field3_Field1Inner_Field19) Descriptor() ([]byte, []int) {
 	return file___proto_metadata_proto_rawDescGZIP(), []int{1, 2, 0, 0}
+}
+
+// Field 3 - Media metadata (can be mostly empty)
+type SetLocation_Field3 struct {
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Field1        *SetLocation_Field3_Field1 `protobuf:"bytes,1,opt,name=field1,proto3" json:"field1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field3) Reset() {
+	*x = SetLocation_Field3{}
+	mi := &file___proto_metadata_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field3) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field3) ProtoMessage() {}
+
+func (x *SetLocation_Field3) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field3.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field3) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 0}
+}
+
+func (x *SetLocation_Field3) GetField1() *SetLocation_Field3_Field1 {
+	if x != nil {
+		return x.Field1
+	}
+	return nil
+}
+
+// Field 4 - Location data
+type SetLocation_Field4 struct {
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Field1        *SetLocation_Field4_Field1 `protobuf:"bytes,1,opt,name=field1,proto3" json:"field1,omitempty"`
+	Field2        *SetLocation_Field4_Field2 `protobuf:"bytes,2,opt,name=field2,proto3" json:"field2,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field4) Reset() {
+	*x = SetLocation_Field4{}
+	mi := &file___proto_metadata_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field4) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field4) ProtoMessage() {}
+
+func (x *SetLocation_Field4) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field4.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field4) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 1}
+}
+
+func (x *SetLocation_Field4) GetField1() *SetLocation_Field4_Field1 {
+	if x != nil {
+		return x.Field1
+	}
+	return nil
+}
+
+func (x *SetLocation_Field4) GetField2() *SetLocation_Field4_Field2 {
+	if x != nil {
+		return x.Field2
+	}
+	return nil
+}
+
+type SetLocation_Field3_Field1 struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field3_Field1) Reset() {
+	*x = SetLocation_Field3_Field1{}
+	mi := &file___proto_metadata_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field3_Field1) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field3_Field1) ProtoMessage() {}
+
+func (x *SetLocation_Field3_Field1) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field3_Field1.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field3_Field1) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 0, 0}
+}
+
+type SetLocation_Field4_Field1 struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MediaKey      string                 `protobuf:"bytes,2,opt,name=media_key,json=mediaKey,proto3" json:"media_key,omitempty"` // mediaKey or dedupKey
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field4_Field1) Reset() {
+	*x = SetLocation_Field4_Field1{}
+	mi := &file___proto_metadata_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field4_Field1) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field4_Field1) ProtoMessage() {}
+
+func (x *SetLocation_Field4_Field1) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field4_Field1.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field4_Field1) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 1, 0}
+}
+
+func (x *SetLocation_Field4_Field1) GetMediaKey() string {
+	if x != nil {
+		return x.MediaKey
+	}
+	return ""
+}
+
+type SetLocation_Field4_Field2 struct {
+	state         protoimpl.MessageState                 `protogen:"open.v1"`
+	Action        int64                                  `protobuf:"varint,1,opt,name=action,proto3" json:"action,omitempty"` // Always 2 for setting location
+	Coordinates   *SetLocation_Field4_Field2_Coordinates `protobuf:"bytes,2,opt,name=coordinates,proto3" json:"coordinates,omitempty"`
+	Field3        *SetLocation_Field4_Field2_Field3      `protobuf:"bytes,3,opt,name=field3,proto3" json:"field3,omitempty"` // Viewport bounds
+	PlaceName     *SetLocation_Field4_Field2_PlaceName   `protobuf:"bytes,4,opt,name=place_name,json=placeName,proto3" json:"place_name,omitempty"`
+	PlaceId       string                                 `protobuf:"bytes,5,opt,name=place_id,json=placeId,proto3" json:"place_id,omitempty"` // Google Maps Place ID (optional)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field4_Field2) Reset() {
+	*x = SetLocation_Field4_Field2{}
+	mi := &file___proto_metadata_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field4_Field2) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field4_Field2) ProtoMessage() {}
+
+func (x *SetLocation_Field4_Field2) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field4_Field2.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field4_Field2) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 1, 1}
+}
+
+func (x *SetLocation_Field4_Field2) GetAction() int64 {
+	if x != nil {
+		return x.Action
+	}
+	return 0
+}
+
+func (x *SetLocation_Field4_Field2) GetCoordinates() *SetLocation_Field4_Field2_Coordinates {
+	if x != nil {
+		return x.Coordinates
+	}
+	return nil
+}
+
+func (x *SetLocation_Field4_Field2) GetField3() *SetLocation_Field4_Field2_Field3 {
+	if x != nil {
+		return x.Field3
+	}
+	return nil
+}
+
+func (x *SetLocation_Field4_Field2) GetPlaceName() *SetLocation_Field4_Field2_PlaceName {
+	if x != nil {
+		return x.PlaceName
+	}
+	return nil
+}
+
+func (x *SetLocation_Field4_Field2) GetPlaceId() string {
+	if x != nil {
+		return x.PlaceId
+	}
+	return ""
+}
+
+type SetLocation_Field4_Field2_Coordinates struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Latitude      int32                  `protobuf:"fixed32,1,opt,name=latitude,proto3" json:"latitude,omitempty"`   // Latitude * 10000000
+	Longitude     int32                  `protobuf:"fixed32,2,opt,name=longitude,proto3" json:"longitude,omitempty"` // Longitude * 10000000
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field4_Field2_Coordinates) Reset() {
+	*x = SetLocation_Field4_Field2_Coordinates{}
+	mi := &file___proto_metadata_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field4_Field2_Coordinates) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field4_Field2_Coordinates) ProtoMessage() {}
+
+func (x *SetLocation_Field4_Field2_Coordinates) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field4_Field2_Coordinates.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field4_Field2_Coordinates) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 1, 1, 0}
+}
+
+func (x *SetLocation_Field4_Field2_Coordinates) GetLatitude() int32 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *SetLocation_Field4_Field2_Coordinates) GetLongitude() int32 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+type SetLocation_Field4_Field2_Bounds struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Field1        int32                  `protobuf:"fixed32,1,opt,name=field1,proto3" json:"field1,omitempty"` // Coordinate * 10000000
+	Field2        int32                  `protobuf:"fixed32,2,opt,name=field2,proto3" json:"field2,omitempty"` // Coordinate * 10000000
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field4_Field2_Bounds) Reset() {
+	*x = SetLocation_Field4_Field2_Bounds{}
+	mi := &file___proto_metadata_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field4_Field2_Bounds) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field4_Field2_Bounds) ProtoMessage() {}
+
+func (x *SetLocation_Field4_Field2_Bounds) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field4_Field2_Bounds.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field4_Field2_Bounds) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 1, 1, 1}
+}
+
+func (x *SetLocation_Field4_Field2_Bounds) GetField1() int32 {
+	if x != nil {
+		return x.Field1
+	}
+	return 0
+}
+
+func (x *SetLocation_Field4_Field2_Bounds) GetField2() int32 {
+	if x != nil {
+		return x.Field2
+	}
+	return 0
+}
+
+type SetLocation_Field4_Field2_Field3 struct {
+	state         protoimpl.MessageState            `protogen:"open.v1"`
+	Field1        *SetLocation_Field4_Field2_Bounds `protobuf:"bytes,1,opt,name=field1,proto3" json:"field1,omitempty"`
+	Field2        *SetLocation_Field4_Field2_Bounds `protobuf:"bytes,2,opt,name=field2,proto3" json:"field2,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field4_Field2_Field3) Reset() {
+	*x = SetLocation_Field4_Field2_Field3{}
+	mi := &file___proto_metadata_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field4_Field2_Field3) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field4_Field2_Field3) ProtoMessage() {}
+
+func (x *SetLocation_Field4_Field2_Field3) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field4_Field2_Field3.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field4_Field2_Field3) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 1, 1, 2}
+}
+
+func (x *SetLocation_Field4_Field2_Field3) GetField1() *SetLocation_Field4_Field2_Bounds {
+	if x != nil {
+		return x.Field1
+	}
+	return nil
+}
+
+func (x *SetLocation_Field4_Field2_Field3) GetField2() *SetLocation_Field4_Field2_Bounds {
+	if x != nil {
+		return x.Field2
+	}
+	return nil
+}
+
+type SetLocation_Field4_Field2_PlaceName struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`      // e.g., "New Delhi"
+	Field3        int64                  `protobuf:"varint,3,opt,name=field3,proto3" json:"field3,omitempty"` // Always 1
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetLocation_Field4_Field2_PlaceName) Reset() {
+	*x = SetLocation_Field4_Field2_PlaceName{}
+	mi := &file___proto_metadata_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetLocation_Field4_Field2_PlaceName) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetLocation_Field4_Field2_PlaceName) ProtoMessage() {}
+
+func (x *SetLocation_Field4_Field2_PlaceName) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetLocation_Field4_Field2_PlaceName.ProtoReflect.Descriptor instead.
+func (*SetLocation_Field4_Field2_PlaceName) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{2, 1, 1, 3}
+}
+
+func (x *SetLocation_Field4_Field2_PlaceName) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SetLocation_Field4_Field2_PlaceName) GetField3() int64 {
+	if x != nil {
+		return x.Field3
+	}
+	return 0
+}
+
+type SetDateTime_Field1 struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	MediaKey       []string               `protobuf:"bytes,1,rep,name=media_key,json=mediaKey,proto3" json:"media_key,omitempty"`                    // One or more mediaKey or dedupKey
+	Timestamp      float64                `protobuf:"fixed64,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`                                // Unix timestamp in seconds (as double/float64)
+	TimezoneOffset int32                  `protobuf:"varint,3,opt,name=timezone_offset,json=timezoneOffset,proto3" json:"timezone_offset,omitempty"` // Timezone offset in seconds from UTC
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SetDateTime_Field1) Reset() {
+	*x = SetDateTime_Field1{}
+	mi := &file___proto_metadata_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetDateTime_Field1) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetDateTime_Field1) ProtoMessage() {}
+
+func (x *SetDateTime_Field1) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_metadata_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetDateTime_Field1.ProtoReflect.Descriptor instead.
+func (*SetDateTime_Field1) Descriptor() ([]byte, []int) {
+	return file___proto_metadata_proto_rawDescGZIP(), []int{3, 0}
+}
+
+func (x *SetDateTime_Field1) GetMediaKey() []string {
+	if x != nil {
+		return x.MediaKey
+	}
+	return nil
+}
+
+func (x *SetDateTime_Field1) GetTimestamp() float64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *SetDateTime_Field1) GetTimezoneOffset() int32 {
+	if x != nil {
+		return x.TimezoneOffset
+	}
+	return 0
 }
 
 var File___proto_metadata_proto protoreflect.FileDescriptor
@@ -368,7 +988,43 @@ const file___proto_metadata_proto_rawDesc = "" +
 	"\x06field1\x18\x01 \x01(\v2 .SetFavourite.Field3.Field1InnerR\x06field1\x1a\\\n" +
 	"\vField1Inner\x12B\n" +
 	"\afield19\x18\x13 \x01(\v2(.SetFavourite.Field3.Field1Inner.Field19R\afield19\x1a\t\n" +
-	"\aField19B.Z,github.com/viperadnan-git/go-gpm/internal/pbb\x06proto3"
+	"\aField19\"\x8d\a\n" +
+	"\vSetLocation\x12+\n" +
+	"\x06field3\x18\x03 \x01(\v2\x13.SetLocation.Field3R\x06field3\x12+\n" +
+	"\x06field4\x18\x04 \x01(\v2\x13.SetLocation.Field4R\x06field4\x1aF\n" +
+	"\x06Field3\x122\n" +
+	"\x06field1\x18\x01 \x01(\v2\x1a.SetLocation.Field3.Field1R\x06field1\x1a\b\n" +
+	"\x06Field1\x1a\xdb\x05\n" +
+	"\x06Field4\x122\n" +
+	"\x06field1\x18\x01 \x01(\v2\x1a.SetLocation.Field4.Field1R\x06field1\x122\n" +
+	"\x06field2\x18\x02 \x01(\v2\x1a.SetLocation.Field4.Field2R\x06field2\x1a%\n" +
+	"\x06Field1\x12\x1b\n" +
+	"\tmedia_key\x18\x02 \x01(\tR\bmediaKey\x1a\xc1\x04\n" +
+	"\x06Field2\x12\x16\n" +
+	"\x06action\x18\x01 \x01(\x03R\x06action\x12H\n" +
+	"\vcoordinates\x18\x02 \x01(\v2&.SetLocation.Field4.Field2.CoordinatesR\vcoordinates\x129\n" +
+	"\x06field3\x18\x03 \x01(\v2!.SetLocation.Field4.Field2.Field3R\x06field3\x12C\n" +
+	"\n" +
+	"place_name\x18\x04 \x01(\v2$.SetLocation.Field4.Field2.PlaceNameR\tplaceName\x12\x19\n" +
+	"\bplace_id\x18\x05 \x01(\tR\aplaceId\x1aG\n" +
+	"\vCoordinates\x12\x1a\n" +
+	"\blatitude\x18\x01 \x01(\x0fR\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x02 \x01(\x0fR\tlongitude\x1a8\n" +
+	"\x06Bounds\x12\x16\n" +
+	"\x06field1\x18\x01 \x01(\x0fR\x06field1\x12\x16\n" +
+	"\x06field2\x18\x02 \x01(\x0fR\x06field2\x1a~\n" +
+	"\x06Field3\x129\n" +
+	"\x06field1\x18\x01 \x01(\v2!.SetLocation.Field4.Field2.BoundsR\x06field1\x129\n" +
+	"\x06field2\x18\x02 \x01(\v2!.SetLocation.Field4.Field2.BoundsR\x06field2\x1a7\n" +
+	"\tPlaceName\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06field3\x18\x03 \x01(\x03R\x06field3\"\xa8\x01\n" +
+	"\vSetDateTime\x12+\n" +
+	"\x06field1\x18\x01 \x01(\v2\x13.SetDateTime.Field1R\x06field1\x1al\n" +
+	"\x06Field1\x12\x1b\n" +
+	"\tmedia_key\x18\x01 \x03(\tR\bmediaKey\x12\x1c\n" +
+	"\ttimestamp\x18\x02 \x01(\x01R\ttimestamp\x12'\n" +
+	"\x0ftimezone_offset\x18\x03 \x01(\x05R\x0etimezoneOffsetB.Z,github.com/viperadnan-git/go-gpm/internal/pbb\x06proto3"
 
 var (
 	file___proto_metadata_proto_rawDescOnce sync.Once
@@ -382,27 +1038,50 @@ func file___proto_metadata_proto_rawDescGZIP() []byte {
 	return file___proto_metadata_proto_rawDescData
 }
 
-var file___proto_metadata_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file___proto_metadata_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file___proto_metadata_proto_goTypes = []any{
 	(*SetCaption)(nil),                              // 0: SetCaption
 	(*SetFavourite)(nil),                            // 1: SetFavourite
-	(*SetFavourite_Field1)(nil),                     // 2: SetFavourite.Field1
-	(*SetFavourite_Field2)(nil),                     // 3: SetFavourite.Field2
-	(*SetFavourite_Field3)(nil),                     // 4: SetFavourite.Field3
-	(*SetFavourite_Field3_Field1Inner)(nil),         // 5: SetFavourite.Field3.Field1Inner
-	(*SetFavourite_Field3_Field1Inner_Field19)(nil), // 6: SetFavourite.Field3.Field1Inner.Field19
+	(*SetLocation)(nil),                             // 2: SetLocation
+	(*SetDateTime)(nil),                             // 3: SetDateTime
+	(*SetFavourite_Field1)(nil),                     // 4: SetFavourite.Field1
+	(*SetFavourite_Field2)(nil),                     // 5: SetFavourite.Field2
+	(*SetFavourite_Field3)(nil),                     // 6: SetFavourite.Field3
+	(*SetFavourite_Field3_Field1Inner)(nil),         // 7: SetFavourite.Field3.Field1Inner
+	(*SetFavourite_Field3_Field1Inner_Field19)(nil), // 8: SetFavourite.Field3.Field1Inner.Field19
+	(*SetLocation_Field3)(nil),                      // 9: SetLocation.Field3
+	(*SetLocation_Field4)(nil),                      // 10: SetLocation.Field4
+	(*SetLocation_Field3_Field1)(nil),               // 11: SetLocation.Field3.Field1
+	(*SetLocation_Field4_Field1)(nil),               // 12: SetLocation.Field4.Field1
+	(*SetLocation_Field4_Field2)(nil),               // 13: SetLocation.Field4.Field2
+	(*SetLocation_Field4_Field2_Coordinates)(nil),   // 14: SetLocation.Field4.Field2.Coordinates
+	(*SetLocation_Field4_Field2_Bounds)(nil),        // 15: SetLocation.Field4.Field2.Bounds
+	(*SetLocation_Field4_Field2_Field3)(nil),        // 16: SetLocation.Field4.Field2.Field3
+	(*SetLocation_Field4_Field2_PlaceName)(nil),     // 17: SetLocation.Field4.Field2.PlaceName
+	(*SetDateTime_Field1)(nil),                      // 18: SetDateTime.Field1
 }
 var file___proto_metadata_proto_depIdxs = []int32{
-	2, // 0: SetFavourite.field1:type_name -> SetFavourite.Field1
-	3, // 1: SetFavourite.field2:type_name -> SetFavourite.Field2
-	4, // 2: SetFavourite.field3:type_name -> SetFavourite.Field3
-	5, // 3: SetFavourite.Field3.field1:type_name -> SetFavourite.Field3.Field1Inner
-	6, // 4: SetFavourite.Field3.Field1Inner.field19:type_name -> SetFavourite.Field3.Field1Inner.Field19
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	4,  // 0: SetFavourite.field1:type_name -> SetFavourite.Field1
+	5,  // 1: SetFavourite.field2:type_name -> SetFavourite.Field2
+	6,  // 2: SetFavourite.field3:type_name -> SetFavourite.Field3
+	9,  // 3: SetLocation.field3:type_name -> SetLocation.Field3
+	10, // 4: SetLocation.field4:type_name -> SetLocation.Field4
+	18, // 5: SetDateTime.field1:type_name -> SetDateTime.Field1
+	7,  // 6: SetFavourite.Field3.field1:type_name -> SetFavourite.Field3.Field1Inner
+	8,  // 7: SetFavourite.Field3.Field1Inner.field19:type_name -> SetFavourite.Field3.Field1Inner.Field19
+	11, // 8: SetLocation.Field3.field1:type_name -> SetLocation.Field3.Field1
+	12, // 9: SetLocation.Field4.field1:type_name -> SetLocation.Field4.Field1
+	13, // 10: SetLocation.Field4.field2:type_name -> SetLocation.Field4.Field2
+	14, // 11: SetLocation.Field4.Field2.coordinates:type_name -> SetLocation.Field4.Field2.Coordinates
+	16, // 12: SetLocation.Field4.Field2.field3:type_name -> SetLocation.Field4.Field2.Field3
+	17, // 13: SetLocation.Field4.Field2.place_name:type_name -> SetLocation.Field4.Field2.PlaceName
+	15, // 14: SetLocation.Field4.Field2.Field3.field1:type_name -> SetLocation.Field4.Field2.Bounds
+	15, // 15: SetLocation.Field4.Field2.Field3.field2:type_name -> SetLocation.Field4.Field2.Bounds
+	16, // [16:16] is the sub-list for method output_type
+	16, // [16:16] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file___proto_metadata_proto_init() }
@@ -416,7 +1095,7 @@ func file___proto_metadata_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file___proto_metadata_proto_rawDesc), len(file___proto_metadata_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

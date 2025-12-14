@@ -26,7 +26,7 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 From the project root directory:
 
 ```bash
-export PATH=$PATH:$(go env GOPATH)/bin
+export PATH=$PATH:$(go env GOPATH)/bin  # optional, if path not already added
 
 for proto in .proto/*.proto; do
   protoc --proto_path=. --go_out=. --go_opt=module=github.com/viperadnan-git/go-gpm "$proto"
