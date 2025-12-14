@@ -24,6 +24,7 @@ func main() {
 				Usage:       "Path to config file",
 				Sources:     cli.EnvVars("GPCLI_CONFIG"),
 				DefaultText: "~/.config/gpcli/gpcli.config",
+				Config:      cli.StringConfig{TrimSpace: true},
 			},
 			&cli.StringFlag{
 				Name:    "log-level",
@@ -65,7 +66,7 @@ func main() {
 			// Set config path from flag
 			configPath = cmd.String("config")
 
-			// Set auth override from flag (strip whitespace)
+			// Set auth override from flag
 			if auth := cmd.String("auth"); auth != "" {
 				authOverride = auth
 			}
@@ -160,8 +161,9 @@ func main() {
 						Usage: "Disable file type filtering",
 					},
 					&cli.StringFlag{
-						Name:  "album",
-						Usage: "Add uploaded files to album with this name (creates if not exists)",
+						Name:   "album",
+						Usage:  "Add uploaded files to album with this name (creates if not exists)",
+						Config: cli.StringConfig{TrimSpace: true},
 					},
 					&cli.StringFlag{
 						Name:    "quality",
@@ -179,16 +181,18 @@ func main() {
 						Usage:   "Archive uploaded files after upload",
 					},
 					&cli.StringFlag{
-						Name:  "caption",
-						Usage: "Set caption for uploaded files",
+						Name:   "caption",
+						Usage:  "Set caption for uploaded files",
+						Config: cli.StringConfig{TrimSpace: true},
 					},
 					&cli.BoolFlag{
 						Name:  "favourite",
 						Usage: "Mark uploaded files as favourites",
 					},
 					&cli.StringFlag{
-						Name:  "datetime",
-						Usage: "Override datetime for uploaded files (ISO 8601 format or 'now')",
+						Name:   "datetime",
+						Usage:  "Override datetime for uploaded files (ISO 8601 format or 'now')",
+						Config: cli.StringConfig{TrimSpace: true},
 					},
 				},
 				Action: uploadAction,
@@ -211,6 +215,7 @@ func main() {
 						Name:    "output",
 						Aliases: []string{"o"},
 						Usage:   "Output path (file path or directory)",
+						Config:  cli.StringConfig{TrimSpace: true},
 					},
 				},
 				Action: downloadAction,
@@ -229,6 +234,7 @@ func main() {
 						Name:    "output",
 						Aliases: []string{"o"},
 						Usage:   "Output path (file path or directory)",
+						Config:  cli.StringConfig{TrimSpace: true},
 					},
 					&cli.IntFlag{
 						Name:    "width",
@@ -269,6 +275,7 @@ func main() {
 						Name:    "from-file",
 						Aliases: []string{"i"},
 						Usage:   "Read item keys from file (one per line)",
+						Config:  cli.StringConfig{TrimSpace: true},
 					},
 				},
 				Action: deleteAction,
@@ -287,6 +294,7 @@ func main() {
 						Name:    "from-file",
 						Aliases: []string{"i"},
 						Usage:   "Read item keys from file (one per line)",
+						Config:  cli.StringConfig{TrimSpace: true},
 					},
 				},
 				Action: archiveAction,
@@ -320,6 +328,7 @@ func main() {
 					&cli.StringArg{
 						Name:      "caption",
 						UsageText: "Caption text to set",
+						Config:    cli.StringConfig{TrimSpace: true},
 					},
 				},
 				Action: captionAction,
@@ -369,6 +378,7 @@ func main() {
 					&cli.StringArg{
 						Name:      "datetime",
 						UsageText: "Date and time in ISO 8601 format (e.g., '2024-12-24T15:30:00+05:30') or 'now'",
+						Config:    cli.StringConfig{TrimSpace: true},
 					},
 				},
 				Flags: []cli.Flag{
@@ -376,6 +386,7 @@ func main() {
 						Name:    "from-file",
 						Aliases: []string{"i"},
 						Usage:   "Read item keys from file (one per line)",
+						Config:  cli.StringConfig{TrimSpace: true},
 					},
 				},
 				Action: datetimeAction,
@@ -392,6 +403,7 @@ func main() {
 							&cli.StringArg{
 								Name:      "name",
 								UsageText: "Album name",
+								Config:    cli.StringConfig{TrimSpace: true},
 							},
 						},
 						Action: albumCreateAction,
@@ -411,6 +423,7 @@ func main() {
 								Name:    "from-file",
 								Aliases: []string{"i"},
 								Usage:   "Read media keys from file (one per line)",
+								Config:  cli.StringConfig{TrimSpace: true},
 							},
 						},
 						Action: albumAddAction,
