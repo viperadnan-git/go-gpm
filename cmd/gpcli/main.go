@@ -84,7 +84,7 @@ func main() {
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name:      "auth-string",
-								UsageText: "Authentication string from browser",
+								UsageText: "<auth-string>",
 							},
 						},
 						Action: credentialsAddAction,
@@ -102,7 +102,7 @@ func main() {
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name:      "identifier",
-								UsageText: "Account number or email address",
+								UsageText: "<number|email>",
 							},
 						},
 						Action: credentialsRemoveAction,
@@ -113,7 +113,7 @@ func main() {
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name:      "identifier",
-								UsageText: "Account number or email address",
+								UsageText: "<number|email>",
 							},
 						},
 						Action: credentialsSetAction,
@@ -131,7 +131,7 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "filepath",
-						UsageText: "Path to the file or directory to upload",
+						UsageText: "<filepath>",
 					},
 				},
 				Flags: []cli.Flag{
@@ -203,7 +203,7 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "input",
-						UsageText: "Media key, dedup key, or file path",
+						UsageText: "<item-key|filepath>",
 					},
 				},
 				Flags: []cli.Flag{
@@ -226,7 +226,7 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "input",
-						UsageText: "Media key, dedup key, or file path",
+						UsageText: "<item-key|filepath>",
 					},
 				},
 				Flags: []cli.Flag{
@@ -305,7 +305,7 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "input",
-						UsageText: "Media key, dedup key, or file path",
+						UsageText: "<item-key|filepath>",
 					},
 				},
 				Flags: []cli.Flag{
@@ -323,11 +323,11 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "input",
-						UsageText: "Media key, dedup key, or file path",
+						UsageText: "<item-key|filepath>",
 					},
 					&cli.StringArg{
 						Name:      "caption",
-						UsageText: "Caption text to set",
+						UsageText: "<caption>",
 						Config:    cli.StringConfig{TrimSpace: true},
 					},
 				},
@@ -339,7 +339,7 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "input",
-						UsageText: "Hash, dedup key, media key, or file path",
+						UsageText: "<hash|dedup-key|media-key|filepath>",
 					},
 				},
 				Action: resolveAction,
@@ -351,7 +351,7 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "input",
-						UsageText: "ITEM-KEY",
+						UsageText: "<item-key|filepath>",
 					},
 				},
 				Flags: []cli.Flag{
@@ -466,7 +466,7 @@ func main() {
 				Arguments: []cli.Argument{
 					&cli.StringArg{
 						Name:      "version",
-						UsageText: "Target version (optional, defaults to latest)",
+						UsageText: "<version> (optional, defaults to latest)",
 					},
 				},
 				Flags: []cli.Flag{
