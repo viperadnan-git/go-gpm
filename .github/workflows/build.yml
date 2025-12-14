@@ -14,10 +14,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-    strategy:
-      matrix:
-        goarch: [amd64, arm64]
-        goos: [linux, darwin, windows]
 
     steps:
       - name: Checkout code
@@ -28,14 +24,54 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Build
-        run: cd cmd/gpcli && go build -o gpcli .
+      - name: Run GoReleaser (snapshot)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: build --snapshot --clean
+          workdir: cmd/gpcli
 
-      - name: Upload artifact
+      - name: Upload linux-amd64
         uses: actions/upload-artifact@v4
         with:
-          name: gpcli-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: cmd/gpcli/gpcli
+          name: gpcli-linux-amd64
+          path: cmd/gpcli/dist/gpcli_linux_amd64_v1/gpcli
+          retention-days: 90
+
+      - name: Upload linux-arm64
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpcli-linux-arm64
+          path: cmd/gpcli/dist/gpcli_linux_arm64/gpcli
+          retention-days: 90
+
+      - name: Upload darwin-amd64
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpcli-darwin-amd64
+          path: cmd/gpcli/dist/gpcli_darwin_amd64_v1/gpcli
+          retention-days: 90
+
+      - name: Upload darwin-arm64
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpcli-darwin-arm64
+          path: cmd/gpcli/dist/gpcli_darwin_arm64/gpcli
+          retention-days: 90
+
+      - name: Upload windows-amd64
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpcli-windows-amd64
+          path: cmd/gpcli/dist/gpcli_windows_amd64_v1/gpcli.exe
+          retention-days: 90
+
+      - name: Upload windows-arm64
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpcli-windows-arm64
+          path: cmd/gpcli/dist/gpcli_windows_arm64/gpcli.exe
           retention-days: 90
 
   release:

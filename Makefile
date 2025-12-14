@@ -4,7 +4,7 @@ PREFIX ?= /usr/local
 GO ?= $(shell which go)
 
 build:
-	cd cmd/gpcli && $(GO) build -o gpcli .
+	cd cmd/gpcli && $(GO) build -ldflags="-s -w" -o gpcli .
 
 clean:
 	rm -f cmd/gpcli/gpcli
