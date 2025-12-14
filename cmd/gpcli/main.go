@@ -475,6 +475,16 @@ func main() {
 						Aliases: []string{"C"},
 						Usage:   "Only check for updates without installing",
 					},
+					&cli.StringFlag{
+						Name:    "url",
+						Aliases: []string{"u"},
+						Usage:   "Download and install from a specific URL",
+					},
+					&cli.BoolFlag{
+						Name:    "nightly",
+						Aliases: []string{"n"},
+						Usage:   "Update to the latest nightly build",
+					},
 				},
 				Action: upgradeAction,
 			},
