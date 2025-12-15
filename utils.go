@@ -9,13 +9,26 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/viperadnan-git/go-gpm/internal/core"
 )
 
+// Supported file formats for Google Photos (treat as constants)
+var (
+	GPSupportedPhotoExtensions = []string{
+		"avif", "bmp", "gif", "heic", "ico", "jpg", "jpeg", "png", "tiff", "webp",
+		"cr2", "cr3", "nef", "arw", "orf", "raf", "rw2", "pef", "sr2", "dng",
+	}
+	GPSupportedVideoExtensions = []string{
+		"3gp", "3g2", "asf", "avi", "divx", "m2t", "m2ts", "m4v", "mkv", "mmv",
+		"mod", "mov", "mp4", "mpg", "mpeg", "mts", "tod", "wmv", "ts",
+	}
+)
+
 // dedupKeyPattern matches dedup keys (URL-safe base64 encoded SHA1)
-var dedupKeyPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{27}$`)
+var DedupKeyPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{27}$`)
 
 // DownloadFromReader saves data from an io.Reader to the specified output path
 // Returns the final output path
@@ -139,7 +152,7 @@ func (g *GooglePhotosAPI) ResolveItemKey(ctx context.Context, input string) (str
 	}
 
 	// If input looks like a dedup key
-	if dedupKeyPattern.MatchString(input) {
+	if DedupKeyPattern.MatchString(input) {
 		return input, nil
 	}
 
@@ -167,7 +180,7 @@ func (g *GooglePhotosAPI) ResolveMediaKey(ctx context.Context, input string) (st
 	}
 
 	// If input looks like a dedup key, convert to hash and look up mediaKey
-	if dedupKeyPattern.MatchString(input) {
+	if DedupKeyPattern.MatchString(input) {
 		hash, err := core.DedupeKeyToSHA1(input)
 		if err != nil {
 			return "", fmt.Errorf("failed to decode dedup key: %w", err)
@@ -200,4 +213,65 @@ func (g *GooglePhotosAPI) ResolveMediaKey(ctx context.Context, input string) (st
 	}
 	// Assume it's already a media key
 	return input, nil
+}
+
+// IsSupportedByGooglePhotos checks if a file extension is supported by Google Photos
+func IsSupportedByGooglePhotos(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	if ext == "" {
+		return false
+	}
+	ext = ext[1:]
+	return slices.Contains(GPSupportedPhotoExtensions, ext) || slices.Contains(GPSupportedVideoExtensions, ext)
+}
+
+// GetGooglePhotosSupportedFiles returns files supported by Google Photos from a path
+func GetGooglePhotosSupportedFiles(path string, recursive, disableFilter bool) ([]string, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, fmt.Errorf("error accessing %s: %w", path, err)
+	}
+
+	var files []string
+	if info.IsDir() {
+		files, err = scanDir(path, recursive)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		files = []string{path}
+	}
+
+	if disableFilter {
+		return files, nil
+	}
+
+	var result []string
+	for _, f := range files {
+		if IsSupportedByGooglePhotos(f) {
+			result = append(result, f)
+		}
+	}
+	return result, nil
+}
+
+func scanDir(path string, recursive bool) ([]string, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	var files []string
+	for _, e := range entries {
+		full := filepath.Join(path, e.Name())
+		if e.IsDir() && recursive {
+			sub, err := scanDir(full, true)
+			if err != nil {
+				return nil, err
+			}
+			files = append(files, sub...)
+		} else if !e.IsDir() {
+			files = append(files, full)
+		}
+	}
+	return files, nil
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	gpm "github.com/viperadnan-git/go-gpm"
@@ -94,6 +96,11 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	// Handle --check mode (dry run)
+	if cmd.Bool("check") {
+		return checkFiles(ctx, api, filePath, threads, uploadOpts.Recursive, uploadOpts.DisableFilter)
+	}
+
 	// Log start
 	logger.Info("scanning files", "path", filePath)
 
@@ -102,7 +109,7 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 	var successfulMediaKeys []string
 
 	// Process upload events
-	for event := range api.Upload(ctx, []string{filePath}, uploadOpts) {
+	for event := range api.Upload(ctx, filePath, uploadOpts) {
 		if event.Total > 0 {
 			totalFiles = event.Total
 			logger.Info("starting upload", "files", totalFiles, "threads", threads)
@@ -174,5 +181,75 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 		logger.Info("datetime set successfully", "count", len(successfulMediaKeys))
 	}
 
+	return nil
+}
+
+func checkFiles(ctx context.Context, api *gpm.GooglePhotosAPI, path string, threads int, recursive, disableFilter bool) error {
+	logger.Info("scanning files", "path", path)
+
+	files, err := gpm.GetGooglePhotosSupportedFiles(path, recursive, disableFilter)
+	if err != nil {
+		return fmt.Errorf("failed to scan files: %w", err)
+	}
+	if len(files) == 0 {
+		logger.Info("no supported files found")
+		return nil
+	}
+
+	totalFiles := len(files)
+	workers := min(threads, totalFiles)
+	logger.Info("starting check", "files", totalFiles, "threads", workers)
+
+	var wouldUpload, exists, failed atomic.Int32
+	var processed atomic.Int32
+
+	workChan := make(chan string, len(files))
+	var wg sync.WaitGroup
+
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for filePath := range workChan {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
+				hash, err := gpm.CalculateSHA1(ctx, filePath)
+				if err != nil {
+					failed.Add(1)
+					count := processed.Add(1)
+					logger.Error(fmt.Sprintf("[%d/%d] failed", count, totalFiles), "file", filePath, "error", err)
+					continue
+				}
+
+				mediaKey, _ := api.FindMediaKeyByHash(ctx, hash)
+				count := processed.Add(1)
+				if mediaKey != "" {
+					exists.Add(1)
+					logger.Info(fmt.Sprintf("[%d/%d] exists", count, totalFiles), "mediaKey", mediaKey, "file", filePath)
+				} else {
+					wouldUpload.Add(1)
+					logger.Info(fmt.Sprintf("[%d/%d] would upload", count, totalFiles), "file", filePath)
+				}
+			}
+		}()
+	}
+
+	for _, f := range files {
+		select {
+		case <-ctx.Done():
+			close(workChan)
+			wg.Wait()
+			return ctx.Err()
+		case workChan <- f:
+		}
+	}
+	close(workChan)
+	wg.Wait()
+
+	logger.Info("check complete", "would_upload", wouldUpload.Load(), "exists", exists.Load(), "failed", failed.Load())
 	return nil
 }

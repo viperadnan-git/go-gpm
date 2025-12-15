@@ -194,6 +194,11 @@ func main() {
 						Usage:  "Override datetime for uploaded files (ISO 8601 format or 'now')",
 						Config: cli.StringConfig{TrimSpace: true},
 					},
+					&cli.BoolFlag{
+						Name:    "check",
+						Aliases: []string{"c"},
+						Usage:   "Dry run: check which files would be uploaded vs already exist",
+					},
 				},
 				Action: uploadAction,
 			},

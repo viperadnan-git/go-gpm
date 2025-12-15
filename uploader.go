@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
-	"slices"
-	"strings"
 	"sync"
 
 	"github.com/viperadnan-git/go-gpm/internal/core"
@@ -54,7 +51,7 @@ type UploadOptions struct {
 
 // Upload uploads files to Google Photos and returns a channel for status events.
 // The channel is closed when upload completes. Multiple calls are queued automatically.
-func (g *GooglePhotosAPI) Upload(ctx context.Context, paths []string, opts UploadOptions) <-chan UploadEvent {
+func (g *GooglePhotosAPI) Upload(ctx context.Context, path string, opts UploadOptions) <-chan UploadEvent {
 	events := make(chan UploadEvent)
 
 	go func() {
@@ -64,7 +61,7 @@ func (g *GooglePhotosAPI) Upload(ctx context.Context, paths []string, opts Uploa
 		defer close(events)
 
 		// Filter files
-		files, err := filterGooglePhotosFiles(paths, opts.Recursive, opts.DisableFilter)
+		files, err := GetGooglePhotosSupportedFiles(path, opts.Recursive, opts.DisableFilter)
 		if err != nil {
 			events <- UploadEvent{Status: StatusFailed, Error: err}
 			return
@@ -204,66 +201,3 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 	send(StatusCompleted, mediaKey, dedupKey, nil)
 }
 
-// isSupportedByGooglePhotos checks if a file extension is supported
-func isSupportedByGooglePhotos(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	if ext == "" {
-		return false
-	}
-	ext = ext[1:]
-
-	photoFormats := []string{
-		"avif", "bmp", "gif", "heic", "ico", "jpg", "jpeg", "png", "tiff", "webp",
-		"cr2", "cr3", "nef", "arw", "orf", "raf", "rw2", "pef", "sr2", "dng",
-	}
-	videoFormats := []string{
-		"3gp", "3g2", "asf", "avi", "divx", "m2t", "m2ts", "m4v", "mkv", "mmv",
-		"mod", "mov", "mp4", "mpg", "mpeg", "mts", "tod", "wmv", "ts",
-	}
-	return slices.Contains(photoFormats, ext) || slices.Contains(videoFormats, ext)
-}
-
-func filterGooglePhotosFiles(paths []string, recursive, disableFilter bool) ([]string, error) {
-	var result []string
-	for _, path := range paths {
-		info, err := os.Stat(path)
-		if err != nil {
-			return nil, fmt.Errorf("error accessing %s: %w", path, err)
-		}
-		if info.IsDir() {
-			files, err := scanDir(path, recursive)
-			if err != nil {
-				return nil, err
-			}
-			for _, f := range files {
-				if disableFilter || isSupportedByGooglePhotos(f) {
-					result = append(result, f)
-				}
-			}
-		} else if disableFilter || isSupportedByGooglePhotos(path) {
-			result = append(result, path)
-		}
-	}
-	return result, nil
-}
-
-func scanDir(path string, recursive bool) ([]string, error) {
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-	var files []string
-	for _, e := range entries {
-		full := filepath.Join(path, e.Name())
-		if e.IsDir() && recursive {
-			sub, err := scanDir(full, true)
-			if err != nil {
-				return nil, err
-			}
-			files = append(files, sub...)
-		} else if !e.IsDir() {
-			files = append(files, full)
-		}
-	}
-	return files, nil
-}
