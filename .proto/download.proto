@@ -51,15 +51,35 @@ message GetDownloadUrlResponse {
   Field1 field1 = 1;
 
   message Field1 {
-    Field5 field5 = 5;
+    string media_key = 1;           // The media key
+    MediaMetadata metadata = 2;     // File metadata
+    URLs urls = 5;                  // Download URLs
+    OwnerInfo owner_info = 6;       // Owner/user info
 
-    message Field5 {
-      int64 field1 = 1;  // isEdited flag
-      Field2 field2 = 2; // Contains download info
+    message MediaMetadata {
+      string filename = 4;            // Original filename
+      int64 created_at = 7;           // Creation time (Unix ms)
+      int64 field8 = 8;               // Unknown
+      int64 uploaded_at = 9;          // Upload time (Unix ms)
+      int64 file_size = 10;           // File size in bytes
+      int64 quality_percentage = 11;  // Quality percentage (0-100)
+      int64 media_type = 19;          // Media type (1=photo, 2=video)
+      int64 field24 = 24;             // Unknown
+      int64 field26 = 26;             // Unknown
+    }
+
+    message OwnerInfo {
+      string owner_id = 1;          // Owner user ID
+    }
+
+    message URLs {
+      int64 is_edited = 1;          // 1 if edited version exists
+      DownloadUrls download_urls = 2;
       Field3 field3 = 3;
 
-      message Field2 {
-        string download_url = 5;
+      message DownloadUrls {
+        string edited_url = 5;      // Download URL for edited version
+        string original_url = 6;    // Download URL for original version
       }
 
       message Field3 {

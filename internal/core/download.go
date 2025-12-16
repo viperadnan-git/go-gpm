@@ -2,13 +2,23 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/viperadnan-git/go-gpm/internal/pb"
 )
 
-// GetDownloadUrl gets the download URL for a media item
-// Returns downloadURL and isEdited (true if the URL is for an edited version)
-func (a *Api) GetDownloadUrl(ctx context.Context, mediaKey string) (downloadURL string, isEdited bool, err error) {
+// DownloadInfo contains download information for a media item
+type DownloadInfo struct {
+	Filename    string
+	FileSize    int64
+	IsEdited    bool
+	DownloadURL string // Preferred URL (OriginalURL if available, otherwise EditedURL)
+	OriginalURL string
+	EditedURL   string
+}
+
+// GetDownloadInfo gets the download information for a media item
+func (a *Api) GetDownloadInfo(ctx context.Context, mediaKey string) (*DownloadInfo, error) {
 	requestBody := pb.GetDownloadUrl{
 		Field1: &pb.GetDownloadUrl_Field1{
 			Field1: &pb.GetDownloadUrl_Field1_Field1Inner{
@@ -42,18 +52,39 @@ func (a *Api) GetDownloadUrl(ctx context.Context, mediaKey string) (downloadURL 
 		WithCommonHeaders(),
 		WithStatusCheck(),
 	); err != nil {
-		return "", false, err
+		return nil, err
 	}
 
-	if response.GetField1() != nil && response.GetField1().GetField5() != nil {
-		isEdited = response.GetField1().GetField5().GetField1() > 0
-		// Try field2 first (primary location), then field3 (fallback)
-		if response.GetField1().GetField5().GetField2() != nil {
-			downloadURL = response.GetField1().GetField5().GetField2().GetDownloadUrl()
-		} else if response.GetField1().GetField5().GetField3() != nil {
-			downloadURL = response.GetField1().GetField5().GetField3().GetDownloadUrl()
+	info := &DownloadInfo{}
+
+	if response.GetField1() != nil {
+		if response.GetField1().GetMetadata() != nil {
+			info.Filename = response.GetField1().GetMetadata().GetFilename()
+			info.FileSize = response.GetField1().GetMetadata().GetFileSize()
+		}
+
+		if response.GetField1().GetUrls() != nil {
+			info.IsEdited = response.GetField1().GetUrls().GetIsEdited() > 0
+
+			if response.GetField1().GetUrls().GetDownloadUrls() != nil {
+				info.OriginalURL = response.GetField1().GetUrls().GetDownloadUrls().GetOriginalUrl()
+				info.EditedURL = response.GetField1().GetUrls().GetDownloadUrls().GetEditedUrl()
+			} else if response.GetField1().GetUrls().GetField3() != nil {
+				info.OriginalURL = response.GetField1().GetUrls().GetField3().GetDownloadUrl()
+			}
 		}
 	}
 
-	return downloadURL, isEdited, nil
+	// Set DownloadURL to preferred URL (original if available, otherwise edited)
+	if info.OriginalURL != "" {
+		info.DownloadURL = info.OriginalURL
+	} else {
+		info.DownloadURL = info.EditedURL
+	}
+
+	if info.DownloadURL == "" {
+		return nil, fmt.Errorf("no download URL available")
+	}
+
+	return info, nil
 }

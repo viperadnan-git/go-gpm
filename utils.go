@@ -40,9 +40,9 @@ func DownloadFromReader(reader io.Reader, outputPath, filename string) (string, 
 	return filePath, nil
 }
 
-// DownloadFile downloads a file from the given URL to the specified output path
-// Returns the final output path
-func DownloadFile(downloadURL, outputPath string) (string, error) {
+// DownloadFile downloads a file from the given URL with a specified filename
+// If filename is empty, it will be extracted from Content-Disposition header or URL
+func DownloadFile(downloadURL, outputPath, filename string) (string, error) {
 	resp, err := http.Get(downloadURL)
 	if err != nil {
 		return "", fmt.Errorf("download request failed: %w", err)
@@ -53,7 +53,10 @@ func DownloadFile(downloadURL, outputPath string) (string, error) {
 		return "", fmt.Errorf("download failed with status %d", resp.StatusCode)
 	}
 
-	filename := extractFilenameFromContentDisposition(resp.Header.Get("Content-Disposition"))
+	// Use provided filename, or extract from response
+	if filename == "" {
+		filename = extractFilenameFromContentDisposition(resp.Header.Get("Content-Disposition"))
+	}
 	if filename == "" {
 		filename = extractFilenameFromURL(downloadURL)
 	}

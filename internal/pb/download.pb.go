@@ -604,8 +604,11 @@ func (*GetDownloadUrl_Field2_Field5Type_Field5Inner_Field1Type) Descriptor() ([]
 }
 
 type GetDownloadUrlResponse_Field1 struct {
-	state         protoimpl.MessageState                `protogen:"open.v1"`
-	Field5        *GetDownloadUrlResponse_Field1_Field5 `protobuf:"bytes,5,opt,name=field5,proto3" json:"field5,omitempty"`
+	state         protoimpl.MessageState                       `protogen:"open.v1"`
+	MediaKey      string                                       `protobuf:"bytes,1,opt,name=media_key,json=mediaKey,proto3" json:"media_key,omitempty"`    // The media key
+	Metadata      *GetDownloadUrlResponse_Field1_MediaMetadata `protobuf:"bytes,2,opt,name=metadata,proto3" json:"metadata,omitempty"`                    // File metadata
+	Urls          *GetDownloadUrlResponse_Field1_URLs          `protobuf:"bytes,5,opt,name=urls,proto3" json:"urls,omitempty"`                            // Download URLs
+	OwnerInfo     *GetDownloadUrlResponse_Field1_OwnerInfo     `protobuf:"bytes,6,opt,name=owner_info,json=ownerInfo,proto3" json:"owner_info,omitempty"` // Owner/user info
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -640,36 +643,63 @@ func (*GetDownloadUrlResponse_Field1) Descriptor() ([]byte, []int) {
 	return file___proto_download_proto_rawDescGZIP(), []int{1, 0}
 }
 
-func (x *GetDownloadUrlResponse_Field1) GetField5() *GetDownloadUrlResponse_Field1_Field5 {
+func (x *GetDownloadUrlResponse_Field1) GetMediaKey() string {
 	if x != nil {
-		return x.Field5
+		return x.MediaKey
+	}
+	return ""
+}
+
+func (x *GetDownloadUrlResponse_Field1) GetMetadata() *GetDownloadUrlResponse_Field1_MediaMetadata {
+	if x != nil {
+		return x.Metadata
 	}
 	return nil
 }
 
-type GetDownloadUrlResponse_Field1_Field5 struct {
-	state         protoimpl.MessageState                       `protogen:"open.v1"`
-	Field1        int64                                        `protobuf:"varint,1,opt,name=field1,proto3" json:"field1,omitempty"` // isEdited flag
-	Field2        *GetDownloadUrlResponse_Field1_Field5_Field2 `protobuf:"bytes,2,opt,name=field2,proto3" json:"field2,omitempty"`  // Contains download info
-	Field3        *GetDownloadUrlResponse_Field1_Field5_Field3 `protobuf:"bytes,3,opt,name=field3,proto3" json:"field3,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+func (x *GetDownloadUrlResponse_Field1) GetUrls() *GetDownloadUrlResponse_Field1_URLs {
+	if x != nil {
+		return x.Urls
+	}
+	return nil
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5) Reset() {
-	*x = GetDownloadUrlResponse_Field1_Field5{}
+func (x *GetDownloadUrlResponse_Field1) GetOwnerInfo() *GetDownloadUrlResponse_Field1_OwnerInfo {
+	if x != nil {
+		return x.OwnerInfo
+	}
+	return nil
+}
+
+type GetDownloadUrlResponse_Field1_MediaMetadata struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Filename          string                 `protobuf:"bytes,4,opt,name=filename,proto3" json:"filename,omitempty"`                                              // Original filename
+	CreatedAt         int64                  `protobuf:"varint,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`                          // Creation time (Unix ms)
+	Field8            int64                  `protobuf:"varint,8,opt,name=field8,proto3" json:"field8,omitempty"`                                                 // Unknown
+	UploadedAt        int64                  `protobuf:"varint,9,opt,name=uploaded_at,json=uploadedAt,proto3" json:"uploaded_at,omitempty"`                       // Upload time (Unix ms)
+	FileSize          int64                  `protobuf:"varint,10,opt,name=file_size,json=fileSize,proto3" json:"file_size,omitempty"`                            // File size in bytes
+	QualityPercentage int64                  `protobuf:"varint,11,opt,name=quality_percentage,json=qualityPercentage,proto3" json:"quality_percentage,omitempty"` // Quality percentage (0-100)
+	MediaType         int64                  `protobuf:"varint,19,opt,name=media_type,json=mediaType,proto3" json:"media_type,omitempty"`                         // Media type (1=photo, 2=video)
+	Field24           int64                  `protobuf:"varint,24,opt,name=field24,proto3" json:"field24,omitempty"`                                              // Unknown
+	Field26           int64                  `protobuf:"varint,26,opt,name=field26,proto3" json:"field26,omitempty"`                                              // Unknown
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) Reset() {
+	*x = GetDownloadUrlResponse_Field1_MediaMetadata{}
 	mi := &file___proto_download_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5) String() string {
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDownloadUrlResponse_Field1_Field5) ProtoMessage() {}
+func (*GetDownloadUrlResponse_Field1_MediaMetadata) ProtoMessage() {}
 
-func (x *GetDownloadUrlResponse_Field1_Field5) ProtoReflect() protoreflect.Message {
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) ProtoReflect() protoreflect.Message {
 	mi := &file___proto_download_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -681,54 +711,201 @@ func (x *GetDownloadUrlResponse_Field1_Field5) ProtoReflect() protoreflect.Messa
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDownloadUrlResponse_Field1_Field5.ProtoReflect.Descriptor instead.
-func (*GetDownloadUrlResponse_Field1_Field5) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetDownloadUrlResponse_Field1_MediaMetadata.ProtoReflect.Descriptor instead.
+func (*GetDownloadUrlResponse_Field1_MediaMetadata) Descriptor() ([]byte, []int) {
 	return file___proto_download_proto_rawDescGZIP(), []int{1, 0, 0}
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5) GetField1() int64 {
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetFilename() string {
 	if x != nil {
-		return x.Field1
+		return x.Filename
+	}
+	return ""
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
 	}
 	return 0
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5) GetField2() *GetDownloadUrlResponse_Field1_Field5_Field2 {
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetField8() int64 {
 	if x != nil {
-		return x.Field2
+		return x.Field8
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetUploadedAt() int64 {
+	if x != nil {
+		return x.UploadedAt
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetFileSize() int64 {
+	if x != nil {
+		return x.FileSize
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetQualityPercentage() int64 {
+	if x != nil {
+		return x.QualityPercentage
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetMediaType() int64 {
+	if x != nil {
+		return x.MediaType
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetField24() int64 {
+	if x != nil {
+		return x.Field24
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlResponse_Field1_MediaMetadata) GetField26() int64 {
+	if x != nil {
+		return x.Field26
+	}
+	return 0
+}
+
+type GetDownloadUrlResponse_Field1_OwnerInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OwnerId       string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"` // Owner user ID
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDownloadUrlResponse_Field1_OwnerInfo) Reset() {
+	*x = GetDownloadUrlResponse_Field1_OwnerInfo{}
+	mi := &file___proto_download_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDownloadUrlResponse_Field1_OwnerInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDownloadUrlResponse_Field1_OwnerInfo) ProtoMessage() {}
+
+func (x *GetDownloadUrlResponse_Field1_OwnerInfo) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_download_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDownloadUrlResponse_Field1_OwnerInfo.ProtoReflect.Descriptor instead.
+func (*GetDownloadUrlResponse_Field1_OwnerInfo) Descriptor() ([]byte, []int) {
+	return file___proto_download_proto_rawDescGZIP(), []int{1, 0, 1}
+}
+
+func (x *GetDownloadUrlResponse_Field1_OwnerInfo) GetOwnerId() string {
+	if x != nil {
+		return x.OwnerId
+	}
+	return ""
+}
+
+type GetDownloadUrlResponse_Field1_URLs struct {
+	state         protoimpl.MessageState                           `protogen:"open.v1"`
+	IsEdited      int64                                            `protobuf:"varint,1,opt,name=is_edited,json=isEdited,proto3" json:"is_edited,omitempty"` // 1 if edited version exists
+	DownloadUrls  *GetDownloadUrlResponse_Field1_URLs_DownloadUrls `protobuf:"bytes,2,opt,name=download_urls,json=downloadUrls,proto3" json:"download_urls,omitempty"`
+	Field3        *GetDownloadUrlResponse_Field1_URLs_Field3       `protobuf:"bytes,3,opt,name=field3,proto3" json:"field3,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDownloadUrlResponse_Field1_URLs) Reset() {
+	*x = GetDownloadUrlResponse_Field1_URLs{}
+	mi := &file___proto_download_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDownloadUrlResponse_Field1_URLs) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDownloadUrlResponse_Field1_URLs) ProtoMessage() {}
+
+func (x *GetDownloadUrlResponse_Field1_URLs) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_download_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDownloadUrlResponse_Field1_URLs.ProtoReflect.Descriptor instead.
+func (*GetDownloadUrlResponse_Field1_URLs) Descriptor() ([]byte, []int) {
+	return file___proto_download_proto_rawDescGZIP(), []int{1, 0, 2}
+}
+
+func (x *GetDownloadUrlResponse_Field1_URLs) GetIsEdited() int64 {
+	if x != nil {
+		return x.IsEdited
+	}
+	return 0
+}
+
+func (x *GetDownloadUrlResponse_Field1_URLs) GetDownloadUrls() *GetDownloadUrlResponse_Field1_URLs_DownloadUrls {
+	if x != nil {
+		return x.DownloadUrls
 	}
 	return nil
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5) GetField3() *GetDownloadUrlResponse_Field1_Field5_Field3 {
+func (x *GetDownloadUrlResponse_Field1_URLs) GetField3() *GetDownloadUrlResponse_Field1_URLs_Field3 {
 	if x != nil {
 		return x.Field3
 	}
 	return nil
 }
 
-type GetDownloadUrlResponse_Field1_Field5_Field2 struct {
+type GetDownloadUrlResponse_Field1_URLs_DownloadUrls struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	DownloadUrl   string                 `protobuf:"bytes,5,opt,name=download_url,json=downloadUrl,proto3" json:"download_url,omitempty"`
+	EditedUrl     string                 `protobuf:"bytes,5,opt,name=edited_url,json=editedUrl,proto3" json:"edited_url,omitempty"`       // Download URL for edited version
+	OriginalUrl   string                 `protobuf:"bytes,6,opt,name=original_url,json=originalUrl,proto3" json:"original_url,omitempty"` // Download URL for original version
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field2) Reset() {
-	*x = GetDownloadUrlResponse_Field1_Field5_Field2{}
-	mi := &file___proto_download_proto_msgTypes[15]
+func (x *GetDownloadUrlResponse_Field1_URLs_DownloadUrls) Reset() {
+	*x = GetDownloadUrlResponse_Field1_URLs_DownloadUrls{}
+	mi := &file___proto_download_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field2) String() string {
+func (x *GetDownloadUrlResponse_Field1_URLs_DownloadUrls) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDownloadUrlResponse_Field1_Field5_Field2) ProtoMessage() {}
+func (*GetDownloadUrlResponse_Field1_URLs_DownloadUrls) ProtoMessage() {}
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field2) ProtoReflect() protoreflect.Message {
-	mi := &file___proto_download_proto_msgTypes[15]
+func (x *GetDownloadUrlResponse_Field1_URLs_DownloadUrls) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_download_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -739,19 +916,26 @@ func (x *GetDownloadUrlResponse_Field1_Field5_Field2) ProtoReflect() protoreflec
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDownloadUrlResponse_Field1_Field5_Field2.ProtoReflect.Descriptor instead.
-func (*GetDownloadUrlResponse_Field1_Field5_Field2) Descriptor() ([]byte, []int) {
-	return file___proto_download_proto_rawDescGZIP(), []int{1, 0, 0, 0}
+// Deprecated: Use GetDownloadUrlResponse_Field1_URLs_DownloadUrls.ProtoReflect.Descriptor instead.
+func (*GetDownloadUrlResponse_Field1_URLs_DownloadUrls) Descriptor() ([]byte, []int) {
+	return file___proto_download_proto_rawDescGZIP(), []int{1, 0, 2, 0}
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field2) GetDownloadUrl() string {
+func (x *GetDownloadUrlResponse_Field1_URLs_DownloadUrls) GetEditedUrl() string {
 	if x != nil {
-		return x.DownloadUrl
+		return x.EditedUrl
 	}
 	return ""
 }
 
-type GetDownloadUrlResponse_Field1_Field5_Field3 struct {
+func (x *GetDownloadUrlResponse_Field1_URLs_DownloadUrls) GetOriginalUrl() string {
+	if x != nil {
+		return x.OriginalUrl
+	}
+	return ""
+}
+
+type GetDownloadUrlResponse_Field1_URLs_Field3 struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Field1        string                 `protobuf:"bytes,1,opt,name=field1,proto3" json:"field1,omitempty"`
 	Field3        int64                  `protobuf:"varint,3,opt,name=field3,proto3" json:"field3,omitempty"`
@@ -760,21 +944,21 @@ type GetDownloadUrlResponse_Field1_Field5_Field3 struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field3) Reset() {
-	*x = GetDownloadUrlResponse_Field1_Field5_Field3{}
-	mi := &file___proto_download_proto_msgTypes[16]
+func (x *GetDownloadUrlResponse_Field1_URLs_Field3) Reset() {
+	*x = GetDownloadUrlResponse_Field1_URLs_Field3{}
+	mi := &file___proto_download_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field3) String() string {
+func (x *GetDownloadUrlResponse_Field1_URLs_Field3) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDownloadUrlResponse_Field1_Field5_Field3) ProtoMessage() {}
+func (*GetDownloadUrlResponse_Field1_URLs_Field3) ProtoMessage() {}
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field3) ProtoReflect() protoreflect.Message {
-	mi := &file___proto_download_proto_msgTypes[16]
+func (x *GetDownloadUrlResponse_Field1_URLs_Field3) ProtoReflect() protoreflect.Message {
+	mi := &file___proto_download_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -785,26 +969,26 @@ func (x *GetDownloadUrlResponse_Field1_Field5_Field3) ProtoReflect() protoreflec
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDownloadUrlResponse_Field1_Field5_Field3.ProtoReflect.Descriptor instead.
-func (*GetDownloadUrlResponse_Field1_Field5_Field3) Descriptor() ([]byte, []int) {
-	return file___proto_download_proto_rawDescGZIP(), []int{1, 0, 0, 1}
+// Deprecated: Use GetDownloadUrlResponse_Field1_URLs_Field3.ProtoReflect.Descriptor instead.
+func (*GetDownloadUrlResponse_Field1_URLs_Field3) Descriptor() ([]byte, []int) {
+	return file___proto_download_proto_rawDescGZIP(), []int{1, 0, 2, 1}
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field3) GetField1() string {
+func (x *GetDownloadUrlResponse_Field1_URLs_Field3) GetField1() string {
 	if x != nil {
 		return x.Field1
 	}
 	return ""
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field3) GetField3() int64 {
+func (x *GetDownloadUrlResponse_Field1_URLs_Field3) GetField3() int64 {
 	if x != nil {
 		return x.Field3
 	}
 	return 0
 }
 
-func (x *GetDownloadUrlResponse_Field1_Field5_Field3) GetDownloadUrl() string {
+func (x *GetDownloadUrlResponse_Field1_URLs_Field3) GetDownloadUrl() string {
 	if x != nil {
 		return x.DownloadUrl
 	}
@@ -847,17 +1031,39 @@ const file___proto_download_proto_rawDesc = "" +
 	"\x06field1\x18\x01 \x01(\v28.GetDownloadUrl.Field2.Field5Type.Field5Inner.Field1TypeR\x06field1\x12\x16\n" +
 	"\x06field3\x18\x03 \x01(\x03R\x06field3\x1a\f\n" +
 	"\n" +
-	"Field1Type\"\xd3\x03\n" +
+	"Field1Type\"\x81\b\n" +
 	"\x16GetDownloadUrlResponse\x126\n" +
-	"\x06field1\x18\x01 \x01(\v2\x1e.GetDownloadUrlResponse.Field1R\x06field1\x1a\x80\x03\n" +
-	"\x06Field1\x12=\n" +
-	"\x06field5\x18\x05 \x01(\v2%.GetDownloadUrlResponse.Field1.Field5R\x06field5\x1a\xb6\x02\n" +
-	"\x06Field5\x12\x16\n" +
-	"\x06field1\x18\x01 \x01(\x03R\x06field1\x12D\n" +
-	"\x06field2\x18\x02 \x01(\v2,.GetDownloadUrlResponse.Field1.Field5.Field2R\x06field2\x12D\n" +
-	"\x06field3\x18\x03 \x01(\v2,.GetDownloadUrlResponse.Field1.Field5.Field3R\x06field3\x1a+\n" +
-	"\x06Field2\x12!\n" +
-	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrl\x1a[\n" +
+	"\x06field1\x18\x01 \x01(\v2\x1e.GetDownloadUrlResponse.Field1R\x06field1\x1a\xae\a\n" +
+	"\x06Field1\x12\x1b\n" +
+	"\tmedia_key\x18\x01 \x01(\tR\bmediaKey\x12H\n" +
+	"\bmetadata\x18\x02 \x01(\v2,.GetDownloadUrlResponse.Field1.MediaMetadataR\bmetadata\x127\n" +
+	"\x04urls\x18\x05 \x01(\v2#.GetDownloadUrlResponse.Field1.URLsR\x04urls\x12G\n" +
+	"\n" +
+	"owner_info\x18\x06 \x01(\v2(.GetDownloadUrlResponse.Field1.OwnerInfoR\townerInfo\x1a\xa2\x02\n" +
+	"\rMediaMetadata\x12\x1a\n" +
+	"\bfilename\x18\x04 \x01(\tR\bfilename\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\a \x01(\x03R\tcreatedAt\x12\x16\n" +
+	"\x06field8\x18\b \x01(\x03R\x06field8\x12\x1f\n" +
+	"\vuploaded_at\x18\t \x01(\x03R\n" +
+	"uploadedAt\x12\x1b\n" +
+	"\tfile_size\x18\n" +
+	" \x01(\x03R\bfileSize\x12-\n" +
+	"\x12quality_percentage\x18\v \x01(\x03R\x11qualityPercentage\x12\x1d\n" +
+	"\n" +
+	"media_type\x18\x13 \x01(\x03R\tmediaType\x12\x18\n" +
+	"\afield24\x18\x18 \x01(\x03R\afield24\x12\x18\n" +
+	"\afield26\x18\x1a \x01(\x03R\afield26\x1a&\n" +
+	"\tOwnerInfo\x12\x19\n" +
+	"\bowner_id\x18\x01 \x01(\tR\aownerId\x1a\xed\x02\n" +
+	"\x04URLs\x12\x1b\n" +
+	"\tis_edited\x18\x01 \x01(\x03R\bisEdited\x12U\n" +
+	"\rdownload_urls\x18\x02 \x01(\v20.GetDownloadUrlResponse.Field1.URLs.DownloadUrlsR\fdownloadUrls\x12B\n" +
+	"\x06field3\x18\x03 \x01(\v2*.GetDownloadUrlResponse.Field1.URLs.Field3R\x06field3\x1aP\n" +
+	"\fDownloadUrls\x12\x1d\n" +
+	"\n" +
+	"edited_url\x18\x05 \x01(\tR\teditedUrl\x12!\n" +
+	"\foriginal_url\x18\x06 \x01(\tR\voriginalUrl\x1a[\n" +
 	"\x06Field3\x12\x16\n" +
 	"\x06field1\x18\x01 \x01(\tR\x06field1\x12\x16\n" +
 	"\x06field3\x18\x03 \x01(\x03R\x06field3\x12!\n" +
@@ -875,7 +1081,7 @@ func file___proto_download_proto_rawDescGZIP() []byte {
 	return file___proto_download_proto_rawDescData
 }
 
-var file___proto_download_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file___proto_download_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file___proto_download_proto_goTypes = []any{
 	(*GetDownloadUrl)(nil),                                          // 0: GetDownloadUrl
 	(*GetDownloadUrlResponse)(nil),                                  // 1: GetDownloadUrlResponse
@@ -891,9 +1097,11 @@ var file___proto_download_proto_goTypes = []any{
 	(*GetDownloadUrl_Field2_Field5Type_Field5Inner)(nil),            // 11: GetDownloadUrl.Field2.Field5Type.Field5Inner
 	(*GetDownloadUrl_Field2_Field5Type_Field5Inner_Field1Type)(nil), // 12: GetDownloadUrl.Field2.Field5Type.Field5Inner.Field1Type
 	(*GetDownloadUrlResponse_Field1)(nil),                           // 13: GetDownloadUrlResponse.Field1
-	(*GetDownloadUrlResponse_Field1_Field5)(nil),                    // 14: GetDownloadUrlResponse.Field1.Field5
-	(*GetDownloadUrlResponse_Field1_Field5_Field2)(nil),             // 15: GetDownloadUrlResponse.Field1.Field5.Field2
-	(*GetDownloadUrlResponse_Field1_Field5_Field3)(nil),             // 16: GetDownloadUrlResponse.Field1.Field5.Field3
+	(*GetDownloadUrlResponse_Field1_MediaMetadata)(nil),             // 14: GetDownloadUrlResponse.Field1.MediaMetadata
+	(*GetDownloadUrlResponse_Field1_OwnerInfo)(nil),                 // 15: GetDownloadUrlResponse.Field1.OwnerInfo
+	(*GetDownloadUrlResponse_Field1_URLs)(nil),                      // 16: GetDownloadUrlResponse.Field1.URLs
+	(*GetDownloadUrlResponse_Field1_URLs_DownloadUrls)(nil),         // 17: GetDownloadUrlResponse.Field1.URLs.DownloadUrls
+	(*GetDownloadUrlResponse_Field1_URLs_Field3)(nil),               // 18: GetDownloadUrlResponse.Field1.URLs.Field3
 }
 var file___proto_download_proto_depIdxs = []int32{
 	2,  // 0: GetDownloadUrl.field1:type_name -> GetDownloadUrl.Field1
@@ -908,14 +1116,16 @@ var file___proto_download_proto_depIdxs = []int32{
 	11, // 9: GetDownloadUrl.Field2.Field5Type.field5:type_name -> GetDownloadUrl.Field2.Field5Type.Field5Inner
 	8,  // 10: GetDownloadUrl.Field2.Field1Type.Field7Type.field2:type_name -> GetDownloadUrl.Field2.Field1Type.Field7Type.Field2Type
 	12, // 11: GetDownloadUrl.Field2.Field5Type.Field5Inner.field1:type_name -> GetDownloadUrl.Field2.Field5Type.Field5Inner.Field1Type
-	14, // 12: GetDownloadUrlResponse.Field1.field5:type_name -> GetDownloadUrlResponse.Field1.Field5
-	15, // 13: GetDownloadUrlResponse.Field1.Field5.field2:type_name -> GetDownloadUrlResponse.Field1.Field5.Field2
-	16, // 14: GetDownloadUrlResponse.Field1.Field5.field3:type_name -> GetDownloadUrlResponse.Field1.Field5.Field3
-	15, // [15:15] is the sub-list for method output_type
-	15, // [15:15] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	14, // 12: GetDownloadUrlResponse.Field1.metadata:type_name -> GetDownloadUrlResponse.Field1.MediaMetadata
+	16, // 13: GetDownloadUrlResponse.Field1.urls:type_name -> GetDownloadUrlResponse.Field1.URLs
+	15, // 14: GetDownloadUrlResponse.Field1.owner_info:type_name -> GetDownloadUrlResponse.Field1.OwnerInfo
+	17, // 15: GetDownloadUrlResponse.Field1.URLs.download_urls:type_name -> GetDownloadUrlResponse.Field1.URLs.DownloadUrls
+	18, // 16: GetDownloadUrlResponse.Field1.URLs.field3:type_name -> GetDownloadUrlResponse.Field1.URLs.Field3
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file___proto_download_proto_init() }
@@ -929,7 +1139,7 @@ func file___proto_download_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file___proto_download_proto_rawDesc), len(file___proto_download_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -29,27 +29,23 @@ func downloadAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if !urlOnly {
-		logger.Info("fetching download URL", "media_key", mediaKey)
+		logger.Info("fetching download info", "media_key", mediaKey)
 	}
 
-	downloadURL, isEdited, err := apiClient.GetDownloadUrl(ctx, mediaKey)
+	info, err := apiClient.GetDownloadInfo(ctx, mediaKey)
 	if err != nil {
-		return fmt.Errorf("failed to get download URL: %w", err)
-	}
-
-	if downloadURL == "" {
-		return fmt.Errorf("no download URL available")
+		return fmt.Errorf("failed to get download info: %w", err)
 	}
 
 	// If --url flag is set, just print the URL and exit
 	if urlOnly {
-		fmt.Println(downloadURL)
+		fmt.Println(info.DownloadURL)
 		return nil
 	}
 
 	// Download the file
-	logger.Info("downloading", "is_edited", isEdited)
-	savedPath, err := gpm.DownloadFile(downloadURL, outputPath)
+	logger.Info("downloading", "filename", info.Filename, "size", info.FileSize, "is_edited", info.IsEdited)
+	savedPath, err := gpm.DownloadFile(info.DownloadURL, outputPath, info.Filename)
 	if err != nil {
 		return err
 	}

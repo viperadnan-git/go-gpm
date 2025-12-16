@@ -2,7 +2,6 @@ package gpm
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/viperadnan-git/go-gpm/internal/core"
@@ -16,6 +15,9 @@ type TokenCache = core.TokenCache
 
 // MemoryTokenCache stores tokens in memory (thread-safe)
 type MemoryTokenCache = core.MemoryTokenCache
+
+// DownloadInfo contains download information for a media item
+type DownloadInfo = core.DownloadInfo
 
 // NewMemoryTokenCache creates a new in-memory token cache
 func NewMemoryTokenCache() *MemoryTokenCache {
@@ -53,12 +55,9 @@ func (g *GooglePhotosAPI) DownloadThumbnail(ctx context.Context, mediaKey string
 // DownloadMedia downloads a media item to the specified output path
 // Returns the final output path
 func (g *GooglePhotosAPI) DownloadMedia(ctx context.Context, mediaKey string, outputPath string) (string, error) {
-	downloadURL, _, err := g.GetDownloadUrl(ctx, mediaKey)
+	info, err := g.GetDownloadInfo(ctx, mediaKey)
 	if err != nil {
 		return "", err
 	}
-	if downloadURL == "" {
-		return "", fmt.Errorf("no download URL available")
-	}
-	return DownloadFile(downloadURL, outputPath)
+	return DownloadFile(info.DownloadURL, outputPath, info.Filename)
 }
