@@ -18,6 +18,7 @@ type CachedToken struct {
 
 // AccountConfig holds per-account settings
 type AccountConfig struct {
+	Email         string       `toml:"email"`          // Account email
 	Auth          string       `toml:"auth"`           // Auth string (androidId, Token, Email, etc.)
 	AuthToken     *CachedToken `toml:"auth_token"`     // Cached access token
 	Quality       string       `toml:"quality"`        // "original" or "storage-saver"
@@ -28,8 +29,8 @@ type AccountConfig struct {
 
 // Config represents the TOML configuration
 type Config struct {
-	Selected string                    `toml:"selected"` // Currently selected account email
-	Accounts map[string]*AccountConfig `toml:"accounts"` // Map of email -> account config
+	Selected string           `toml:"selected"` // Selected account email
+	Accounts []*AccountConfig `toml:"accounts"` // List of account configs (order preserved)
 }
 
 // DefaultAccountConfig returns the default account configuration
@@ -80,19 +81,12 @@ func NewConfigManager(configPath string) (*ConfigManager, error) {
 
 	m := &ConfigManager{
 		configPath: configPath,
-		config: Config{
-			Accounts: make(map[string]*AccountConfig),
-		},
 	}
 
 	// Load config from file if it exists
 	if data, err := os.ReadFile(configPath); err == nil && len(data) > 0 {
 		if err := toml.Unmarshal(data, &m.config); err != nil {
 			return nil, fmt.Errorf("failed to parse config: %w", err)
-		}
-		// Initialize map if nil
-		if m.config.Accounts == nil {
-			m.config.Accounts = make(map[string]*AccountConfig)
 		}
 	}
 
@@ -111,14 +105,24 @@ func (m *ConfigManager) GetConfigPath() string {
 	return m.configPath
 }
 
+// findAccountIndex returns the index of account with given email, or -1 if not found (caller must hold lock)
+func (m *ConfigManager) findAccountIndex(email string) int {
+	for i, acc := range m.config.Accounts {
+		if acc.Email == email {
+			return i
+		}
+	}
+	return -1
+}
+
 // GetSelectedAccount returns the currently selected account config
 func (m *ConfigManager) GetSelectedAccount() *AccountConfig {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	if m.config.Selected == "" {
-		return nil
+	if idx := m.findAccountIndex(m.config.Selected); idx >= 0 {
+		return m.config.Accounts[idx]
 	}
-	return m.config.Accounts[m.config.Selected]
+	return nil
 }
 
 // Save persists the current configuration to disk
@@ -144,10 +148,10 @@ func (m *ConfigManager) Save() error {
 	return nil
 }
 
-// SetSelected updates the selected email
+// SetSelected updates the selected account by email
 func (m *ConfigManager) SetSelected(email string) error {
 	m.mu.Lock()
-	if _, exists := m.config.Accounts[email]; !exists {
+	if m.findAccountIndex(email) < 0 {
 		m.mu.Unlock()
 		return fmt.Errorf("account %s does not exist", email)
 	}
@@ -157,7 +161,7 @@ func (m *ConfigManager) SetSelected(email string) error {
 }
 
 // AddCredentials adds a new account with the given auth string
-func (m *ConfigManager) AddCredentials(authString string) (email string, err error) {
+func (m *ConfigManager) AddCredentials(authString string) (string, error) {
 	requiredFields := []string{"androidId", "app", "client_sig", "Email", "Token", "lang", "service"}
 
 	params, err := url.ParseQuery(authString)
@@ -165,7 +169,6 @@ func (m *ConfigManager) AddCredentials(authString string) (email string, err err
 		return "", fmt.Errorf("invalid auth string format: %w", err)
 	}
 
-	// Validate required fields
 	var missingFields []string
 	for _, field := range requiredFields {
 		if params.Get(field) == "" {
@@ -176,81 +179,67 @@ func (m *ConfigManager) AddCredentials(authString string) (email string, err err
 		return "", fmt.Errorf("auth string missing required fields: %v", missingFields)
 	}
 
-	email = params.Get("Email")
-	if email == "" {
-		return "", fmt.Errorf("email cannot be empty")
-	}
-
+	email := params.Get("Email")
 	m.mu.Lock()
-	if _, exists := m.config.Accounts[email]; exists {
+	if m.findAccountIndex(email) >= 0 {
 		m.mu.Unlock()
 		return "", fmt.Errorf("account %s already exists", email)
 	}
 
-	// Create new account with defaults
 	account := DefaultAccountConfig()
+	account.Email = email
 	account.Auth = authString
-	m.config.Accounts[email] = account
+	m.config.Accounts = append(m.config.Accounts, account)
 	m.config.Selected = email
 	m.mu.Unlock()
 
 	if err := m.Save(); err != nil {
 		return "", err
 	}
-
 	return email, nil
 }
 
 // RemoveCredentials removes an account by email
 func (m *ConfigManager) RemoveCredentials(email string) error {
 	m.mu.Lock()
-	if _, exists := m.config.Accounts[email]; !exists {
+	idx := m.findAccountIndex(email)
+	if idx < 0 {
 		m.mu.Unlock()
 		return fmt.Errorf("account %s does not exist", email)
 	}
 
-	delete(m.config.Accounts, email)
+	m.config.Accounts = append(m.config.Accounts[:idx], m.config.Accounts[idx+1:]...)
 
-	// Clear selection if we're removing the selected account
 	if m.config.Selected == email {
 		m.config.Selected = ""
-		// Select first available account if any
-		for e := range m.config.Accounts {
-			m.config.Selected = e
-			break
+		if len(m.config.Accounts) > 0 {
+			m.config.Selected = m.config.Accounts[0].Email
 		}
 	}
 	m.mu.Unlock()
-
 	return m.Save()
 }
 
 // UpdateAccountToken updates the cached auth token for an account
 func (m *ConfigManager) UpdateAccountToken(email, token string, expiry int64) error {
 	m.mu.Lock()
-	account, exists := m.config.Accounts[email]
-	if !exists {
+	idx := m.findAccountIndex(email)
+	if idx < 0 {
 		m.mu.Unlock()
 		return fmt.Errorf("account %s does not exist", email)
 	}
-
-	account.AuthToken = &CachedToken{
-		Token:  token,
-		Expiry: expiry,
-	}
+	m.config.Accounts[idx].AuthToken = &CachedToken{Token: token, Expiry: expiry}
 	m.mu.Unlock()
-
 	return m.Save()
 }
 
-// GetAccountEmails returns a list of all account emails
+// GetAccountEmails returns a list of all account emails (in config order)
 func (m *ConfigManager) GetAccountEmails() []string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-
-	emails := make([]string, 0, len(m.config.Accounts))
-	for email := range m.config.Accounts {
-		emails = append(emails, email)
+	emails := make([]string, len(m.config.Accounts))
+	for i, acc := range m.config.Accounts {
+		emails[i] = acc.Email
 	}
 	return emails
 }
@@ -278,12 +267,12 @@ func NewConfigTokenCache(manager *ConfigManager, email string) *ConfigTokenCache
 func (c *ConfigTokenCache) Get() (string, int64) {
 	c.manager.mu.RLock()
 	defer c.manager.mu.RUnlock()
-
-	account, exists := c.manager.config.Accounts[c.email]
-	if !exists || account.AuthToken == nil {
-		return "", 0
+	if idx := c.manager.findAccountIndex(c.email); idx >= 0 {
+		if t := c.manager.config.Accounts[idx].AuthToken; t != nil {
+			return t.Token, t.Expiry
+		}
 	}
-	return account.AuthToken.Token, account.AuthToken.Expiry
+	return "", 0
 }
 
 // Set stores the token with its expiry timestamp

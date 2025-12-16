@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	gpm "github.com/viperadnan-git/go-gpm"
@@ -62,8 +63,7 @@ func getAuthData() string {
 // getSelectedEmail returns the email of the currently selected account
 func getSelectedEmail() string {
 	if authOverride != "" {
-		params, err := ParseAuthString(authOverride)
-		if err == nil {
+		if params, err := ParseAuthString(authOverride); err == nil {
 			return params.Get("Email")
 		}
 		return ""
@@ -73,43 +73,30 @@ func getSelectedEmail() string {
 
 // resolveEmailFromArg resolves an email from either an index number (1-based) or email string
 func resolveEmailFromArg(arg string, emails []string) (string, error) {
-	// Try to parse as number first
-	if num, err := fmt.Sscanf(arg, "%d", new(int)); err == nil && num == 1 {
-		var idx int
-		fmt.Sscanf(arg, "%d", &idx)
+	if idx, err := strconv.Atoi(arg); err == nil {
 		if idx < 1 || idx > len(emails) {
 			return "", fmt.Errorf("invalid index %d: must be between 1 and %d", idx, len(emails))
 		}
 		return emails[idx-1], nil
 	}
 
-	// Otherwise treat as email - try exact match first
+	argLower := strings.ToLower(arg)
+	var candidates []string
 	for _, email := range emails {
 		if email == arg {
 			return email, nil
 		}
-	}
-
-	// Try fuzzy matching
-	var candidates []string
-	for _, email := range emails {
-		if containsSubstring(email, arg) {
+		if strings.Contains(strings.ToLower(email), argLower) {
 			candidates = append(candidates, email)
 		}
 	}
 
-	if len(candidates) == 0 {
-		return "", fmt.Errorf("no authentication found matching '%s'", arg)
-	} else if len(candidates) == 1 {
+	if len(candidates) == 1 {
 		return candidates[0], nil
+	} else if len(candidates) > 1 {
+		return "", fmt.Errorf("multiple accounts match '%s': %v - please be more specific", arg, candidates)
 	}
-	return "", fmt.Errorf("multiple accounts match '%s': %v - please be more specific", arg, candidates)
-}
-
-func containsSubstring(str, substr string) bool {
-	strLower := strings.ToLower(str)
-	substrLower := strings.ToLower(substr)
-	return strings.Contains(strLower, substrLower)
+	return "", fmt.Errorf("no authentication found matching '%s'", arg)
 }
 
 // readLinesFromFile reads lines from a file, one per line, skipping empty lines and comments

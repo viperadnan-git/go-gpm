@@ -28,28 +28,24 @@ func authInfoAction(ctx context.Context, cmd *cli.Command) error {
 
 	config := cfgManager.GetConfig()
 
-	// Show current authentication
+	if len(config.Accounts) == 0 {
+		fmt.Println("No accounts configured. Use 'gpcli auth add <auth-string>' to add one.")
+		return nil
+	}
+
 	if config.Selected != "" {
 		fmt.Printf("Current authentication: %s\n", config.Selected)
 	} else {
 		fmt.Println("No active authentication")
 	}
 
-	// List all available accounts
-	if len(config.Accounts) == 0 {
-		fmt.Println("\nNo accounts configured. Use 'gpcli auth add <auth-string>' to add one.")
-		return nil
-	}
-
 	fmt.Println("\nAvailable accounts:")
-	i := 1
-	for email := range config.Accounts {
+	for i, acc := range config.Accounts {
 		marker := ""
-		if email == config.Selected {
+		if acc.Email == config.Selected {
 			marker = " *"
 		}
-		fmt.Printf("  %d. %s%s\n", i, email, marker)
-		i++
+		fmt.Printf("  %d. %s%s\n", i+1, acc.Email, marker)
 	}
 
 	fmt.Println("\nUse 'gpcli auth set <number|email>' to change active authentication")
