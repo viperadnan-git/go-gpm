@@ -45,9 +45,14 @@ func (a *Api) GetDownloadUrl(ctx context.Context, mediaKey string) (downloadURL 
 		return "", false, err
 	}
 
-	if response.GetField1() != nil && response.GetField1().GetField5() != nil && response.GetField1().GetField5().GetField3() != nil {
-		downloadURL = response.GetField1().GetField5().GetField3().GetDownloadUrl()
+	if response.GetField1() != nil && response.GetField1().GetField5() != nil {
 		isEdited = response.GetField1().GetField5().GetField1() > 0
+		// Try field2 first (primary location), then field3 (fallback)
+		if response.GetField1().GetField5().GetField2() != nil {
+			downloadURL = response.GetField1().GetField5().GetField2().GetDownloadUrl()
+		} else if response.GetField1().GetField5().GetField3() != nil {
+			downloadURL = response.GetField1().GetField5().GetField3().GetDownloadUrl()
+		}
 	}
 
 	return downloadURL, isEdited, nil
