@@ -146,20 +146,40 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 
 	// Handle album creation if album name was specified
 	if albumName != "" && len(successfulMediaKeys) > 0 {
-		logger.Info("adding to album", "album", albumName)
-
 		const batchSize = 500
-		firstBatchEnd := min(batchSize, len(successfulMediaKeys))
+		var albumKey string
 
-		albumKey, err := api.CreateAlbum(ctx, albumName, successfulMediaKeys[:firstBatchEnd])
-		if err != nil {
-			return fmt.Errorf("failed to create album: %w", err)
-		}
+		// Check if album already exists in mappings
+		if existingKey := cfgManager.GetAlbumKey(albumName); existingKey != "" {
+			albumKey = existingKey
+			logger.Info("using existing album", "album", albumName, "key", albumKey)
+			// Add all media to existing album in batches
+			for i := 0; i < len(successfulMediaKeys); i += batchSize {
+				end := min(i+batchSize, len(successfulMediaKeys))
+				if err := api.AddMediaToAlbum(ctx, albumKey, successfulMediaKeys[i:end]); err != nil {
+					logger.Warn("failed to add batch to album", "error", err)
+				}
+			}
+		} else {
+			logger.Info("creating album", "album", albumName)
+			firstBatchEnd := min(batchSize, len(successfulMediaKeys))
 
-		for i := batchSize; i < len(successfulMediaKeys); i += batchSize {
-			end := min(i+batchSize, len(successfulMediaKeys))
-			if err = api.AddMediaToAlbum(ctx, albumKey, successfulMediaKeys[i:end]); err != nil {
-				logger.Warn("failed to add batch to album", "error", err)
+			var err error
+			albumKey, err = api.CreateAlbum(ctx, albumName, successfulMediaKeys[:firstBatchEnd])
+			if err != nil {
+				return fmt.Errorf("failed to create album: %w", err)
+			}
+
+			// Auto-store the mapping for future use
+			if err := cfgManager.SetAlbumMapping(albumName, albumKey); err != nil {
+				logger.Warn("failed to store album mapping", "error", err)
+			}
+
+			for i := batchSize; i < len(successfulMediaKeys); i += batchSize {
+				end := min(i+batchSize, len(successfulMediaKeys))
+				if err = api.AddMediaToAlbum(ctx, albumKey, successfulMediaKeys[i:end]); err != nil {
+					logger.Warn("failed to add batch to album", "error", err)
+				}
 			}
 		}
 

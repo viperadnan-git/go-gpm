@@ -18,13 +18,14 @@ type CachedToken struct {
 
 // AccountConfig holds per-account settings
 type AccountConfig struct {
-	Email         string       `toml:"email"`          // Account email
-	Auth          string       `toml:"auth"`           // Auth string (androidId, Token, Email, etc.)
-	AuthToken     *CachedToken `toml:"auth_token"`     // Cached access token
-	Quality       string       `toml:"quality"`        // "original" or "storage-saver"
-	UseQuota      bool         `toml:"use_quota"`      // If true, uploads count against storage quota
-	UploadThreads int          `toml:"upload_threads"` // Number of upload threads
-	Proxy         string       `toml:"proxy"`          // Proxy URL
+	Email         string            `toml:"email"`          // Account email
+	Auth          string            `toml:"auth"`           // Auth string (androidId, Token, Email, etc.)
+	AuthToken     *CachedToken      `toml:"auth_token"`     // Cached access token
+	Quality       string            `toml:"quality"`        // "original" or "storage-saver"
+	UseQuota      bool              `toml:"use_quota"`      // If true, uploads count against storage quota
+	UploadThreads int               `toml:"upload_threads"` // Number of upload threads
+	Proxy         string            `toml:"proxy"`          // Proxy URL
+	Albums        map[string]string `toml:"albums"`         // Album name -> album key mapping
 }
 
 // Config represents the TOML configuration
@@ -278,4 +279,70 @@ func (c *ConfigTokenCache) Get() (string, int64) {
 // Set stores the token with its expiry timestamp
 func (c *ConfigTokenCache) Set(token string, expiry int64) {
 	c.manager.UpdateAccountToken(c.email, token, expiry)
+}
+
+// GetAlbumKey returns the album key for a given album name from the selected account
+func (m *ConfigManager) GetAlbumKey(name string) string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if idx := m.findAccountIndex(m.config.Selected); idx >= 0 {
+		if m.config.Accounts[idx].Albums != nil {
+			return m.config.Accounts[idx].Albums[name]
+		}
+	}
+	return ""
+}
+
+// SetAlbumMapping adds or updates an album name-to-key mapping for the selected account
+func (m *ConfigManager) SetAlbumMapping(name, key string) error {
+	m.mu.Lock()
+	idx := m.findAccountIndex(m.config.Selected)
+	if idx < 0 {
+		m.mu.Unlock()
+		return fmt.Errorf("no account selected")
+	}
+	if m.config.Accounts[idx].Albums == nil {
+		m.config.Accounts[idx].Albums = make(map[string]string)
+	}
+	m.config.Accounts[idx].Albums[name] = key
+	m.mu.Unlock()
+	return m.Save()
+}
+
+// RemoveAlbumMapping removes an album mapping by name from the selected account
+func (m *ConfigManager) RemoveAlbumMapping(name string) error {
+	m.mu.Lock()
+	idx := m.findAccountIndex(m.config.Selected)
+	if idx < 0 {
+		m.mu.Unlock()
+		return fmt.Errorf("no account selected")
+	}
+	if m.config.Accounts[idx].Albums == nil {
+		m.mu.Unlock()
+		return fmt.Errorf("album '%s' not found", name)
+	}
+	if _, exists := m.config.Accounts[idx].Albums[name]; !exists {
+		m.mu.Unlock()
+		return fmt.Errorf("album '%s' not found", name)
+	}
+	delete(m.config.Accounts[idx].Albums, name)
+	m.mu.Unlock()
+	return m.Save()
+}
+
+// GetAlbumMappings returns all album mappings for the selected account
+func (m *ConfigManager) GetAlbumMappings() map[string]string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if idx := m.findAccountIndex(m.config.Selected); idx >= 0 {
+		if m.config.Accounts[idx].Albums != nil {
+			// Return a copy to avoid race conditions
+			result := make(map[string]string, len(m.config.Accounts[idx].Albums))
+			for k, v := range m.config.Accounts[idx].Albums {
+				result[k] = v
+			}
+			return result
+		}
+	}
+	return make(map[string]string)
 }

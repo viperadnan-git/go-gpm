@@ -200,4 +200,3 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 
 	send(StatusCompleted, mediaKey, dedupKey, nil)
 }
-

@@ -3,9 +3,29 @@ package main
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/urfave/cli/v3"
 )
+
+// albumKeyPattern matches album keys like AF1QipOTAHAvdvLHVyvBNXPZy_93ArwuxfW9dATmqi8T
+var albumKeyPattern = regexp.MustCompile(`^AF1Qip[A-Za-z0-9_-]{32,44}$`)
+
+// isAlbumKey returns true if the input matches the album key pattern
+func isAlbumKey(s string) bool {
+	return albumKeyPattern.MatchString(s)
+}
+
+// resolveAlbumKey resolves an album name or key to an album key
+func resolveAlbumKey(input string) (string, error) {
+	if isAlbumKey(input) {
+		return input, nil
+	}
+	if key := cfgManager.GetAlbumKey(input); key != "" {
+		return key, nil
+	}
+	return "", fmt.Errorf("album '%s' not found in stored mappings (use album key or store the mapping first)", input)
+}
 
 func albumCreateAction(ctx context.Context, cmd *cli.Command) error {
 	if err := loadConfig(); err != nil {
@@ -47,6 +67,11 @@ func albumCreateAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to create album: %w", err)
 	}
 
+	// Auto-store the album mapping
+	if err := cfgManager.SetAlbumMapping(albumName, albumKey); err != nil {
+		logger.Warn("failed to store album mapping", "error", err)
+	}
+
 	logger.Info("album created successfully", "name", albumName, "album_key", albumKey, "media_count", len(mediaKeys))
 	return nil
 }
@@ -56,9 +81,14 @@ func albumAddAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	albumKey := cmd.StringArg("album-key")
-	if albumKey == "" {
-		return fmt.Errorf("album key is required")
+	albumInput := cmd.StringArg("album-key")
+	if albumInput == "" {
+		return fmt.Errorf("album key or name is required")
+	}
+
+	albumKey, err := resolveAlbumKey(albumInput)
+	if err != nil {
+		return err
 	}
 
 	// Collect media inputs from both command-line args and file
@@ -113,9 +143,14 @@ func albumDeleteAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	albumKey := cmd.StringArg("album-key")
-	if albumKey == "" {
-		return fmt.Errorf("album key is required")
+	albumInput := cmd.StringArg("album-key")
+	if albumInput == "" {
+		return fmt.Errorf("album key or name is required")
+	}
+
+	albumKey, err := resolveAlbumKey(albumInput)
+	if err != nil {
+		return err
 	}
 
 	apiClient, err := createAPIClient()
@@ -138,9 +173,14 @@ func albumRenameAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	albumKey := cmd.StringArg("album-key")
-	if albumKey == "" {
-		return fmt.Errorf("album key is required")
+	albumInput := cmd.StringArg("album-key")
+	if albumInput == "" {
+		return fmt.Errorf("album key or name is required")
+	}
+
+	albumKey, err := resolveAlbumKey(albumInput)
+	if err != nil {
+		return err
 	}
 
 	newName := cmd.StringArg("new-name")
@@ -160,5 +200,63 @@ func albumRenameAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	logger.Info("album renamed successfully", "album_key", albumKey, "new_name", newName)
+	return nil
+}
+
+func albumStoreAddAction(ctx context.Context, cmd *cli.Command) error {
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	key := cmd.StringArg("key")
+	if key == "" {
+		return fmt.Errorf("album key is required")
+	}
+
+	name := cmd.String("name")
+	if name == "" {
+		return fmt.Errorf("album name is required (use --name)")
+	}
+
+	if err := cfgManager.SetAlbumMapping(name, key); err != nil {
+		return fmt.Errorf("failed to store album mapping: %w", err)
+	}
+
+	logger.Info("album mapping stored", "name", name, "key", key)
+	return nil
+}
+
+func albumStoreRemoveAction(ctx context.Context, cmd *cli.Command) error {
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	name := cmd.StringArg("name")
+	if name == "" {
+		return fmt.Errorf("album name is required")
+	}
+
+	if err := cfgManager.RemoveAlbumMapping(name); err != nil {
+		return fmt.Errorf("failed to remove album mapping: %w", err)
+	}
+
+	logger.Info("album mapping removed", "name", name)
+	return nil
+}
+
+func albumStoreListAction(ctx context.Context, cmd *cli.Command) error {
+	if err := loadConfig(); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	mappings := cfgManager.GetAlbumMappings()
+	if len(mappings) == 0 {
+		logger.Info("no album mappings stored")
+		return nil
+	}
+
+	for name, key := range mappings {
+		fmt.Printf("%s -> %s\n", name, key)
+	}
 	return nil
 }

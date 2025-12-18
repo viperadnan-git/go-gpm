@@ -162,6 +162,7 @@ func main() {
 					},
 					&cli.StringFlag{
 						Name:   "album",
+						Aliases: []string{"a"},
 						Usage:  "Add uploaded files to album with this name (creates if not exists)",
 						Config: cli.StringConfig{TrimSpace: true},
 					},
@@ -177,7 +178,7 @@ func main() {
 					},
 					&cli.BoolFlag{
 						Name:    "archive",
-						Aliases: []string{"a"},
+						Aliases: []string{"A"},
 						Usage:   "Archive uploaded files after upload",
 					},
 					&cli.StringFlag{
@@ -462,6 +463,51 @@ func main() {
 							},
 						},
 						Action: albumDeleteAction,
+					},
+					{
+						Name:  "store",
+						Usage: "Manage album name-to-key mappings",
+						Commands: []*cli.Command{
+							{
+								Name:      "add",
+								Usage:     "Add album name-to-key mapping",
+								UsageText: "gpcli album store add <key> --name <name>",
+								Arguments: []cli.Argument{
+									&cli.StringArg{
+										Name:      "key",
+										UsageText: "Album key",
+									},
+								},
+								Flags: []cli.Flag{
+									&cli.StringFlag{
+										Name:     "name",
+										Aliases:  []string{"n"},
+										Usage:    "Album name",
+										Required: true,
+									},
+								},
+								Action: albumStoreAddAction,
+							},
+							{
+								Name:      "remove",
+								Aliases:   []string{"rm"},
+								Usage:     "Remove album mapping by name",
+								UsageText: "gpcli album store remove <name>",
+								Arguments: []cli.Argument{
+									&cli.StringArg{
+										Name:      "name",
+										UsageText: "Album name to remove",
+									},
+								},
+								Action: albumStoreRemoveAction,
+							},
+							{
+								Name:    "list",
+								Aliases: []string{"ls"},
+								Usage:   "List all album mappings",
+								Action:  albumStoreListAction,
+							},
+						},
 					},
 				},
 			},
