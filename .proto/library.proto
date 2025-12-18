@@ -1,0 +1,710 @@
+syntax = "proto3";
+option go_package = "github.com/viperadnan-git/go-gpm/internal/pb";
+
+// LibraryStateResponse - Main response from GetLibraryState, GetLibraryPageInit, GetLibraryPage
+message LibraryStateResponse {
+  LibraryData data = 1;
+}
+
+// LibraryData - Container for all library data
+message LibraryData {
+  repeated MediaItem media_items = 2;           // array of media items (photos/videos)
+  repeated Album albums = 3;                    // array of albums
+  UserInfo user_info = 4;                       // user account information
+  string state_token = 6;                       // token for incremental sync
+  repeated Category categories = 10;            // auto-generated categories
+  SyncPayload sync_payload = 20;                // sync metadata (incremental response)
+}
+
+// ============= MEDIA ITEM =============
+
+// MediaItem - A photo or video in the library
+message MediaItem {
+  string media_key = 1;                         // unique identifier for the media
+  MediaMetadata metadata = 2;                   // file and upload metadata
+  DownloadInfo download_info = 5;               // urls for downloading content
+  OwnerRef owner_ref = 6;                       // reference to owner
+  MediaItemField11 field11 = 11;                // unknown
+  MediaItemField14 field14 = 14;                // unknown
+  MediaItemField15 field15 = 15;                // unknown, contains "CAA"/"CAE" strings
+  MediaItemField17 field17 = 17;                // unknown
+  repeated VideoThumbnail video_thumbnails = 18; // thumbnail data (videos only)
+  string field23 = 23;                          // unknown, usually empty
+}
+
+// MediaMetadata - Metadata about the media file
+message MediaMetadata {
+  MediaAlbumInfo album_info = 1;                // album container info (album_media_key if in album)
+  AccountKeyRef account_key_ref = 2;            // reference to uploader account
+  string caption = 3;                           // user-set caption
+  string filename = 4;                          // original filename
+  repeated Capability capabilities = 5;         // available operations
+  repeated SourceInfo sources = 6;              // source information
+  int64 creation_timestamp = 7;                 // when the photo/video was taken (milliseconds)
+  int64 timezone_offset = 8;                    // timezone offset in milliseconds
+  int64 modification_timestamp = 9;             // last modification time (milliseconds)
+  int64 file_size = 10;                         // file size in bytes
+  int32 field11 = 11;                           // unknown, usually 100
+  DedupKeyPair dedup_keys = 13;                 // sha1 hash based dedup keys
+  TrashInfo trash_info = 16;                    // trash status (1=active, 2=trashed)
+  int32 media_type = 19;                        // 1=unknown, 2=video?
+  DedupKeyInfo dedup_key_info = 21;             // dedup key without padding
+  MediaMetadataField22 field22 = 22;            // unknown
+  int32 field24 = 24;                           // unknown, usually 1
+  int32 field26 = 26;                           // some index number
+  MediaMetadataField29 field29 = 29;            // unknown
+  MediaMetadataField30 field30 = 30;            // unknown
+  MediaMetadataField31 field31 = 31;            // unknown
+  MediaMetadataField35 field35 = 35;            // unknown
+  MediaMetadataField37 field37 = 37;            // unknown
+  MediaMetadataField39 field39 = 39;            // unknown
+}
+
+// MediaAlbumInfo - Album container information for media item
+message MediaAlbumInfo {
+  string album_media_key = 1;                   // album key if media is inside an album, otherwise some container key
+  uint32 field2 = 2;                            // unknown
+  string field3 = 3;                            // unknown string
+}
+
+// AccountKeyRef - Reference to account
+message AccountKeyRef {
+  string account_key = 1;                       // account key
+}
+
+// Capability - Represents an available operation
+message Capability {
+  int32 capability_id = 1;                      // capability identifier
+  int32 field2 = 2;                             // unknown
+  int32 field3 = 3;                             // unknown
+}
+
+// SourceInfo - Source information for the media
+message SourceInfo {
+  int32 source_id = 1;                          // source identifier
+}
+
+// DedupKeyPair - Pair of dedup keys
+message DedupKeyPair {
+  string dedup_key_1 = 1;                       // sha1 hash base64 with padding
+  string dedup_key_2 = 2;                       // same as dedup_key_1
+}
+
+// DedupKeyInfo - Dedup key info
+message DedupKeyInfo {
+  string dedup_key = 1;                         // sha1 hash base64 without padding
+  int32 field4 = 4;                             // unknown
+}
+
+// TrashInfo - Trash status for media item
+message TrashInfo {
+  int32 trash_state = 1;                        // 1=active (not in trash), 2=in trash
+  int32 field2 = 2;                             // unknown, present when trashed
+  int64 trashed_at = 3;                         // timestamp when item was moved to trash (milliseconds)
+}
+
+// MediaMetadataField22 - Unknown field
+message MediaMetadataField22 {
+  int32 field1 = 1;                             // unknown
+}
+
+// MediaMetadataField29 - Unknown field
+message MediaMetadataField29 {
+  int32 field1 = 1;                             // unknown
+}
+
+// MediaMetadataField30 - Unknown field
+message MediaMetadataField30 {
+  int32 field1 = 1;                             // unknown
+}
+
+// MediaMetadataField31 - Unknown field
+message MediaMetadataField31 {
+  int32 field1 = 1;                             // unknown
+}
+
+// MediaMetadataField35 - Unknown field
+message MediaMetadataField35 {
+  int32 field1 = 1;                             // unknown
+  int32 field2 = 2;                             // unknown
+  int32 field3 = 3;                             // unknown
+  int32 field4 = 4;                             // unknown
+  int32 field6 = 6;                             // unknown
+}
+
+// MediaMetadataField37 - Unknown field
+message MediaMetadataField37 {
+  int32 field1 = 1;                             // unknown
+}
+
+// MediaMetadataField39 - Unknown field
+message MediaMetadataField39 {
+  int32 field1 = 1;                             // unknown
+}
+
+// MediaItemField11 - Unknown field
+message MediaItemField11 {
+  uint32 field2 = 2;                            // unknown
+}
+
+// MediaItemField14 - Unknown field
+message MediaItemField14 {
+  int32 field4 = 4;                             // unknown
+}
+
+// MediaItemField15 - Unknown field
+message MediaItemField15 {
+  string field1 = 1;                            // unknown, "CAA" or "CAE"
+}
+
+// MediaItemField17 - Unknown field
+message MediaItemField17 {
+  int32 field4 = 4;                             // unknown
+}
+
+// ============= DOWNLOAD INFO =============
+
+// DownloadInfo - Information for downloading media
+message DownloadInfo {
+  int32 media_type = 1;                         // 1=image, 2=video
+  ImageDownloadInfo image_info = 2;             // image download urls (images only)
+  VideoDownloadInfo video_info = 3;             // video download urls (videos only)
+}
+
+// ImageDownloadInfo - Download info for images
+message ImageDownloadInfo {
+  ImageUrlInfo url_info = 1;                    // thumbnail/preview url info
+  string download_url = 6;                      // full resolution download url
+  ImageField7 field7 = 7;                       // unknown
+}
+
+// ImageUrlInfo - URL and dimension info for images
+message ImageUrlInfo {
+  string url = 1;                               // base url for thumbnails
+  int32 width = 2;                              // image width
+  int32 height = 3;                             // image height
+  ImageDimensions dimensions = 9;               // detailed dimensions
+  int64 field10 = 10;                           // file size
+}
+
+// ImageDimensions - Image dimension details
+message ImageDimensions {
+  int32 width = 1;                              // width
+  int32 height = 2;                             // height
+  int32 field3 = 3;                             // unknown, possibly orientation
+}
+
+// ImageField7 - Unknown field
+message ImageField7 {
+  ImageField7Inner field1 = 1;                  // unknown
+}
+
+// ImageField7Inner - Unknown inner field
+message ImageField7Inner {
+  int32 field1 = 1;                             // unknown
+  uint32 field2 = 2;                            // unknown
+}
+
+// VideoDownloadInfo - Download info for videos
+message VideoDownloadInfo {
+  string field1 = 1;                            // unknown identifier
+  VideoThumbnailUrl thumbnail = 2;              // thumbnail url info
+  int32 field3 = 3;                             // unknown
+  VideoStreamInfo stream_info = 4;              // video stream details
+  string download_url = 5;                      // video download url
+  VideoEncodingInfo encoding = 6;               // video encoding info
+  string field7 = 7;                            // unknown, usually empty
+}
+
+// VideoThumbnailUrl - Video thumbnail URL info
+message VideoThumbnailUrl {
+  string url = 1;                               // thumbnail url
+  int32 width = 2;                              // width
+  int32 height = 3;                             // height
+  ImageDimensions dimensions = 9;               // detailed dimensions
+  int64 field10 = 10;                           // file size
+}
+
+// VideoStreamInfo - Video stream details
+message VideoStreamInfo {
+  int32 field1 = 1;                             // unknown
+  VideoStreamFormat format = 2;                 // stream format info
+  int32 field4 = 4;                             // width?
+  int32 field5 = 5;                             // height?
+}
+
+// VideoStreamFormat - Video format info
+message VideoStreamFormat {
+  int32 field1 = 1;                             // unknown
+  int32 width = 2;                              // width
+  int32 height = 3;                             // height
+  string stream_url = 4;                        // streaming url
+}
+
+// VideoEncodingInfo - Video encoding metadata
+message VideoEncodingInfo {
+  int64 field4 = 4;                             // unknown
+  int64 field5 = 5;                             // unknown
+  string codec = 6;                             // codec name, e.g., "H264"
+}
+
+// VideoThumbnail - Thumbnail for video preview
+message VideoThumbnail {
+  VideoThumbnailKey key = 1;                    // thumbnail key
+  VideoThumbnailBounds bounds = 2;              // bounding box
+  VideoThumbnailColors colors = 5;              // color info
+  int32 field6 = 6;                             // unknown
+}
+
+// VideoThumbnailKey - Key for video thumbnail
+message VideoThumbnailKey {
+  string key = 1;                               // thumbnail identifier
+}
+
+// VideoThumbnailBounds - Bounding box for thumbnail
+message VideoThumbnailBounds {
+  uint32 field1 = 1;                            // unknown (float bits?)
+  uint32 field2 = 2;                            // unknown
+  uint32 field3 = 3;                            // unknown
+  uint32 field4 = 4;                            // unknown
+}
+
+// VideoThumbnailColors - Color information
+message VideoThumbnailColors {
+  uint32 field1 = 1;                            // unknown
+  uint32 field2 = 2;                            // unknown
+  uint32 field3 = 3;                            // unknown
+  uint32 field4 = 4;                            // unknown
+  uint32 field5 = 5;                            // unknown
+}
+
+// OwnerRef - Reference to owner
+message OwnerRef {
+  string media_key = 1;                         // media key
+  OwnerIdentity owner_identity = 2;             // owner identity info
+}
+
+// OwnerIdentity - Owner identity details
+message OwnerIdentity {
+  string user_id = 1;                           // numeric user id
+  string field3 = 3;                            // unknown identifier
+}
+
+// ============= ALBUM =============
+
+// Album - A photo album
+message Album {
+  string album_key = 1;                         // unique identifier for the album
+  AlbumMetadata metadata = 2;                   // album details
+  OwnerRef owner_ref = 4;                       // reference to owner
+  AlbumField5 field5 = 5;                       // unknown
+  AlbumField19 field19 = 19;                    // unknown
+}
+
+// AlbumMetadata - Metadata about an album
+message AlbumMetadata {
+  AccountKeyRef creator_key = 3;                // album creator
+  AccountKeyRef owner_key = 4;                  // album owner
+  string name = 5;                              // album name
+  int32 item_count = 7;                         // number of items in album
+  int32 field8 = 8;                             // unknown
+  AlbumTimestamps timestamps = 10;              // various timestamps
+  repeated Capability capabilities = 11;        // available operations
+  AlbumField12 field12 = 12;                    // unknown
+  AlbumField13 field13 = 13;                    // unknown
+  AlbumField14 field14 = 14;                    // unknown
+  string download_url = 15;                     // album download url
+  AlbumCover cover = 17;                        // album cover image
+  string field18 = 18;                          // unknown, usually empty
+}
+
+// AlbumTimestamps - Timestamps for album
+message AlbumTimestamps {
+  int64 first_item_timestamp = 1;               // timestamp of first item
+  int64 last_item_timestamp = 2;                // timestamp of last item
+  int64 field5 = 5;                             // unknown timestamp
+  AlbumTimestampOffset field6 = 6;              // first item with offset
+  AlbumTimestampOffset field7 = 7;              // last item with offset
+  int64 modification_timestamp = 10;            // last modification time
+}
+
+// AlbumTimestampOffset - Timestamp with timezone offset
+message AlbumTimestampOffset {
+  int64 timestamp = 1;                          // timestamp in milliseconds
+  int64 offset = 2;                             // timezone offset
+}
+
+// AlbumField12 - Unknown field
+message AlbumField12 {
+  int32 field1 = 1;                             // unknown
+}
+
+// AlbumField13 - Unknown field
+message AlbumField13 {
+  int32 field1 = 1;                             // unknown
+}
+
+// AlbumField14 - Unknown field
+message AlbumField14 {
+  int32 field1 = 1;                             // unknown
+  int32 field2 = 2;                             // unknown
+  int32 field3 = 3;                             // unknown
+}
+
+// AlbumCover - Album cover image reference
+message AlbumCover {
+  string media_key = 1;                         // media key of cover image
+}
+
+// AlbumField5 - Unknown field
+message AlbumField5 {
+  int32 field1 = 1;                             // unknown
+  AccountKeyRef field2 = 2;                     // unknown
+}
+
+// AlbumField19 - Unknown field
+message AlbumField19 {
+  int32 field1 = 1;                             // unknown
+  int32 field2 = 2;                             // unknown
+}
+
+// ============= USER INFO =============
+
+// UserInfo - User account information
+message UserInfo {
+  string account_key = 1;                       // account key
+  string user_id = 2;                           // numeric user id
+  string profile_photo_url = 4;                 // profile photo url
+  UserOwnerRef owner_ref = 6;                   // owner reference
+  UserSettings settings = 7;                    // user settings
+  StorageInfo storage_info = 8;                 // storage quota info
+  UserInfoField11 field11 = 11;                 // unknown
+  UserInfoField13 field13 = 13;                 // unknown
+  UserInfoField16 field16 = 16;                 // unknown
+  UserInfoField18 field18 = 18;                 // unknown
+  UserInfoField20 field20 = 20;                 // unknown
+  UserInfoField21 field21 = 21;                 // unknown
+  UserInfoField26 field26 = 26;                 // unknown
+  UserInfoField27 field27 = 27;                 // unknown
+}
+
+// UserOwnerRef - User owner reference
+message UserOwnerRef {
+  string account_key = 1;                       // account key
+  string user_id = 2;                           // user id
+}
+
+// UserSettings - User preferences and settings
+message UserSettings {
+  UserSettingsField2 field2 = 2;                // unknown
+  UserSettingsField14 field14 = 14;             // unknown
+  UserSettingsField17 field17 = 17;             // unknown
+  UserSettingsField18 field18 = 18;             // unknown
+  UserSettingsField19 field19 = 19;             // unknown
+  UserSettingsField20 field20 = 20;             // unknown
+  UserSettingsField33 field33 = 33;             // unknown
+  UserSettingsField38 field38 = 38;             // unknown
+  UserSettingsField41 field41 = 41;             // unknown
+  UserSettingsField43 field43 = 43;             // unknown
+  string field45 = 45;                          // unknown
+  UserSettingsField46 field46 = 46;             // unknown
+  UserSettingsField47 field47 = 47;             // unknown
+  UserSettingsField7 field7 = 7;                // unknown
+  UserSettingsField8 field8 = 8;                // unknown
+}
+
+// UserSettingsField2 - Unknown field
+message UserSettingsField2 {
+  int32 field1 = 1;                             // unknown
+  int32 field2 = 2;                             // unknown
+  int32 field4 = 4;                             // unknown
+}
+
+// UserSettingsField14 - Unknown field
+message UserSettingsField14 {
+  repeated UserSettingsField14Item items = 1;   // unknown items
+  int32 field2 = 2;                             // unknown
+  int64 field3 = 3;                             // unknown
+  int64 field4 = 4;                             // unknown
+}
+
+// UserSettingsField14Item - Unknown item
+message UserSettingsField14Item {
+  int32 field1 = 1;                             // unknown
+  int32 field2 = 2;                             // unknown
+}
+
+// UserSettingsField17 - Unknown field
+message UserSettingsField17 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField18 - Unknown field
+message UserSettingsField18 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField19 - Unknown field
+message UserSettingsField19 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField20 - Unknown field
+message UserSettingsField20 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField33 - Unknown field
+message UserSettingsField33 {
+  int32 field1 = 1;                             // unknown
+  int32 field3 = 3;                             // unknown
+}
+
+// UserSettingsField38 - Unknown field
+message UserSettingsField38 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField41 - Unknown field
+message UserSettingsField41 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField43 - Unknown field
+message UserSettingsField43 {
+  UserSettingsField43Inner field1 = 1;          // unknown
+}
+
+// UserSettingsField43Inner - Unknown inner field
+message UserSettingsField43Inner {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField46 - Unknown field
+message UserSettingsField46 {
+  UserSettingsField46Inner field2 = 2;          // unknown
+  UserSettingsField46Inner2 field3 = 3;         // unknown
+  UserSettingsField46Inner field4 = 4;          // unknown
+}
+
+// UserSettingsField46Inner - Unknown inner field
+message UserSettingsField46Inner {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField46Inner2 - Unknown inner field
+message UserSettingsField46Inner2 {
+  int32 field1 = 1;                             // unknown
+  int32 field3 = 3;                             // unknown
+}
+
+// UserSettingsField47 - Unknown field
+message UserSettingsField47 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField7 - Unknown field
+message UserSettingsField7 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserSettingsField8 - Unknown field
+message UserSettingsField8 {
+  int32 field1 = 1;                             // unknown
+  int32 field2 = 2;                             // unknown
+  int32 field3 = 3;                             // unknown
+  int32 field4 = 4;                             // unknown
+  int32 field5 = 5;                             // unknown
+  int32 field6 = 6;                             // unknown
+  int32 field7 = 7;                             // unknown
+  int32 field8 = 8;                             // unknown
+  int32 field10 = 10;                           // unknown
+  int32 field11 = 11;                           // unknown
+  int32 field13 = 13;                           // unknown
+}
+
+// StorageInfo - Storage quota information
+message StorageInfo {
+  int64 used_bytes = 1;                         // bytes used
+  int64 total_bytes = 2;                        // total available bytes
+  int64 field3 = 3;                             // unknown
+  int64 field4 = 4;                             // unknown
+  StorageInfoField5 field5 = 5;                 // unknown
+  StorageInfoField6 field6 = 6;                 // unknown
+  int64 field7 = 7;                             // unknown
+  int64 field8 = 8;                             // unknown, possibly free space
+  int32 field11 = 11;                           // unknown
+}
+
+// StorageInfoField5 - Unknown field
+message StorageInfoField5 {
+  int32 field1 = 1;                             // unknown
+}
+
+// StorageInfoField6 - Unknown field
+message StorageInfoField6 {
+  int64 field1 = 1;                             // unknown
+  int64 field2 = 2;                             // unknown
+  int32 field3 = 3;                             // unknown
+  StorageInfoField6Inner field4 = 4;            // unknown
+}
+
+// StorageInfoField6Inner - Unknown inner field
+message StorageInfoField6Inner {
+  int64 field1 = 1;                             // unknown
+}
+
+// UserInfoField11 - Unknown field
+message UserInfoField11 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserInfoField13 - Unknown field
+message UserInfoField13 {
+  string url = 1;                               // some url
+}
+
+// UserInfoField16 - Unknown field
+message UserInfoField16 {
+  string field1 = 1;                            // unknown
+}
+
+// UserInfoField18 - Unknown field
+message UserInfoField18 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserInfoField20 - Unknown field
+message UserInfoField20 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserInfoField21 - Unknown field
+message UserInfoField21 {
+  UserInfoField21Field4 field4 = 4;             // unknown
+  UserInfoField21Field6 field6 = 6;             // unknown
+  UserInfoField21Field7 field7 = 7;             // unknown
+}
+
+// UserInfoField21Field4 - Unknown field
+message UserInfoField21Field4 {
+  UserInfoField21Field4Inner field1 = 1;        // unknown
+}
+
+// UserInfoField21Field4Inner - Unknown inner field
+message UserInfoField21Field4Inner {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserInfoField21Field6 - Unknown field
+message UserInfoField21Field6 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserInfoField21Field7 - Unknown field
+message UserInfoField21Field7 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserInfoField26 - Unknown field
+message UserInfoField26 {
+  int32 field1 = 1;                             // unknown
+}
+
+// UserInfoField27 - Unknown field
+message UserInfoField27 {
+  int32 field1 = 1;                             // unknown
+}
+
+// ============= CATEGORY =============
+
+// Category - Auto-generated category (e.g., Screenshots, Recipes)
+message Category {
+  CategoryKey key = 1;                          // category key
+  CategoryMetadata metadata = 2;                // category details
+  int32 field3 = 3;                             // unknown
+  int32 field4 = 4;                             // unknown
+  repeated int32 field8 = 8;                    // unknown
+  CategoryField11 field11 = 11;                 // unknown
+  CategoryField14 field14 = 14;                 // unknown
+}
+
+// CategoryKey - Category identifier
+message CategoryKey {
+  string key = 1;                               // category key
+}
+
+// CategoryMetadata - Category details
+message CategoryMetadata {
+  int64 field3 = 3;                             // unknown timestamp
+  int32 field4 = 4;                             // unknown
+  int64 category_id = 5;                        // numeric category id
+  string name = 6;                              // category display name
+}
+
+// CategoryField11 - Unknown field
+message CategoryField11 {
+  CategoryField11Inner field1 = 1;              // unknown
+}
+
+// CategoryField11Inner - Unknown inner field
+message CategoryField11Inner {
+  CategoryField11Inner2 field2 = 2;             // unknown
+}
+
+// CategoryField11Inner2 - Unknown inner field
+message CategoryField11Inner2 {
+  CategoryField11Inner3 field1 = 1;             // unknown
+}
+
+// CategoryField11Inner3 - Unknown inner field
+message CategoryField11Inner3 {
+  CategoryField11Inner4 field22 = 22;           // unknown
+}
+
+// CategoryField11Inner4 - Unknown inner field
+message CategoryField11Inner4 {
+  CategoryField11Inner5 field2 = 2;             // unknown
+}
+
+// CategoryField11Inner5 - Unknown inner field
+message CategoryField11Inner5 {
+  string key = 1;                               // category key reference
+}
+
+// CategoryField14 - Unknown field
+message CategoryField14 {
+  int32 field1 = 1;                             // unknown
+}
+
+// ============= SYNC PAYLOAD =============
+
+// SyncPayload - Sync metadata for incremental updates
+message SyncPayload {
+  SyncPayloadField1 field1 = 1;                 // unknown
+  SyncPayloadAny field2 = 2;                    // type-any payload
+  int32 field3 = 3;                             // sync interval in seconds (e.g., 86400)
+  int32 field5 = 5;                             // unknown
+}
+
+// SyncPayloadField1 - Unknown field
+message SyncPayloadField1 {
+  int32 field1 = 1;                             // unknown
+  string token = 2;                             // some token
+}
+
+// SyncPayloadAny - Type URL and payload
+message SyncPayloadAny {
+  string type_url = 1;                          // type.googleapis.com/photos.printing.client.PrintingPromotionSyncPayload
+  SyncPayloadAnyData data = 2;                  // payload data
+}
+
+// SyncPayloadAnyData - Payload data
+message SyncPayloadAnyData {
+  SyncPayloadAnyDataInner field1 = 1;           // unknown
+}
+
+// SyncPayloadAnyDataInner - Payload inner data
+message SyncPayloadAnyDataInner {
+  string country_code = 1;                      // country code, e.g., "IN"
+}

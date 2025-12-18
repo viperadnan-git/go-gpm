@@ -493,6 +493,27 @@ func main() {
 				},
 				Action: upgradeAction,
 			},
+			{
+				Name:  "library",
+				Usage: "List all media items and albums in your library",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "trashed",
+						Aliases: []string{"t"},
+						Usage:   "Show items in trash",
+					},
+					&cli.StringFlag{
+						Name:    "album",
+						Aliases: []string{"a"},
+						Usage:   "Filter by album (key or name)",
+					},
+					&cli.BoolFlag{
+						Name:  "raw",
+						Usage: "Print raw JSON response",
+					},
+				},
+				Action: libraryAction,
+			},
 		},
 	}
 
