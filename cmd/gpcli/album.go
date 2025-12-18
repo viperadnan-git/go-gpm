@@ -164,6 +164,20 @@ func albumDeleteAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to delete album: %w", err)
 	}
 
+	// Remove album mapping if it exists
+	if !isAlbumKey(albumInput) {
+		// Input was a name, remove by name
+		cfgManager.RemoveAlbumMapping(albumInput)
+	} else {
+		// Input was a key, find and remove by key
+		for name, key := range cfgManager.GetAlbumMappings() {
+			if key == albumKey {
+				cfgManager.RemoveAlbumMapping(name)
+				break
+			}
+		}
+	}
+
 	logger.Info("album deleted successfully", "album_key", albumKey)
 	return nil
 }
