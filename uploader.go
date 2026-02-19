@@ -137,7 +137,7 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 		send(StatusChecking, "", dedupKey, nil)
 		if mediaKey, _ := api.FindMediaKeyByHash(ctx, sha1Hash); mediaKey != "" {
 			if opts.DeleteFromHost {
-				os.Remove(filePath)
+				_ = os.Remove(filePath)
 			}
 			send(StatusSkipped, mediaKey, dedupKey, nil)
 			return
@@ -195,7 +195,7 @@ func uploadFile(ctx context.Context, api *core.Api, filePath string, workerID in
 		}
 	}
 	if opts.DeleteFromHost {
-		os.Remove(filePath)
+		_ = os.Remove(filePath)
 	}
 
 	send(StatusCompleted, mediaKey, dedupKey, nil)

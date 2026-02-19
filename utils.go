@@ -33,7 +33,10 @@ var DedupKeyPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{27}$`)
 // DownloadFromReader saves data from an io.Reader to the specified output path
 // Returns the final output path
 func DownloadFromReader(reader io.Reader, outputPath, filename string) (string, error) {
-	filePath := resolveOutputPath(outputPath, filename)
+	filePath, err := resolveOutputPath(outputPath, filename)
+	if err != nil {
+		return "", err
+	}
 	if err := writeToFile(filePath, reader); err != nil {
 		return "", err
 	}
@@ -112,22 +115,24 @@ func extractFilenameFromURL(urlStr string) string {
 }
 
 // resolveOutputPath determines the final file path based on output path and filename
-func resolveOutputPath(outputPath, filename string) string {
+func resolveOutputPath(outputPath, filename string) (string, error) {
 	if outputPath == "" {
-		return filename
+		return filename, nil
 	}
 
 	info, err := os.Stat(outputPath)
 	if err == nil && info.IsDir() {
-		return filepath.Join(outputPath, filename)
+		return filepath.Join(outputPath, filename), nil
 	} else if err != nil && os.IsNotExist(err) {
 		parentDir := filepath.Dir(outputPath)
 		if parentDir != "." && parentDir != "/" {
-			os.MkdirAll(parentDir, 0755)
+			if err := os.MkdirAll(parentDir, 0755); err != nil {
+				return "", fmt.Errorf("failed to create directory: %w", err)
+			}
 		}
-		return outputPath
+		return outputPath, nil
 	}
-	return outputPath
+	return outputPath, nil
 }
 
 // writeToFile writes data from reader to file
