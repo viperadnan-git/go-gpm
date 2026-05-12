@@ -38,7 +38,7 @@ type UploadEvent struct {
 // UploadOptions contains runtime options for upload operations
 type UploadOptions struct {
 	Workers         int
-	Recursive       bool
+	Depth           int
 	ForceUpload     bool
 	DeleteFromHost  bool
 	DisableFilter   bool
@@ -61,7 +61,7 @@ func (g *GooglePhotosAPI) Upload(ctx context.Context, path string, opts UploadOp
 		defer close(events)
 
 		// Filter files
-		files, err := GetGooglePhotosSupportedFiles(path, opts.Recursive, opts.DisableFilter)
+		files, err := GetGooglePhotosSupportedFiles(path, opts.Depth, opts.DisableFilter)
 		if err != nil {
 			events <- UploadEvent{Status: StatusFailed, Error: err}
 			return

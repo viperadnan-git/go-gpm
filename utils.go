@@ -233,8 +233,9 @@ func IsSupportedByGooglePhotos(filename string) bool {
 	return slices.Contains(GPSupportedPhotoExtensions, ext) || slices.Contains(GPSupportedVideoExtensions, ext)
 }
 
-// GetGooglePhotosSupportedFiles returns files supported by Google Photos from a path
-func GetGooglePhotosSupportedFiles(path string, recursive, disableFilter bool) ([]string, error) {
+// GetGooglePhotosSupportedFiles returns files supported by Google Photos from a path.
+// depth controls directory traversal: -1 unlimited, 1 only the given dir's files, N descends N levels.
+func GetGooglePhotosSupportedFiles(path string, depth int, disableFilter bool) ([]string, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, fmt.Errorf("error accessing %s: %w", path, err)
@@ -242,7 +243,7 @@ func GetGooglePhotosSupportedFiles(path string, recursive, disableFilter bool) (
 
 	var files []string
 	if info.IsDir() {
-		files, err = scanDir(path, recursive)
+		files, err = scanDir(path, depth)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +264,7 @@ func GetGooglePhotosSupportedFiles(path string, recursive, disableFilter bool) (
 	return result, nil
 }
 
-func scanDir(path string, recursive bool) ([]string, error) {
+func scanDir(path string, depth int) ([]string, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -271,13 +272,20 @@ func scanDir(path string, recursive bool) ([]string, error) {
 	var files []string
 	for _, e := range entries {
 		full := filepath.Join(path, e.Name())
-		if e.IsDir() && recursive {
-			sub, err := scanDir(full, true)
+		if e.IsDir() {
+			if depth == 1 {
+				continue
+			}
+			next := depth - 1
+			if depth < 0 {
+				next = depth
+			}
+			sub, err := scanDir(full, next)
 			if err != nil {
 				return nil, err
 			}
 			files = append(files, sub...)
-		} else if !e.IsDir() {
+		} else {
 			files = append(files, full)
 		}
 	}

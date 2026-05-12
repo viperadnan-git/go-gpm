@@ -135,10 +135,10 @@ func main() {
 					},
 				},
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:    "recursive",
-						Aliases: []string{"r"},
-						Usage:   "Include subdirectories",
+					&cli.IntFlag{
+						Name:  "depth",
+						Value: -1,
+						Usage: "Max directory depth (-1 unlimited, 1 only top-level files)",
 					},
 					&cli.IntFlag{
 						Name:    "threads",

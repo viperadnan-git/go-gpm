@@ -79,7 +79,7 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 	// Build upload options from CLI flags
 	uploadOpts := gpm.UploadOptions{
 		Workers:         threads,
-		Recursive:       cmd.Bool("recursive"),
+		Depth:           cmd.Int("depth"),
 		ForceUpload:     cmd.Bool("force"),
 		DeleteFromHost:  cmd.Bool("delete"),
 		DisableFilter:   cmd.Bool("disable-filter"),
@@ -98,7 +98,7 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 
 	// Handle --check mode (dry run)
 	if cmd.Bool("check") {
-		return checkFiles(ctx, api, filePath, threads, uploadOpts.Recursive, uploadOpts.DisableFilter)
+		return checkFiles(ctx, api, filePath, threads, uploadOpts.Depth, uploadOpts.DisableFilter)
 	}
 
 	// Log start
@@ -204,10 +204,10 @@ func uploadAction(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func checkFiles(ctx context.Context, api *gpm.GooglePhotosAPI, path string, threads int, recursive, disableFilter bool) error {
+func checkFiles(ctx context.Context, api *gpm.GooglePhotosAPI, path string, threads, depth int, disableFilter bool) error {
 	logger.Info("scanning files", "path", path)
 
-	files, err := gpm.GetGooglePhotosSupportedFiles(path, recursive, disableFilter)
+	files, err := gpm.GetGooglePhotosSupportedFiles(path, depth, disableFilter)
 	if err != nil {
 		return fmt.Errorf("failed to scan files: %w", err)
 	}
